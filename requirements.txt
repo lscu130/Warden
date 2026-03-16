@@ -1,0 +1,468 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+GUI Brand Labeler for capture_v6 dataset
+
+需求覆盖：
+- 输入起止时间：格式 20251230T050535Z（目录名后缀同款），按时间从早到晚遍历
+- 打开每个样本的 full 截图（无则 fallback viewport），并与输入同步（同窗显示+输入）
+- 输入品牌字符串：写 meta.json["brand"]=字符串
+- 直接回车（空输入）：写 meta.json["brand"]=None（brand=none）
+- 输入 del：删除整个样本目录（默认软删到 _deleted_samples）
+- 支持快速提升：显示 last brand，按 Ctrl+L 或按钮一键填入
+- 统计：标记、删除、跳过、错误数量，结束时弹窗+打印
+
+依赖：
+- 标准库 + tkinter
+- 推荐安装 pillow（PIL）用于 PNG 显示与缩放（没有也会尝试 tkinter PhotoImage 直接读 PNG）
+"""
+from __future__ import annotations
+
+import json
+import os
+import re
+import shutil
+import sys
+from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Optional, List
+
+# =========================
+# CONFIG（按你习惯：路径放代码头）
+# =========================
+
+# 指向某个标签根目录：例如 phish/ 或 benign/
+DATASET_ROOT = r"/path/to/EVT Dataset/phish"
+
+# 删除策略：建议默认软删（更安全）
+# - 设为 "_deleted_samples"：移动到 DATASET_ROOT/_deleted_samples/
+# - 设为 None：永久删除（shutil.rmtree）
+TRASH_DIRNAME = "_deleted_samples"
+
+# 优先显示的截图文件名（capture_v6）
+FULL_SCREENSHOT_NAME = "screenshot_full.png"
+FALLBACK_SCREENSHOT_NAME = "screenshot_viewport.png"
+
+# 元信息文件名（capture_v6）
+META_NAME = "meta.json"
+URL_NAME = "url.json"
+VISIBLE_TEXT_NAME = "visible_text.txt"
+
+# 预览可见文本长度（0=不显示）
+VISIBLE_TEXT_PREVIEW_CHARS = 350
+
+# GUI 显示最大尺寸（超过会等比缩放）
+MAX_IMG_W = 1400
+MAX_IMG_H = 820
+
+# 样本目录名后缀时间戳正则： ...20251230T050535Z 或 ...20251230T050535Z_2
+TS_RE = re.compile(r"(?P<ts>\d{8}T\d{6}Z)(?:_\d+)?$")
+
+# =========================
+# Utils
+# =========================
+
+def parse_ts(ts: str) -> datetime:
+    # 20251230T050535Z
+    return datetime.strptime(ts, "%Y%m%dT%H%M%SZ")
+
+def extract_ts(folder_name: str) -> Optional[str]:
+    m = TS_RE.search(folder_name)
+    return m.group("ts") if m else None
+
+def read_json(path: Path) -> dict:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+def write_json_atomic(path: Path, obj: dict) -> None:
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(obj, ensure_ascii=False, indent=2), encoding="utf-8")
+    tmp.replace(path)
+
+def backup_once(path: Path) -> None:
+    bak = path.with_suffix(path.suffix + ".bak")
+    if not bak.exists() and path.exists():
+        shutil.copy2(path, bak)
+
+def safe_move_or_delete(sample_dir: Path, trash_dir: Optional[Path]) -> None:
+    if trash_dir is None:
+        shutil.rmtree(sample_dir, ignore_errors=True)
+        return
+    trash_dir.mkdir(parents=True, exist_ok=True)
+    target = trash_dir / sample_dir.name
+    if target.exists():
+        i = 2
+        while (trash_dir / f"{sample_dir.name}_{i}").exists():
+            i += 1
+        target = trash_dir / f"{sample_dir.name}_{i}"
+    shutil.move(str(sample_dir), str(target))
+
+def sanitize_one_line(s: str) -> str:
+    s = re.sub(r"\s+", " ", s).strip()
+    return s
+
+@dataclass
+class Sample:
+    path: Path
+    ts: datetime
+    ts_str: str
+
+def collect_samples(root: Path) -> List[Sample]:
+    out: List[Sample] = []
+    for d in root.iterdir():
+        if not d.is_dir():
+            continue
+        ts_str = extract_ts(d.name)
+        if not ts_str:
+            continue
+        try:
+            dt = parse_ts(ts_str)
+        except ValueError:
+            continue
+        out.append(Sample(path=d, ts=dt, ts_str=ts_str))
+    out.sort(key=lambda s: s.ts)
+    return out
+
+def in_range(s: Sample, start: Optional[datetime], end: Optional[datetime]) -> bool:
+    if start and s.ts < start:
+        return False
+    if end and s.ts > end:
+        return False
+    return True
+
+# =========================
+# GUI App
+# =========================
+
+class BrandLabelerApp:
+    def __init__(self, samples: List[Sample], trash_dir: Optional[Path]):
+        import tkinter as tk
+        from tkinter import ttk, messagebox
+
+        self.tk = tk
+        self.ttk = ttk
+        self.messagebox = messagebox
+
+        self.samples = samples
+        self.trash_dir = trash_dir
+        self.idx = 0
+
+        self.labeled = 0
+        self.deleted = 0
+        self.skipped = 0
+        self.errors = 0
+
+        self.last_brand: Optional[str] = None
+
+        # PIL optional
+        self.has_pil = False
+        try:
+            from PIL import Image, ImageTk  # noqa: F401
+            self.has_pil = True
+        except Exception:
+            self.has_pil = False
+
+        self.root = tk.Tk()
+        self.root.title("EVT Brand Labeler (capture_v6)")
+        self.root.geometry("1600x980")
+
+        # Layout: left image, right controls/info
+        self.main = ttk.Frame(self.root, padding=8)
+        self.main.pack(fill="both", expand=True)
+
+        self.left = ttk.Frame(self.main)
+        self.right = ttk.Frame(self.main)
+        self.left.pack(side="left", fill="both", expand=True)
+        self.right.pack(side="right", fill="y")
+
+        # Image label
+        self.img_label = ttk.Label(self.left)
+        self.img_label.pack(fill="both", expand=True)
+
+        # Info text
+        self.info = tk.Text(self.right, width=62, height=28, wrap="word")
+        self.info.pack(padx=6, pady=(0, 6), fill="both", expand=False)
+
+        # Entry + buttons
+        self.entry_var = tk.StringVar()
+        self.entry = ttk.Entry(self.right, textvariable=self.entry_var, width=52)
+        self.entry.pack(padx=6, pady=(0, 6), fill="x")
+
+        self.hint = ttk.Label(self.right, text="", foreground="#555")
+        self.hint.pack(padx=6, pady=(0, 10), anchor="w")
+
+        btn_row = ttk.Frame(self.right)
+        btn_row.pack(padx=6, pady=(0, 10), fill="x")
+
+        self.btn_save = ttk.Button(btn_row, text="Save (Enter)", command=self.on_enter)
+        self.btn_skip = ttk.Button(btn_row, text="Skip (None)", command=self.on_skip)
+        self.btn_del  = ttk.Button(btn_row, text="Delete (del)", command=self.on_delete)
+        self.btn_last = ttk.Button(btn_row, text="Use Last (Ctrl+L)", command=self.use_last)
+        self.btn_quit = ttk.Button(btn_row, text="Quit (q)", command=self.on_quit)
+
+        self.btn_save.grid(row=0, column=0, padx=2, pady=2, sticky="ew")
+        self.btn_skip.grid(row=0, column=1, padx=2, pady=2, sticky="ew")
+        self.btn_del.grid(row=0, column=2, padx=2, pady=2, sticky="ew")
+        self.btn_last.grid(row=1, column=0, padx=2, pady=2, sticky="ew")
+        self.btn_quit.grid(row=1, column=1, padx=2, pady=2, sticky="ew")
+
+        btn_row.columnconfigure(0, weight=1)
+        btn_row.columnconfigure(1, weight=1)
+        btn_row.columnconfigure(2, weight=1)
+
+        # Key bindings
+        self.root.bind("<Return>", lambda e: self.on_enter())
+        self.root.bind("<Control-l>", lambda e: self.use_last())
+        self.root.bind("q", lambda e: self.on_quit())
+        self.root.bind("d", lambda e: self.on_delete())  # 快捷键：d=delete（更省手）
+        self.entry.bind("<Escape>", lambda e: self.on_quit())
+
+        self.current_meta_path: Optional[Path] = None
+        self.current_sample_dir: Optional[Path] = None
+        self.current_meta: Optional[dict] = None
+        self.current_img_ref = None  # prevent GC
+
+        self.load_current()
+
+    def run(self):
+        self.root.mainloop()
+
+    def finish(self):
+        summary = (
+            f"标记: {self.labeled}\n"
+            f"删除: {self.deleted}\n"
+            f"跳过(None): {self.skipped}\n"
+            f"错误: {self.errors}\n"
+        )
+        self.messagebox.showinfo("DONE", summary)
+        print(summary)
+
+    def set_info(self, text: str):
+        self.info.configure(state="normal")
+        self.info.delete("1.0", "end")
+        self.info.insert("1.0", text)
+        self.info.configure(state="disabled")
+
+    def load_image(self, img_path: Path):
+        if not img_path.exists():
+            self.img_label.configure(text=f"[NO IMAGE]\n{img_path.name}", image="")
+            self.current_img_ref = None
+            return
+
+        if self.has_pil:
+            from PIL import Image, ImageTk
+
+            im = Image.open(img_path).convert("RGB")
+            w, h = im.size
+            scale = min(MAX_IMG_W / w, MAX_IMG_H / h, 1.0)
+            if scale < 1.0:
+                im = im.resize((int(w * scale), int(h * scale)))
+            photo = ImageTk.PhotoImage(im)
+            self.img_label.configure(image=photo, text="")
+            self.current_img_ref = photo
+        else:
+            # tkinter PhotoImage may read PNG on most modern Tk builds.
+            try:
+                photo = self.tk.PhotoImage(file=str(img_path))
+                self.img_label.configure(image=photo, text="")
+                self.current_img_ref = photo
+            except Exception as e:
+                self.img_label.configure(text=f"[CANNOT LOAD IMAGE]\n{img_path}\n{e}", image="")
+                self.current_img_ref = None
+
+    def build_hint_text(self, sample_dir: Path, meta: dict) -> str:
+        parts = []
+        cur_brand = meta.get("brand", None)
+        parts.append(f"current brand: {cur_brand!r}")
+        if self.last_brand:
+            parts.append(f"last brand: {self.last_brand}")
+
+        urlp = sample_dir / URL_NAME
+        if urlp.exists():
+            try:
+                u = read_json(urlp)
+                parts.append(f"final_url: {u.get('final_url')}")
+            except Exception:
+                pass
+
+        vtp = sample_dir / VISIBLE_TEXT_NAME
+        if VISIBLE_TEXT_PREVIEW_CHARS > 0 and vtp.exists():
+            try:
+                txt = vtp.read_text(encoding="utf-8", errors="ignore")
+                txt = sanitize_one_line(txt)
+                if txt:
+                    parts.append(f"visible_text[:{VISIBLE_TEXT_PREVIEW_CHARS}]: {txt[:VISIBLE_TEXT_PREVIEW_CHARS]}")
+            except Exception:
+                pass
+
+        return "\n".join(parts)
+
+    def load_current(self):
+        # end
+        if self.idx >= len(self.samples):
+            self.finish()
+            self.root.destroy()
+            return
+
+        s = self.samples[self.idx]
+        sample_dir = s.path
+        meta_path = sample_dir / META_NAME
+
+        self.current_sample_dir = sample_dir
+        self.current_meta_path = meta_path
+        self.current_meta = None
+
+        # Read meta
+        if not meta_path.exists():
+            self.errors += 1
+            self.set_info(f"[WARN] meta.json missing: {sample_dir.name}\nSkipping...")
+            self.idx += 1
+            self.root.after(200, self.load_current)
+            return
+
+        try:
+            meta = read_json(meta_path)
+            self.current_meta = meta
+        except Exception as e:
+            self.errors += 1
+            self.set_info(f"[WARN] meta.json unreadable: {sample_dir.name}\n{e}\nSkipping...")
+            self.idx += 1
+            self.root.after(200, self.load_current)
+            return
+
+        # Prefer full screenshot
+        img = sample_dir / FULL_SCREENSHOT_NAME
+        if not img.exists():
+            img = sample_dir / FALLBACK_SCREENSHOT_NAME
+
+        # UI text
+        header = f"[{self.idx+1}/{len(self.samples)}]  {sample_dir.name}\n"
+        header += f"ts={s.ts_str}\n\n"
+        header += self.build_hint_text(sample_dir, meta)
+        header += "\n\n"
+        header += "操作：\n"
+        header += "- 输入品牌后 Enter：保存 brand\n"
+        header += "- 直接 Enter：brand=None（跳过）\n"
+        header += "- 输入 del 后 Enter 或按 Delete 按钮 / 按 d：删除样本目录\n"
+        header += "- Ctrl+L：填入上一次 brand\n"
+        header += "- q：退出\n"
+
+        self.set_info(header)
+
+        self.hint.configure(text=f"Tip: 输入 del=删除；空回车=brand None；Ctrl+L=复用 last brand")
+        self.entry_var.set("")  # clear
+        self.entry.focus_set()
+
+        self.load_image(img)
+
+    def persist_brand(self, brand_value):
+        assert self.current_meta_path and self.current_meta is not None
+        self.current_meta["brand"] = brand_value
+        backup_once(self.current_meta_path)
+        write_json_atomic(self.current_meta_path, self.current_meta)
+
+    def on_enter(self):
+        """
+        Enter 的语义：
+        - 输入为空：Skip(None)
+        - 输入 del：Delete
+        - 输入 q：Quit
+        - 其他：Save brand
+        """
+        cmd = self.entry_var.get().strip()
+        if cmd.lower() == "q":
+            self.on_quit()
+            return
+        if cmd.lower() == "del":
+            self.on_delete()
+            return
+        if cmd == "":
+            self.on_skip()
+            return
+
+        # Save brand
+        try:
+            self.persist_brand(cmd)
+            self.labeled += 1
+            self.last_brand = cmd
+        except Exception as e:
+            self.errors += 1
+            self.messagebox.showerror("Write error", f"Failed to write meta.json:\n{e}")
+        finally:
+            self.idx += 1
+            self.load_current()
+
+    def on_skip(self):
+        try:
+            self.persist_brand(None)
+            self.skipped += 1
+        except Exception as e:
+            self.errors += 1
+            self.messagebox.showerror("Write error", f"Failed to write meta.json:\n{e}")
+        finally:
+            self.idx += 1
+            self.load_current()
+
+    def on_delete(self):
+        if not self.current_sample_dir:
+            return
+        try:
+            safe_move_or_delete(self.current_sample_dir, self.trash_dir)
+            self.deleted += 1
+        except Exception as e:
+            self.errors += 1
+            self.messagebox.showerror("Delete error", f"Failed to delete sample folder:\n{e}")
+        finally:
+            self.idx += 1
+            self.load_current()
+
+    def use_last(self):
+        if self.last_brand:
+            self.entry_var.set(self.last_brand)
+            self.entry.icursor("end")
+            self.entry.focus_set()
+
+    def on_quit(self):
+        summary = (
+            f"当前进度: {self.idx}/{len(self.samples)}\n\n"
+            f"标记: {self.labeled}\n"
+            f"删除: {self.deleted}\n"
+            f"跳过(None): {self.skipped}\n"
+            f"错误: {self.errors}\n"
+        )
+        if self.messagebox.askyesno("Quit", summary + "\n确定退出？"):
+            self.finish()
+            self.root.destroy()
+
+
+def main() -> int:
+    root = Path(DATASET_ROOT)
+    if not root.exists():
+        print(f"[ERR] DATASET_ROOT not found: {root}")
+        return 2
+
+    print("Brand Labeler GUI (capture_v6)")
+    print(f"Dataset root: {root}")
+    print("Time format example: 20251230T050535Z (matches sample folder suffix)")
+    start_s = input("Start time (empty=no lower bound): ").strip()
+    end_s = input("End time   (empty=no upper bound): ").strip()
+
+    start_dt = parse_ts(start_s) if start_s else None
+    end_dt = parse_ts(end_s) if end_s else None
+    if start_dt and end_dt and start_dt > end_dt:
+        print("[ERR] start time is later than end time.")
+        return 2
+
+    samples_all = collect_samples(root)
+    samples = [s for s in samples_all if in_range(s, start_dt, end_dt)]
+
+    print(f"Found {len(samples)} samples in range (total in root: {len(samples_all)})")
+
+    trash_dir = (root / TRASH_DIRNAME) if TRASH_DIRNAME else None
+    app = BrandLabelerApp(samples, trash_dir=trash_dir)
+    app.run()
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

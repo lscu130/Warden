@@ -1,0 +1,762 @@
+{
+  "paypal": {
+    "aliases": [
+      "paypal",
+      "pay pal",
+      "paypal inc"
+    ],
+    "domains": [
+      "paypal.com"
+    ]
+  },
+  "chase": {
+    "aliases": [
+      "chase",
+      "jpmorgan chase",
+      "chase bank"
+    ],
+    "domains": [
+      "chase.com",
+      "jpmorganchase.com"
+    ]
+  },
+  "bankofamerica": {
+    "aliases": [
+      "bank of america"
+    ],
+    "domains": [
+      "bankofamerica.com"
+    ]
+  },
+  "wellsfargo": {
+    "aliases": [
+      "wells fargo",
+      "wellsfargo"
+    ],
+    "domains": [
+      "wellsfargo.com"
+    ]
+  },
+  "citi": {
+    "aliases": [
+      "citi",
+      "citibank",
+      "city bank"
+    ],
+    "domains": [
+      "citi.com",
+      "citibank.com"
+    ]
+  },
+  "capitalone": {
+    "aliases": [
+      "capital one",
+      "capitalone"
+    ],
+    "domains": [
+      "capitalone.com"
+    ]
+  },
+  "hsbc": {
+    "aliases": [
+      "hsbc",
+      "hongkong and shanghai banking corporation"
+    ],
+    "domains": [
+      "hsbc.com"
+    ]
+  },
+  "santander": {
+    "aliases": [
+      "santander",
+      "banco santander"
+    ],
+    "domains": [
+      "santander.com"
+    ]
+  },
+  "rbc": {
+    "aliases": [
+      "royal bank of canada"
+    ],
+    "domains": [
+      "rbc.com",
+      "royalbank.com"
+    ]
+  },
+  "td": {
+    "aliases": [
+      "td bank",
+      "toronto dominion",
+      "toronto-dominion"
+    ],
+    "domains": [
+      "td.com",
+      "tdbank.com"
+    ]
+  },
+  "scotiabank": {
+    "aliases": [
+      "scotiabank",
+      "scotia bank",
+      "bank of nova scotia"
+    ],
+    "domains": [
+      "scotiabank.com"
+    ]
+  },
+  "bmo": {
+    "aliases": [
+      "bank of montreal"
+    ],
+    "domains": [
+      "bmo.com"
+    ]
+  },
+  "cibc": {
+    "aliases": [
+      "canadian imperial bank of commerce"
+    ],
+    "domains": [
+      "cibc.com"
+    ]
+  },
+  "wise": {
+    "aliases": [
+      "wise",
+      "transferwise"
+    ],
+    "domains": [
+      "wise.com"
+    ]
+  },
+  "stripe": {
+    "aliases": [
+      "stripe",
+      "stripe payments"
+    ],
+    "domains": [
+      "stripe.com"
+    ]
+  },
+  "microsoft": {
+    "aliases": [
+      "microsoft",
+      "microsoft account",
+      "office365",
+      "m365"
+    ],
+    "domains": [
+      "microsoft.com",
+      "office.com",
+      "office365.com",
+      "live.com"
+    ]
+  },
+  "outlook": {
+    "aliases": [
+      "outlook",
+      "outlook mail",
+      "hotmail"
+    ],
+    "domains": [
+      "outlook.com",
+      "hotmail.com",
+      "live.com"
+    ]
+  },
+  "google": {
+    "aliases": [
+      "google",
+      "google account",
+      "gmail",
+      "google mail"
+    ],
+    "domains": [
+      "google.com",
+      "gmail.com"
+    ]
+  },
+  "apple": {
+    "aliases": [
+      "apple",
+      "apple id",
+      "icloud",
+      "itunes"
+    ],
+    "domains": [
+      "apple.com",
+      "icloud.com"
+    ]
+  },
+  "adobe": {
+    "aliases": [
+      "adobe",
+      "adobe sign",
+      "acrobat"
+    ],
+    "domains": [
+      "adobe.com",
+      "acrobat.com"
+    ]
+  },
+  "docusign": {
+    "aliases": [
+      "docusign",
+      "docu sign"
+    ],
+    "domains": [
+      "docusign.com"
+    ]
+  },
+  "dropbox": {
+    "aliases": [
+      "dropbox"
+    ],
+    "domains": [
+      "dropbox.com"
+    ]
+  },
+  "onedrive": {
+    "aliases": [
+      "onedrive",
+      "one drive"
+    ],
+    "domains": [
+      "onedrive.live.com",
+      "microsoft.com"
+    ]
+  },
+  "intuit": {
+    "aliases": [
+      "intuit",
+      "quickbooks",
+      "turbotax",
+      "mailchimp"
+    ],
+    "domains": [
+      "intuit.com",
+      "quickbooks.com",
+      "turbotax.intuit.com",
+      "mailchimp.com"
+    ]
+  },
+  "zoom": {
+    "aliases": [
+      "zoom",
+      "zoom workplace",
+      "zoom meetings"
+    ],
+    "domains": [
+      "zoom.us"
+    ]
+  },
+  "facebook": {
+    "aliases": [
+      "facebook",
+      "meta facebook"
+    ],
+    "domains": [
+      "facebook.com",
+      "fb.com"
+    ]
+  },
+  "instagram": {
+    "aliases": [
+      "instagram"
+    ],
+    "domains": [
+      "instagram.com"
+    ]
+  },
+  "whatsapp": {
+    "aliases": [
+      "whatsapp"
+    ],
+    "domains": [
+      "whatsapp.com"
+    ]
+  },
+  "x": {
+    "aliases": [
+      "twitter",
+      "x.com"
+    ],
+    "domains": [
+      "x.com",
+      "twitter.com"
+    ]
+  },
+  "linkedin": {
+    "aliases": [
+      "linkedin",
+      "linked in"
+    ],
+    "domains": [
+      "linkedin.com"
+    ]
+  },
+  "tiktok": {
+    "aliases": [
+      "tiktok",
+      "tik tok",
+      "douyin international"
+    ],
+    "domains": [
+      "tiktok.com"
+    ]
+  },
+  "discord": {
+    "aliases": [
+      "discord"
+    ],
+    "domains": [
+      "discord.com",
+      "discord.gg"
+    ]
+  },
+  "telegram": {
+    "aliases": [
+      "telegram"
+    ],
+    "domains": [
+      "telegram.org"
+    ]
+  },
+  "amazon": {
+    "aliases": [
+      "amazon",
+      "amazon account",
+      "amazon prime"
+    ],
+    "domains": [
+      "amazon.com"
+    ]
+  },
+  "ebay": {
+    "aliases": [
+      "ebay",
+      "e bay"
+    ],
+    "domains": [
+      "ebay.com"
+    ]
+  },
+  "aliexpress": {
+    "aliases": [
+      "aliexpress",
+      "ali express"
+    ],
+    "domains": [
+      "aliexpress.com"
+    ]
+  },
+  "shopee": {
+    "aliases": [
+      "shopee"
+    ],
+    "domains": [
+      "shopee.com"
+    ]
+  },
+  "lazada": {
+    "aliases": [
+      "lazada"
+    ],
+    "domains": [
+      "lazada.com"
+    ]
+  },
+  "walmart": {
+    "aliases": [
+      "walmart",
+      "wal-mart"
+    ],
+    "domains": [
+      "walmart.com"
+    ]
+  },
+  "etsy": {
+    "aliases": [
+      "etsy"
+    ],
+    "domains": [
+      "etsy.com"
+    ]
+  },
+  "usps": {
+    "aliases": [
+      "usps",
+      "united states postal service"
+    ],
+    "domains": [
+      "usps.com"
+    ]
+  },
+  "dhl": {
+    "aliases": [
+      "dhl"
+    ],
+    "domains": [
+      "dhl.com"
+    ]
+  },
+  "fedex": {
+    "aliases": [
+      "fedex",
+      "fed ex"
+    ],
+    "domains": [
+      "fedex.com"
+    ]
+  },
+  "ups": {
+    "aliases": [
+      "ups",
+      "united parcel service"
+    ],
+    "domains": [
+      "ups.com"
+    ]
+  },
+  "canadapost": {
+    "aliases": [
+      "canada post"
+    ],
+    "domains": [
+      "canadapost-postescanada.ca"
+    ]
+  },
+  "royalmail": {
+    "aliases": [
+      "royal mail"
+    ],
+    "domains": [
+      "royalmail.com"
+    ]
+  },
+  "binance": {
+    "aliases": [
+      "binance"
+    ],
+    "domains": [
+      "binance.com"
+    ]
+  },
+  "coinbase": {
+    "aliases": [
+      "coinbase",
+      "coinbase wallet"
+    ],
+    "domains": [
+      "coinbase.com"
+    ]
+  },
+  "metamask": {
+    "aliases": [
+      "metamask",
+      "meta mask"
+    ],
+    "domains": [
+      "metamask.io"
+    ]
+  },
+  "okx": {
+    "aliases": [
+      "okx",
+      "okex"
+    ],
+    "domains": [
+      "okx.com",
+      "okex.com"
+    ]
+  },
+  "bybit": {
+    "aliases": [
+      "bybit"
+    ],
+    "domains": [
+      "bybit.com"
+    ]
+  },
+  "kraken": {
+    "aliases": [
+      "kraken"
+    ],
+    "domains": [
+      "kraken.com"
+    ]
+  },
+  "trustwallet": {
+    "aliases": [
+      "trust wallet"
+    ],
+    "domains": [
+      "trustwallet.com"
+    ]
+  },
+  "steam": {
+    "aliases": [
+      "steam",
+      "steamcommunity"
+    ],
+    "domains": [
+      "steampowered.com",
+      "steamcommunity.com"
+    ]
+  },
+  "epicgames": {
+    "aliases": [
+      "epic games",
+      "epicgames",
+      "fortnite"
+    ],
+    "domains": [
+      "epicgames.com"
+    ]
+  },
+  "roblox": {
+    "aliases": [
+      "roblox"
+    ],
+    "domains": [
+      "roblox.com"
+    ]
+  },
+  "riotgames": {
+    "aliases": [
+      "riot games",
+      "league of legends",
+      "valorant"
+    ],
+    "domains": [
+      "riotgames.com",
+      "leagueoflegends.com",
+      "playvalorant.com"
+    ]
+  },
+  "ea": {
+    "aliases": [
+      "electronic arts",
+      "ea sports",
+      "origin"
+    ],
+    "domains": [
+      "ea.com",
+      "origin.com"
+    ]
+  },
+  "blizzard": {
+    "aliases": [
+      "blizzard",
+      "battle.net",
+      "battlenet"
+    ],
+    "domains": [
+      "blizzard.com",
+      "battle.net"
+    ]
+  },
+  "bitget": {
+    "aliases": [
+      "bitget",
+      "bitget exchange"
+    ],
+    "domains": [
+      "bitget.com"
+    ]
+  },
+  "deribit": {
+    "aliases": [
+      "deribit",
+      "deribit exchange"
+    ],
+    "domains": [
+      "deribit.com"
+    ]
+  },
+  "xtcom": {
+    "aliases": [
+      "xt.com",
+      "xt com",
+      "xt exchange",
+      "xt.com exchange"
+    ],
+    "domains": [
+      "xt.com"
+    ]
+  },
+  "kucoin": {
+    "aliases": [
+      "kucoin",
+      "ku coin",
+      "kucoin exchange"
+    ],
+    "domains": [
+      "kucoin.com"
+    ]
+  },
+  "deepcoin": {
+    "aliases": [
+      "deepcoin",
+      "deepcoin exchange"
+    ],
+    "domains": [
+      "deepcoin.com"
+    ]
+  },
+  "gate": {
+    "aliases": [
+      "gate.io",
+      "gate.com",
+      "gate exchange"
+    ],
+    "domains": [
+      "gate.com",
+      "gate.io"
+    ]
+  },
+  "mexc": {
+    "aliases": [
+      "mexc",
+      "mexc exchange"
+    ],
+    "domains": [
+      "mexc.com"
+    ]
+  },
+  "bitfinex": {
+    "aliases": [
+      "bitfinex",
+      "bitfinex exchange"
+    ],
+    "domains": [
+      "bitfinex.com"
+    ]
+  },
+  "bitmart": {
+    "aliases": [
+      "bitmart",
+      "bitmart exchange"
+    ],
+    "domains": [
+      "bitmart.com"
+    ]
+  },
+  "gemini": {
+    "aliases": [
+      "gemini",
+      "gemini exchange",
+      "gemini crypto"
+    ],
+    "domains": [
+      "gemini.com"
+    ]
+  },
+  "cryptocom": {
+    "aliases": [
+      "crypto.com",
+      "crypto com",
+      "crypto.com exchange",
+      "crypto.com app"
+    ],
+    "domains": [
+      "crypto.com"
+    ]
+  },
+  "bitflyer": {
+    "aliases": [
+      "bitflyer",
+      "bit flyer"
+    ],
+    "domains": [
+      "bitflyer.com"
+    ]
+  },
+  "htx": {
+    "aliases": [
+      "htx",
+      "htx exchange",
+      "huobi",
+      "huobi global"
+    ],
+    "domains": [
+      "htx.com"
+    ]
+  },
+  "bingx": {
+    "aliases": [
+      "bingx",
+      "bingx exchange"
+    ],
+    "domains": [
+      "bingx.com"
+    ]
+  },
+  "lbank": {
+    "aliases": [
+      "lbank",
+      "l bank",
+      "lbank exchange"
+    ],
+    "domains": [
+      "lbank.com"
+    ]
+  },
+  "toobit": {
+    "aliases": [
+      "toobit",
+      "toobit exchange"
+    ],
+    "domains": [
+      "toobit.com"
+    ]
+  },
+  "coincatch": {
+    "aliases": [
+      "coincatch",
+      "coincatch exchange"
+    ],
+    "domains": [
+      "coincatch.com"
+    ]
+  },
+  "coinw": {
+    "aliases": [
+      "coinw",
+      "coinw exchange"
+    ],
+    "domains": [
+      "coinw.com"
+    ]
+  },
+  "digifinex": {
+    "aliases": [
+      "digifinex",
+      "digi finex",
+      "digifinex exchange"
+    ],
+    "domains": [
+      "digifinex.com"
+    ]
+  },
+  "weex": {
+    "aliases": [
+      "weex",
+      "weex exchange"
+    ],
+    "domains": [
+      "weex.com"
+    ]
+  },
+  "ascendex": {
+    "aliases": [
+      "ascendex",
+      "ascend ex",
+      "ascendex exchange"
+    ],
+    "domains": [
+      "ascendex.com"
+    ]
+  }
+}
