@@ -21,14 +21,27 @@ from typing import Iterable, List, Tuple
 from evt_auto_label_utils_brandlex import derive_auto_labels_from_sample_dir, derive_rule_labels, iter_sample_dirs
 
 
+
+# -----------------------------
+# 头部配置区：优先在这里改默认输入/输出位置
+# 命令行参数仍可覆盖这些默认值
+# -----------------------------
+CONFIG_DATASET_ROOTS = [
+    "./data/raw/phish",
+    "./data/raw/benign",
+]
+CONFIG_AUTO_LABEL_OUTPUT_NAME = "auto_labels.json"
+CONFIG_RULE_LABEL_OUTPUT_NAME = "rule_labels.json"
+CONFIG_BRAND_LEXICON_PATH = ""  # 没有外部品牌词典就保持空字符串
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--roots", nargs="+", required=True, help="dataset roots to scan")
-    parser.add_argument("--output-name", default="auto_labels.json", help="output filename inside each sample dir")
+    parser.add_argument("--roots", nargs="+", default=CONFIG_DATASET_ROOTS, help="dataset roots to scan")
+    parser.add_argument("--output-name", default=CONFIG_AUTO_LABEL_OUTPUT_NAME, help="output filename inside each sample dir")
     parser.add_argument("--only-missing", action="store_true", help="skip sample dirs that already have output file")
     parser.add_argument("--workers", type=int, default=4, help="I/O worker count; keep modest to avoid disk thrash")
     parser.add_argument("--limit", type=int, default=0, help="optional max number of samples to process")
-    parser.add_argument("--brand-lexicon", type=str, default="", help="optional path to external brand lexicon json")
+    parser.add_argument("--brand-lexicon", type=str, default=CONFIG_BRAND_LEXICON_PATH, help="optional path to external brand lexicon json")
     parser.add_argument("--emit-rule-labels", action="store_true", help="also emit rule_labels.json from auto_labels")
     parser.add_argument("--fail-fast", action="store_true")
     return parser.parse_args()
@@ -57,7 +70,7 @@ def process_one(sample_dir: Path, output_name: str, brand_lexicon: str = "", emi
         out_path.write_text(json.dumps(labels, ensure_ascii=False, indent=2), encoding="utf-8")
         if emit_rule_labels:
             rule_labels = derive_rule_labels(labels)
-            (sample_dir / "rule_labels.json").write_text(json.dumps(rule_labels, ensure_ascii=False, indent=2), encoding="utf-8")
+            (sample_dir / CONFIG_RULE_LABEL_OUTPUT_NAME).write_text(json.dumps(rule_labels, ensure_ascii=False, indent=2), encoding="utf-8")
         return sample_dir, True, ""
     except Exception as e:
         return sample_dir, False, repr(e)

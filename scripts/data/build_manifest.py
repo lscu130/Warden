@@ -37,6 +37,25 @@ except Exception as exc:
     raise SystemExit("需要 pandas：pip install pandas pyarrow") from exc
 
 # -----------------------------
+# 头部配置区：优先在这里改你本地的输入/输出路径
+# 命令行参数仍可覆盖这些默认值
+# -----------------------------
+CONFIG_DATA_ROOT = "./data"
+CONFIG_INPUT_ROOTS = [
+    "./data/raw/phish",
+    "./data/raw/benign",
+]
+CONFIG_LABELS_PATH = "./data/labels/labels_v1.csv"  # 没有外部标签表就设为 None
+CONFIG_OUTPUT_DIR = "./data/processed/trainset_v1"
+
+# 导出文件名配置
+CONFIG_MANIFEST_CSV_NAME = "manifest_trainset_v1.csv"
+CONFIG_MANIFEST_PARQUET_NAME = "manifest_trainset_v1.parquet"
+CONFIG_SPLITS_DIR_NAME = "splits"
+CONFIG_STATS_DIR_NAME = "stats"
+CONFIG_README_NAME = "README.md"
+
+# -----------------------------
 # 可按你本地实际结构微调的默认候选名
 # -----------------------------
 SCREENSHOT_CANDIDATES = [
@@ -827,10 +846,10 @@ def write_readme(path: Path, args: argparse.Namespace, raw_count: int, final_cou
 # -----------------------------
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Build Warden TRAINSET_V1 manifest")
-    p.add_argument("--data-root", required=True, help="数据根目录，例如 ./data")
-    p.add_argument("--input-roots", nargs="+", required=True, help="待扫描的样本目录，可多个")
-    p.add_argument("--out-dir", default=None, help="输出目录，默认 <data_root>/processed/trainset_v1")
-    p.add_argument("--labels", default=None, help="外部标签表路径（csv/json/jsonl/parquet），可选")
+    p.add_argument("--data-root", default=CONFIG_DATA_ROOT, help=f"数据根目录，默认 {CONFIG_DATA_ROOT}")
+    p.add_argument("--input-roots", nargs="+", default=CONFIG_INPUT_ROOTS, help=f"待扫描的样本目录，可多个；默认 {CONFIG_INPUT_ROOTS}")
+    p.add_argument("--out-dir", default=CONFIG_OUTPUT_DIR, help=f"输出目录，默认 {CONFIG_OUTPUT_DIR}")
+    p.add_argument("--labels", default=CONFIG_LABELS_PATH, help=f"外部标签表路径（csv/json/jsonl/parquet），可选；默认 {CONFIG_LABELS_PATH}")
     p.add_argument("--max-depth", type=int, default=3, help="样本目录最大扫描深度")
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--train-ratio", type=float, default=0.70)
@@ -851,13 +870,17 @@ def main() -> None:
 
     data_root = Path(args.data_root).resolve()
     input_roots = [Path(p).resolve() for p in args.input_roots]
-    out_dir = Path(args.out_dir).resolve() if args.out_dir else (data_root / "processed" / "trainset_v1")
+    out_dir = Path(args.out_dir).resolve() if args.out_dir else Path(CONFIG_OUTPUT_DIR).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
 
     labels_df: Optional[pd.DataFrame] = None
     if args.labels:
-        labels_df = normalize_labels_df(read_table(Path(args.labels)))
-        log(f"[info] 已加载标签表: {args.labels}, rows={len(labels_df)}")
+        labels_path = Path(args.labels)
+        if labels_path.exists():
+            labels_df = normalize_labels_df(read_table(labels_path))
+            log(f"[info] 已加载标签表: {args.labels}, rows={len(labels_df)}")
+        else:
+            log(f"[warn] 标签表不存在，已跳过: {args.labels}")
 
     rows: List[Dict[str, Any]] = []
     sample_dirs = list(iter_sample_dirs(input_roots, max_depth=args.max_depth))
@@ -937,17 +960,17 @@ def main() -> None:
 
     export_df = export_df.sort_values(by=["split", "sample_id"], ascending=[True, True]).reset_index(drop=True)
 
-    csv_path = out_dir / "manifest_trainset_v1.csv"
-    parquet_path = out_dir / "manifest_trainset_v1.parquet"
+    csv_path = out_dir / CONFIG_MANIFEST_CSV_NAME
+    parquet_path = out_dir / CONFIG_MANIFEST_PARQUET_NAME
     export_df.to_csv(csv_path, index=False, encoding="utf-8-sig", quoting=csv.QUOTE_MINIMAL)
     try:
         export_df.to_parquet(parquet_path, index=False)
     except Exception as exc:
         log(f"[warn] 写 parquet 失败：{exc}")
 
-    write_splits(out_dir / "splits", export_df)
-    write_stats(out_dir / "stats", export_df)
-    write_readme(out_dir / "README.md", args, raw_count=raw_count, final_count=len(export_df))
+    write_splits(out_dir / CONFIG_SPLITS_DIR_NAME, export_df)
+    write_stats(out_dir / CONFIG_STATS_DIR_NAME, export_df)
+    write_readme(out_dir / CONFIG_README_NAME, args, raw_count=raw_count, final_count=len(export_df))
 
     log(f"[done] raw_scanned_samples={raw_count}")
     log(f"[done] exported_samples={len(export_df)}")

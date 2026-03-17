@@ -1,0 +1,96 @@
+{
+  "final_url": "https://www.amazon.eg/ap/signin",
+  "top_frame_final_origin": "https://www.amazon.eg",
+  "request_counts": {
+    "total": 51,
+    "by_resource_type": {
+      "document": 3,
+      "stylesheet": 4,
+      "image": 11,
+      "script": 14,
+      "fetch": 1,
+      "font": 6,
+      "ping": 12
+    },
+    "by_method": {
+      "GET": 39,
+      "POST": 12
+    }
+  },
+  "domain_counts": [
+    {
+      "domain_etld1": "media-amazon.com",
+      "count": 25,
+      "methods": {
+        "GET": 25
+      }
+    },
+    {
+      "domain_etld1": "amazon.eg",
+      "count": 16,
+      "methods": {
+        "GET": 13,
+        "POST": 3
+      }
+    },
+    {
+      "domain_etld1": "amazon.com",
+      "count": 9,
+      "methods": {
+        "POST": 9
+      }
+    },
+    {
+      "domain_etld1": "ssl-images-amazon.com",
+      "count": 1,
+      "methods": {
+        "GET": 1
+      }
+    }
+  ],
+  "third_party_domains": [
+    "media-amazon.com",
+    "amazon.com",
+    "ssl-images-amazon.com"
+  ],
+  "post_targets": [
+    {
+      "domain_etld1": "amazon.com",
+      "count": 9
+    },
+    {
+      "domain_etld1": "amazon.eg",
+      "count": 3
+    }
+  ],
+  "status_counts": {
+    "2xx": 43,
+    "3xx": 2,
+    "4xx": 0,
+    "5xx": 0,
+    "other": 0
+  },
+  "timing_ms": {
+    "ttfb_p50": 495.386,
+    "ttfb_p95": 1235.5202,
+    "response_end_p50": 1282.473,
+    "response_end_p95": 2100.8754
+  },
+  "navigation_chain": [
+    {
+      "url": "http://www.amazon.eg/cpe/yourpayments/transactions/",
+      "status": 307
+    },
+    {
+      "url": "https://www.amazon.eg/cpe/yourpayments/transactions/",
+      "status": 302
+    },
+    {
+      "url": "https://www.amazon.eg/ap/signin",
+      "status": 200
+    }
+  ],
+  "anomalies": [
+    "post_to_third_party"
+  ]
+}

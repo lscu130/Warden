@@ -29,6 +29,15 @@ except Exception as exc:
     raise SystemExit("需要 pandas：pip install pandas pyarrow") from exc
 
 
+# -----------------------------
+# 头部配置区：优先在这里改默认输入/输出位置
+# 命令行参数仍可覆盖这些默认值
+# -----------------------------
+CONFIG_DATA_ROOT = "./data"
+CONFIG_MANIFEST_PATH = "./data/processed/trainset_v1/manifest_trainset_v1.csv"
+CONFIG_OUTPUT_DIR = "./data/processed/trainset_v1/consistency_check"
+
+
 POSITIVE_RISK_HINTS = {
     "login_phish", "wallet_phish", "fake_support", "fake_giveaway", "fake_download",
     "payment_fraud", "credential_theft", "otp_phish", "seed_phrase_phish",
@@ -520,9 +529,9 @@ def build_markdown_report(report: Report, summary: Dict[str, Any], args: argpars
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Check Warden TRAINSET_V1 manifest consistency")
-    p.add_argument("--data-root", required=True, help="数据根目录，例如 ./data")
-    p.add_argument("--manifest", default=None, help="manifest 路径，默认 <data_root>/processed/trainset_v1/manifest_trainset_v1.csv")
-    p.add_argument("--out-dir", default=None, help="输出目录，默认 <data_root>/processed/trainset_v1/consistency_check")
+    p.add_argument("--data-root", default=CONFIG_DATA_ROOT, help="数据根目录，例如 ./data")
+    p.add_argument("--manifest", default=CONFIG_MANIFEST_PATH, help="manifest 路径")
+    p.add_argument("--out-dir", default=CONFIG_OUTPUT_DIR, help="输出目录")
     p.add_argument("--require-label", action="store_true", help="将 label_binary 视为必备，缺失则记为 error")
     p.add_argument("--strict", action="store_true", help="若存在 error，则返回非 0")
     p.add_argument("--example-limit", type=int, default=10, help="每类问题最多保留多少个示例")
@@ -532,8 +541,8 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     data_root = Path(args.data_root).resolve()
-    manifest = Path(args.manifest).resolve() if args.manifest else (data_root / "processed" / "trainset_v1" / "manifest_trainset_v1.csv")
-    out_dir = Path(args.out_dir).resolve() if args.out_dir else (data_root / "processed" / "trainset_v1" / "consistency_check")
+    manifest = Path(args.manifest).resolve()
+    out_dir = Path(args.out_dir).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
 
     if not manifest.exists():
