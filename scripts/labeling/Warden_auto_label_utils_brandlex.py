@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Lightweight EVT auto-label utilities.
+"""Lightweight Warden auto-label utilities.
 
 Design goals:
 - Zero heavy parsing dependencies.

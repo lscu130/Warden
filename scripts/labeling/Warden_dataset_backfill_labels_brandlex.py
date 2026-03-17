@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Backfill lightweight auto labels for existing EVT dataset samples.
+"""Backfill lightweight auto labels for existing Warden dataset samples.
 
 Usage examples:
-  python evt_dataset_backfill_labels.py --roots "C:/EVT/phish1" "C:/EVT/benign"
-  python evt_dataset_backfill_labels.py --roots ./phish1 --only-missing --workers 4
+  python Warden_dataset_backfill_labels.py --roots "C:/Warden/phish1" "C:/Warden/benign"
+  python Warden_dataset_backfill_labels.py --roots ./phish1 --only-missing --workers 4
 
 Output:
   Writes auto_labels.json into each sample directory.
@@ -18,7 +18,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Iterable, List, Tuple
 
-from evt_auto_label_utils_brandlex import derive_auto_labels_from_sample_dir, derive_rule_labels, iter_sample_dirs
+from Warden_auto_label_utils_brandlex import derive_auto_labels_from_sample_dir, derive_rule_labels, iter_sample_dirs
 
 
 
