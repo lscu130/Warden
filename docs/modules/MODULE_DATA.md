@@ -40,6 +40,12 @@ Current formal data entry scripts are:
 
 They operate on the current TRAINSET_V1 frozen sample layout and are intentionally read-only with respect to sample directories.
 
+Current default boundary:
+
+- they target TrainSet V1 primary intake
+- they do not default-admit gate / evasion auxiliary-set samples into primary manifest output
+- any future auxiliary-set interface must be opt-in, default-off, and backward compatible
+
 ---
 
 ## 4. Input Contract
@@ -57,6 +63,16 @@ The Data module currently assumes the TRAINSET_V1 directory baseline:
 - directory-level `phish/benign` is only a hint source
 - weak label priority comes from `auto_labels.json`
 - this module must not promote weak labels into gold labels
+
+### 4.3 Auxiliary-set boundary
+
+The gate / evasion auxiliary-set protocol is documented separately in `docs/data/GATA_EVASION_AUXILIARY_SET_V1.md`.
+
+For the current stage:
+
+- the Data module may document or report this boundary
+- the Data module must not silently widen TrainSet V1 primary admission
+- current default manifest flow remains primary-oriented unless a later task adds an explicit opt-in auxiliary interface
 
 ---
 

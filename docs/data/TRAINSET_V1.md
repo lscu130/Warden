@@ -163,6 +163,12 @@ TrainSet V1 的构建方式是：
 
 但不应成为 TrainSet V1 基线训练的前置要求。
 
+### 8.1 与 gate / evasion auxiliary set 的边界
+
+gate / evasion 类样本的辅助协议由 `docs/data/GATA_EVASION_AUXILIARY_SET_V1.md` 单独定义。  
+该集合不替代 TrainSet V1，不扩大 TrainSet V1 primary 的默认 admission，也不改变当前 primary manifest 的核心语义。  
+当前 `build_manifest.py` 的默认行为仍仅面向 TrainSet V1 primary。
+
 ---
 
 ## 9. 标签层策略

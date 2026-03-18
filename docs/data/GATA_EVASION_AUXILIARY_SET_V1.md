@@ -2,7 +2,13 @@
 
 版本：v1.0  
 状态：Draft  
-放置位置：`docs/data/GATE_EVASION_AUXILIARY_SET_V1.md`
+放置位置：`docs/data/GATA_EVASION_AUXILIARY_SET_V1.md`
+
+命名说明：
+
+- 当前仓库中的实际文件名保留为 `GATA_EVASION_AUXILIARY_SET_V1.md`
+- 本文讨论的语义对象仍然是 gate / evasion auxiliary set
+- 当前阶段先统一文档引用与工程口径，不在本任务中重命名文件路径
 
 ---
 
@@ -60,6 +66,18 @@ Warden 仍以多模态网页证据为核心输入，包括但不限于：
 本文件不修改 `TRAINSET_V1.md` 的主训练集定义。  
 TrainSet V1 仍然面向页面级 primary 训练样本。  
 gate / evasion 类样本单独管理，不并入 TrainSet V1 primary。
+
+### 3.4 不改变当前 data scripts 的默认行为
+
+本文件不要求 `scripts/data/build_manifest.py` 或 `scripts/data/check_dataset_consistency.py` 默认感知、默认纳入或默认扩展处理本集合。  
+当前阶段，auxiliary set 与 TrainSet V1 primary 的边界主要通过文档与任务口径冻结。  
+
+若后续需要脚本侧接口：
+
+- 必须是可选开启
+- 必须默认关闭
+- 必须保持向后兼容
+- 不得改变 TrainSet V1 primary manifest 的核心语义
 
 ---
 
@@ -273,6 +291,7 @@ Warden V1 对本集合建议采用以下使用方式：
 在当前阶段，建议统一采用以下口径：
 
 - TrainSet V1 primary：只用于标准页面级主训练；
+- 当前 data scripts 默认仍面向 TrainSet V1 primary，不默认把 auxiliary set 并入 primary manifest；
 - Gate / Evasion Auxiliary Set：单独保存、单独说明、单独评估；
 - L1：只识别并升级，不负责重交互；
 - L2：只处理升级子集，负责交互式恢复与复核；

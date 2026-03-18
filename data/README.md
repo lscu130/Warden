@@ -20,6 +20,12 @@ Formal data entry scripts:
 - `scripts/data/build_manifest.py`
 - `scripts/data/check_dataset_consistency.py`
 
+Auxiliary-set note:
+
+- gate / evasion auxiliary-set protocol is documented in `docs/data/GATA_EVASION_AUXILIARY_SET_V1.md`
+- it is separate from TrainSet V1 primary
+- current data scripts do not default-admit that auxiliary set into primary manifest output
+
 ---
 
 ## Minimal Workflow For Current Stage
@@ -53,5 +59,6 @@ python scripts/data/check_dataset_consistency.py --data-root ./data --manifest .
 - full consistency report over the full collected dataset
 - large-scale `rule_labels.json` backfill
 - split execution for training use
+- any auxiliary-set-specific script interface, unless a later task explicitly adds an opt-in default-off path
 
 `split_dataset.py` should be handled only after the next task is frozen via GPT web review.
