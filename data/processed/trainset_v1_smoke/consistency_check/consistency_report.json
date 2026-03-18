@@ -1,0 +1,38 @@
+{
+  "manifest": "E:\\Warden\\data\\processed\\trainset_v1_smoke\\manifest.jsonl",
+  "data_root": "E:\\Warden\\data",
+  "summary": {
+    "num_rows": 1,
+    "label_hint_distribution": {
+      "phish": 1
+    },
+    "page_stage_distribution": {
+      "login": 1
+    },
+    "risk_level_weak_distribution": {
+      "critical": 1
+    },
+    "split_distribution": {
+      "<empty>": 1
+    },
+    "usable_counts": {
+      "usable_for_text": 1,
+      "usable_for_vision": 1,
+      "usable_for_multimodal": 1
+    }
+  },
+  "errors": [],
+  "warnings": [],
+  "infos": [
+    {
+      "level": "info",
+      "code": "manifest_loaded",
+      "message": "已加载 manifest。",
+      "count": 1,
+      "payload": {
+        "manifest": "E:\\Warden\\data\\processed\\trainset_v1_smoke\\manifest.jsonl"
+      }
+    }
+  ],
+  "status": "pass"
+}

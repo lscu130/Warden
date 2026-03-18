@@ -3,8 +3,8 @@
 """Backfill lightweight auto labels for existing Warden dataset samples.
 
 Usage examples:
-  python Warden_dataset_backfill_labels.py --roots "C:/Warden/phish1" "C:/Warden/benign"
-  python Warden_dataset_backfill_labels.py --roots ./phish1 --only-missing --workers 4
+  python Warden_dataset_backfill_labels_brandlex.py --roots "C:/Warden/phish1" "C:/Warden/benign"
+  python Warden_dataset_backfill_labels_brandlex.py --roots ./phish1 --only-missing --workers 4
 
 Output:
   Writes auto_labels.json into each sample directory.

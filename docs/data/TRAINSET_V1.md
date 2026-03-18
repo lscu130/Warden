@@ -50,8 +50,8 @@ TrainSet V1 的来源是：
 适用脚本链路：
 
 - `capture_url_v6_optimized_v6_2_plus_labels_brandlex.py`
-- `evt_dataset_backfill_labels_brandlex.py`
-- `evt_auto_label_utils_brandlex.py`
+- `Warden_dataset_backfill_labels_brandlex.py`
+- `Warden_auto_label_utils_brandlex.py`
 
 ---
 
@@ -351,8 +351,8 @@ TrainSet V1 与具体 backbone 解耦。
 
 1. 继续按当前冻结生产档采集主数据
 2. 统一运行离线 backfill
-3. 生成 `manifest.jsonl`
-4. 运行数据一致性检查
+3. 运行 `build_manifest.py` 生成 `manifest.jsonl`
+4. 运行 `check_dataset_consistency.py` 做数据一致性检查
 5. 生成 split
 6. 再做 text / vision / multimodal 基线训练
 

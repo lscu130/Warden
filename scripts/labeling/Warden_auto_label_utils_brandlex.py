@@ -118,12 +118,23 @@ BUILTIN_BRAND_LEXICON: Dict[str, Dict[str, Sequence[str]]] = {
 
 
 THIS_DIR = Path(__file__).resolve().parent
+ASSET_BRAND_LEXICON_DIR = THIS_DIR.parent.parent / "assets" / "brand_lexicon"
 DEFAULT_BRAND_LEXICON_CANDIDATES = [
+    os.environ.get("WARDEN_BRAND_LEXICON", "").strip(),
+    str(THIS_DIR / "warden_brand_lexicon_v1.json"),
+    str(THIS_DIR / "warden_brand_lexicon.json"),
+    str(Path.cwd() / "warden_brand_lexicon_v1.json"),
+    str(Path.cwd() / "warden_brand_lexicon.json"),
+    str(ASSET_BRAND_LEXICON_DIR / "warden_brand_lexicon_v1.json"),
+    str(ASSET_BRAND_LEXICON_DIR / "warden_brand_lexicon.json"),
     os.environ.get("EVT_BRAND_LEXICON", "").strip(),
     str(THIS_DIR / "evt_brand_lexicon_v1.json"),
     str(THIS_DIR / "evt_brand_lexicon.json"),
     str(Path.cwd() / "evt_brand_lexicon_v1.json"),
     str(Path.cwd() / "evt_brand_lexicon.json"),
+    str(ASSET_BRAND_LEXICON_DIR / "evt_brand_lexicon_v1.json"),
+    str(ASSET_BRAND_LEXICON_DIR / "evt_brand_lexicon.json"),
+    str(ASSET_BRAND_LEXICON_DIR / "evt_brand_lexicon_standard_v1_web3_expanded.json"),
 ]
 
 
