@@ -1,0 +1,259 @@
+{
+  "forms": [
+    {
+      "action": "/ax/claim?policy_handle=Retail-Checkout&openid.return_to=https%3A%2F%2Fwww.amazon.eg%2Fcpe%2Fyourpayments%2Ftransactions%2F&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&arb=b5a1beac-2ac2-477d-b012-f866c3e1ef19&openid.assoc_handle=egflex&openid.mode=checkid_setup",
+      "action_abs": "https://www.amazon.eg/ax/claim?policy_handle=Retail-Checkout&openid.return_to=https%3A%2F%2Fwww.amazon.eg%2Fcpe%2Fyourpayments%2Ftransactions%2F&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&arb=b5a1beac-2ac2-477d-b012-f866c3e1ef19&openid.assoc_handle=egflex&openid.mode=checkid_setup",
+      "method": "POST",
+      "inputs": [
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "appAction",
+          "id": "",
+          "autocomplete": "",
+          "placeholder": "",
+          "aria_label": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "subPageType",
+          "id": "",
+          "autocomplete": "",
+          "placeholder": "",
+          "aria_label": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "claimCollectionWorkflow",
+          "id": "",
+          "autocomplete": "",
+          "placeholder": "",
+          "aria_label": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "metadata1",
+          "id": "",
+          "autocomplete": "",
+          "placeholder": "",
+          "aria_label": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "claimType",
+          "id": "",
+          "autocomplete": "",
+          "placeholder": "",
+          "aria_label": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "countryCode",
+          "id": "",
+          "autocomplete": "",
+          "placeholder": "",
+          "aria_label": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "isServerSideRouting",
+          "id": "",
+          "autocomplete": "",
+          "placeholder": "",
+          "aria_label": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "webAuthnGetArbForAutofill",
+          "id": "",
+          "autocomplete": "",
+          "placeholder": "",
+          "aria_label": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "webAuthnGetParametersForAutofill",
+          "id": "",
+          "autocomplete": "",
+          "placeholder": "",
+          "aria_label": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "webAuthnChallengeIdForAutofill",
+          "id": "",
+          "autocomplete": "",
+          "placeholder": "",
+          "aria_label": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "openid.ns",
+          "id": "",
+          "autocomplete": "",
+          "placeholder": "",
+          "aria_label": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "openid.mode",
+          "id": "",
+          "autocomplete": "",
+          "placeholder": "",
+          "aria_label": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "openid.return_to",
+          "id": "",
+          "autocomplete": "",
+          "placeholder": "",
+          "aria_label": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "openid.assoc_handle",
+          "id": "",
+          "autocomplete": "",
+          "placeholder": "",
+          "aria_label": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "openid.pape.max_auth_age",
+          "id": "",
+          "autocomplete": "",
+          "placeholder": "",
+          "aria_label": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "openid.identity",
+          "id": "",
+          "autocomplete": "",
+          "placeholder": "",
+          "aria_label": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "openid.claimed_id",
+          "id": "",
+          "autocomplete": "",
+          "placeholder": "",
+          "aria_label": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "signalUnknownCredentialUnifiedAuthWeblabActive",
+          "id": "",
+          "autocomplete": "",
+          "placeholder": "",
+          "aria_label": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "anti-csrftoken-a2z",
+          "id": "",
+          "autocomplete": "",
+          "placeholder": "",
+          "aria_label": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "",
+          "id": "claim-input-dropdown-select-element",
+          "autocomplete": "off",
+          "placeholder": "",
+          "aria_label": ""
+        },
+        {
+          "tag": "input",
+          "type": "email",
+          "name": "email",
+          "id": "ap_email_login",
+          "autocomplete": "webauthn",
+          "placeholder": "",
+          "aria_label": "输入手机号码或电子邮件地址"
+        },
+        {
+          "tag": "input",
+          "type": "password",
+          "name": "password",
+          "id": "auth-credential-autofill-hint",
+          "autocomplete": "",
+          "placeholder": "",
+          "aria_label": ""
+        },
+        {
+          "tag": "input",
+          "type": "submit",
+          "name": "",
+          "id": "",
+          "autocomplete": "",
+          "placeholder": "",
+          "aria_label": ""
+        }
+      ],
+      "has_password": true,
+      "has_otp": false,
+      "has_card": false
+    },
+    {
+      "action": "get",
+      "action_abs": "https://www.amazon.eg/ap/get",
+      "method": "GET",
+      "inputs": [
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "ue_back",
+          "id": "",
+          "autocomplete": "",
+          "placeholder": "",
+          "aria_label": ""
+        }
+      ],
+      "has_password": false,
+      "has_otp": false,
+      "has_card": false
+    },
+    {
+      "action": "get",
+      "action_abs": "https://www.amazon.eg/ap/get",
+      "method": "GET",
+      "inputs": [
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "ue_back",
+          "id": "",
+          "autocomplete": "",
+          "placeholder": "",
+          "aria_label": ""
+        }
+      ],
+      "has_password": false,
+      "has_otp": false,
+      "has_card": false
+    }
+  ]
+}

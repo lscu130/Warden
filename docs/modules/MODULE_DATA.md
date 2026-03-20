@@ -44,6 +44,7 @@ Current default boundary:
 
 - they target TrainSet V1 primary intake
 - they do not default-admit gate / evasion auxiliary-set samples into primary manifest output
+- they do not default-project `rule_labels.json -> threat_taxonomy_v1` into primary manifest core fields
 - any future auxiliary-set interface must be opt-in, default-off, and backward compatible
 
 ---
@@ -62,6 +63,7 @@ The Data module currently assumes the TRAINSET_V1 directory baseline:
 
 - directory-level `phish/benign` is only a hint source
 - weak label priority comes from `auto_labels.json`
+- `rule_labels.json -> threat_taxonomy_v1` is an active weak-label namespace when present, not a gold-label layer
 - this module must not promote weak labels into gold labels
 
 ### 4.3 Auxiliary-set boundary
@@ -120,7 +122,7 @@ At the current project stage:
 - smoke validation is allowed and recommended
 - full-dataset manifest build is deferred until data collection is sufficiently complete
 - full consistency check is deferred until data collection is sufficiently complete
-- large-scale `rule_labels.json` backfill is deferred until data collection is sufficiently complete
+- unified offline `rule_labels.json` backfill remains the preferred path for raising `threat_taxonomy_v1` coverage as sample collection grows
 
 This is an intentional scheduling decision, not an omission.
 

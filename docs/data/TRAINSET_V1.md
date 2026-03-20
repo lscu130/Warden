@@ -139,6 +139,7 @@ TrainSet V1 的构建方式是：
 - `html_raw.html` 可用于补充分析，但不是主读取依赖
 - `screenshot_full.png` 可用于后续增强视觉实验，但首版视觉基线不强依赖
 - `rule_labels.json` 建议通过后续统一离线 backfill 补齐
+- 若 `rule_labels.json` 含 `threat_taxonomy_v1`，应视为长期保留的活跃弱标签输出，而不是临时实验字段
 - `manual_labels.json` 若存在，可作为后续高质量子集或 eval 集增强来源
 
 ---
@@ -191,6 +192,13 @@ TrainSet V1 默认使用：
 3. 用 `--emit-rule-labels` 补齐 `rule_labels.json`。
 
 这样可以避免“旧样本没有、新样本有”的不一致。
+
+若 `rule_labels.json` 中存在 `threat_taxonomy_v1`，当前默认边界是：
+
+- 它是 Warden 多威胁主问题定义对应的活跃弱标签命名空间
+- 它可以长期保留并持续通过统一离线 backfill 提高覆盖率
+- 它不直接提升为 TrainSet V1 primary 的默认金标
+- 当前 primary manifest 核心字段不默认展开写入该命名空间
 
 ### 9.3 `manual_labels.json` 策略
 

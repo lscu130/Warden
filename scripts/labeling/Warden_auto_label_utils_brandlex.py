@@ -822,7 +822,214 @@ def derive_rule_labels(auto_labels: dict) -> dict:
     intent = auto_labels.get("intent_signals") or {}
     evasion = auto_labels.get("evasion_signals") or {}
     forms = auto_labels.get("form_features") or {}
+    network = auto_labels.get("network_features") or {}
     risk = auto_labels.get("risk_outputs") or {}
+    page_stage = str(auto_labels.get("page_stage_candidate") or "other")
+
+    def add_vote(
+        votes: Dict[str, int],
+        reasons: Dict[str, List[str]],
+        label: str,
+        weight: int,
+        reason: str,
+        cond: bool = True,
+    ) -> None:
+        if not cond or not label or weight <= 0:
+            return
+        votes[label] = votes.get(label, 0) + weight
+        reasons.setdefault(label, [])
+        if reason not in reasons[label]:
+            reasons[label].append(reason)
+
+    def choose_candidate(
+        votes: Dict[str, int],
+        reasons: Dict[str, List[str]],
+        fallback_label: str,
+        fallback_reason: str,
+        fallback_confidence: float,
+    ) -> Tuple[str, float, List[str]]:
+        if not votes:
+            return fallback_label, round(max(0.0, min(1.0, fallback_confidence)), 2), [fallback_reason]
+
+        ranked = sorted(votes.items(), key=lambda kv: (-kv[1], kv[0]))
+        best_label, best_score = ranked[0]
+        second_score = ranked[1][1] if len(ranked) > 1 else 0
+        confidence = 0.35 + min(best_score, 12) * 0.04 + min(best_score - second_score, 6) * 0.03
+        confidence = round(max(0.0, min(0.98, confidence)), 2)
+        return best_label, confidence, reasons.get(best_label, []) or [fallback_reason]
+
+    claimed_brands = set(brand.get("claimed_brands") or [])
+    mismatch = brand.get("domain_brand_consistency_candidate") == "mismatch"
+    risk_level = str(risk.get("risk_level_weak") or "low")
+    has_contact_brand = bool({"telegram", "meta"} & claimed_brands)
+
+    primary_votes: Dict[str, int] = {}
+    primary_reasons: Dict[str, List[str]] = {}
+    add_vote(
+        primary_votes,
+        primary_reasons,
+        "wallet_drain_or_web3_approval_fraud",
+        10,
+        "wallet_connect_intent_candidate",
+        bool(intent.get("wallet_connect_intent_candidate")),
+    )
+    add_vote(
+        primary_votes,
+        primary_reasons,
+        "payment_fraud",
+        9,
+        "payment_intent_candidate",
+        bool(intent.get("payment_intent_candidate")),
+    )
+    add_vote(
+        primary_votes,
+        primary_reasons,
+        "credential_theft",
+        8,
+        "credential_intent_candidate",
+        bool(intent.get("credential_intent_candidate")),
+    )
+    add_vote(
+        primary_votes,
+        primary_reasons,
+        "credential_theft",
+        4,
+        "otp_intent_candidate",
+        bool(intent.get("otp_intent_candidate")),
+    )
+    add_vote(
+        primary_votes,
+        primary_reasons,
+        "pii_kyc_harvesting",
+        8,
+        "personal_info_intent_candidate",
+        bool(intent.get("personal_info_intent_candidate")),
+    )
+    add_vote(
+        primary_votes,
+        primary_reasons,
+        "malware_or_fake_download",
+        8,
+        "download_intent_candidate",
+        bool(intent.get("download_intent_candidate")),
+    )
+    add_vote(
+        primary_votes,
+        primary_reasons,
+        "fake_support_or_contact_diversion",
+        6,
+        "social_engineering_language_with_contact_brand",
+        bool(intent.get("social_engineering_language_candidate")) and has_contact_brand,
+    )
+    add_vote(
+        primary_votes,
+        primary_reasons,
+        "credential_theft",
+        3,
+        "brand_mismatch_with_sensitive_intent",
+        bool(
+            mismatch
+            and (
+                intent.get("credential_intent_candidate")
+                or intent.get("otp_intent_candidate")
+                or intent.get("payment_intent_candidate")
+                or intent.get("wallet_connect_intent_candidate")
+            )
+        ),
+    )
+
+    if primary_votes:
+        primary_label, primary_confidence, primary_rules = choose_candidate(
+            primary_votes,
+            primary_reasons,
+            fallback_label="uncertain",
+            fallback_reason="insufficient_primary_signal",
+            fallback_confidence=0.2,
+        )
+    else:
+        low_risk_benign = (
+            risk_level == "low"
+            and not mismatch
+            and not evasion.get("anti_bot_or_cloaking_candidate")
+            and not forms.get("off_domain_form_action")
+        )
+        primary_label = "benign" if low_risk_benign else "uncertain"
+        primary_confidence = 0.3 if low_risk_benign else 0.2
+        primary_rules = ["low_risk_no_high_intent_signals"] if low_risk_benign else ["insufficient_primary_signal"]
+
+    scenario_votes: Dict[str, int] = {}
+    scenario_reasons: Dict[str, List[str]] = {}
+    add_vote(scenario_votes, scenario_reasons, "logistics_delivery", 8, "brand_logistics_delivery", bool({"dhl", "fedex", "ups"} & claimed_brands))
+    add_vote(scenario_votes, scenario_reasons, "payment_platform", 8, "brand_payment_platform", bool({"paypal", "stripe", "alipay"} & claimed_brands))
+    add_vote(scenario_votes, scenario_reasons, "crypto_web3", 9, "wallet_connect_or_crypto_brand", bool(intent.get("wallet_connect_intent_candidate") or ({"binance", "coinbase"} & claimed_brands)))
+    add_vote(scenario_votes, scenario_reasons, "enterprise_mail_cloud", 7, "brand_enterprise_mail_cloud", bool({"microsoft", "google"} & claimed_brands))
+    add_vote(scenario_votes, scenario_reasons, "ecommerce_retail", 6, "brand_ecommerce_retail", bool({"amazon"} & claimed_brands))
+    add_vote(scenario_votes, scenario_reasons, "social_media", 6, "brand_social_media", bool({"meta", "telegram"} & claimed_brands))
+    add_vote(scenario_votes, scenario_reasons, "tech_support", 6, "contact_diversion_signal", primary_label == "fake_support_or_contact_diversion")
+    add_vote(scenario_votes, scenario_reasons, "job_recruitment", 5, "pii_without_brand_and_page_stage_other", bool(intent.get("personal_info_intent_candidate") and not claimed_brands and page_stage == "other"))
+    add_vote(scenario_votes, scenario_reasons, "payment_platform", 4, "payment_page_stage", page_stage == "payment")
+
+    scenario_label, scenario_confidence, scenario_rules = choose_candidate(
+        scenario_votes,
+        scenario_reasons,
+        fallback_label="other",
+        fallback_reason="no_specific_vertical_signal",
+        fallback_confidence=0.25,
+    )
+
+    narrative_tags: List[str] = []
+    if mismatch and brand.get("brand_claim_present_candidate"):
+        narrative_tags.append("brand_impersonation")
+    if intent.get("social_engineering_language_candidate"):
+        narrative_tags.append("customer_service_narrative")
+    if intent.get("urgency_or_threat_language_candidate"):
+        narrative_tags.append("urgency_or_loss_framing")
+    if scenario_label == "crypto_web3" and intent.get("wallet_connect_intent_candidate"):
+        narrative_tags.append("giveaway_airdrop_narrative")
+
+    evidence_tags: List[str] = []
+    if forms.get("has_password") or intent.get("credential_intent_candidate"):
+        evidence_tags.append("credential_form_present")
+    if forms.get("has_card") or intent.get("payment_intent_candidate"):
+        evidence_tags.append("payment_form_present")
+    if intent.get("wallet_connect_intent_candidate"):
+        evidence_tags.append("wallet_connect_present")
+    if intent.get("download_intent_candidate"):
+        evidence_tags.append("download_prompt_present")
+    if primary_label == "fake_support_or_contact_diversion" or has_contact_brand:
+        evidence_tags.append("contact_redirect_present")
+
+    evasion_tags: List[str] = []
+    if evasion.get("captcha_present_candidate") or page_stage == "verification":
+        evasion_tags.append("gate_or_verification_present")
+    if evasion.get("needs_interaction_candidate"):
+        evasion_tags.append("requires_interaction_to_reveal")
+    if evasion.get("variant_failed_candidate"):
+        evasion_tags.append("blank_or_sparse_initial_page")
+    if evasion.get("dynamic_redirect_candidate") or network.get("too_many_redirects"):
+        evasion_tags.append("redirect_chain_present")
+
+    ecosystem_tags: List[str] = []
+    if scenario_label == "crypto_web3" and primary_label in {
+        "wallet_drain_or_web3_approval_fraud",
+        "fake_support_or_contact_diversion",
+    }:
+        ecosystem_tags.append("illicit_service_content")
+
+    threat_taxonomy_v1 = {
+        "primary_threat_label_candidate": primary_label,
+        "primary_threat_label_confidence": primary_confidence,
+        "primary_threat_label_rules": primary_rules,
+        "scenario_label_candidate": scenario_label,
+        "scenario_label_confidence": scenario_confidence,
+        "scenario_label_rules": scenario_rules,
+        "narrative_tags_candidate": sorted(set(narrative_tags)),
+        "evidence_tags_candidate": sorted(set(evidence_tags)),
+        "evasion_tags_candidate": sorted(set(evasion_tags)),
+        "ecosystem_tags_candidate": sorted(set(ecosystem_tags)),
+        "taxonomy_source": "rule_derived_from_auto_labels",
+        "taxonomy_review_status": "weak_candidate_only",
+    }
 
     escalate_l2 = any([
         brand.get("domain_brand_consistency_candidate") == "mismatch" and intent.get("credential_intent_candidate"),
@@ -859,6 +1066,7 @@ def derive_rule_labels(auto_labels: dict) -> dict:
             else "p2" if risk.get("risk_level_weak") == "medium"
             else "p3"
         ),
+        "threat_taxonomy_v1": threat_taxonomy_v1,
     }
 
 

@@ -1,0 +1,8 @@
+{
+  "sample_id": "www.amazon.eg_cpe_yourpayments_transactions_20260316T151016Z",
+  "label": "phish",
+  "crawl_time_utc": "20260316T151016Z",
+  "http_status": 200,
+  "page_title": "Amazon Sign-In",
+  "etld1_mode": "publicsuffix2"
+}

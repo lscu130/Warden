@@ -1,7 +1,7 @@
 {
   "schema_version": "evt_v1.1",
-  "generated_at_utc": "2026-03-16T15:10:24.413282+00:00",
-  "source": "crawler_v6_inline",
+  "generated_at_utc": "2026-03-20T03:04:33.798481+00:00",
+  "source": "backfill",
   "label_hint": "phish",
   "page_stage_candidate": "login",
   "language_candidate": "zh",
@@ -134,13 +134,7 @@
       "font": 6,
       "ping": 12
     },
-    "response_headers_present": {
-      "content_security_policy": true,
-      "strict_transport_security": true,
-      "x_frame_options": true,
-      "x_content_type_options": true,
-      "referrer_policy": false
-    }
+    "response_headers_present": {}
   },
   "risk_outputs": {
     "risk_score_weak": 70,

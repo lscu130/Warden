@@ -1,9 +1,3 @@
-
----
-
-## 3) `HANDOFF_TEMPLATE.md`
-
-```md
 # HANDOFF_TEMPLATE.md
 
 # Handoff Metadata
@@ -16,6 +10,15 @@
 - Date: {{DATE}}
 - Status: {{DONE / PARTIAL / BLOCKED}}
 
+Use this template for any non-trivial engineering delivery in Warden.
+
+Rules:
+
+- Write what actually happened, not what was planned.
+- If something was not run, say so explicitly.
+- If no change happened in a category, write `none`.
+- Keep claims auditable against diffs, commands, and current files.
+
 ---
 
 ## 1. Executive Summary
@@ -23,6 +26,7 @@
 {{EXECUTIVE_SUMMARY}}
 
 State in plain language:
+
 - what was changed
 - why it was changed
 - current completion state
@@ -36,19 +40,24 @@ Keep this short and concrete.
 Describe the actual changes.
 
 ### Code Changes
+
 - {{CODE_CHANGE_1}}
 - {{CODE_CHANGE_2}}
 - {{CODE_CHANGE_3}}
 
 ### Doc Changes
+
 - {{DOC_CHANGE_1}}
 - {{DOC_CHANGE_2}}
+- {{DOC_CHANGE_3}}
 
 ### Output / Artifact Changes
+
 - {{ARTIFACT_CHANGE_1}}
 - {{ARTIFACT_CHANGE_2}}
+- {{ARTIFACT_CHANGE_3}}
 
-If nothing changed in one category, say "none".
+If nothing changed in one category, say `none`.
 
 ---
 
@@ -64,6 +73,7 @@ Optional notes per file:
 
 - {{FILE_NOTE_1}}
 - {{FILE_NOTE_2}}
+- {{FILE_NOTE_3}}
 
 ---
 
@@ -72,17 +82,23 @@ Optional notes per file:
 Describe what behavior is now different.
 
 ### Expected New Behavior
+
 - {{NEW_BEHAVIOR_1}}
 - {{NEW_BEHAVIOR_2}}
+- {{NEW_BEHAVIOR_3}}
 
 ### Preserved Behavior
+
 - {{PRESERVED_BEHAVIOR_1}}
 - {{PRESERVED_BEHAVIOR_2}}
+- {{PRESERVED_BEHAVIOR_3}}
 
 ### User-facing / CLI Impact
+
 - {{CLI_IMPACT}}
 
 ### Output Format Impact
+
 - {{OUTPUT_IMPACT}}
 
 Do not hand-wave here.
@@ -101,6 +117,7 @@ Affected schema fields / interfaces:
 
 - {{FIELD_OR_INTERFACE_1}}
 - {{FIELD_OR_INTERFACE_2}}
+- {{FIELD_OR_INTERFACE_3}}
 
 Compatibility notes:
 
@@ -120,3 +137,58 @@ List what was actually checked.
 {{COMMAND_1}}
 {{COMMAND_2}}
 {{COMMAND_3}}
+```
+
+### Result
+
+- {{RESULT_1}}
+- {{RESULT_2}}
+- {{RESULT_3}}
+
+### Not Run
+
+- {{NOT_RUN_1}}
+- {{NOT_RUN_2}}
+- {{NOT_RUN_3}}
+
+Reason:
+
+{{NOT_RUN_REASON}}
+
+---
+
+## 7. Risks / Caveats
+
+- {{RISK_1}}
+- {{RISK_2}}
+- {{RISK_3}}
+
+If there are no meaningful risks, say `none`.
+
+---
+
+## 8. Docs Impact
+
+- Docs updated: {{YES / NO / NEEDED}}
+
+Docs touched:
+
+- {{DOC_TOUCHED_1}}
+- {{DOC_TOUCHED_2}}
+
+Doc debt still remaining:
+
+- {{DOC_DEBT_1}}
+- {{DOC_DEBT_2}}
+
+If none, say `none`.
+
+---
+
+## 9. Recommended Next Step
+
+- {{NEXT_STEP_1}}
+- {{NEXT_STEP_2}}
+- {{NEXT_STEP_3}}
+
+If the task is blocked or partial, the first next step should say exactly what is needed to continue.

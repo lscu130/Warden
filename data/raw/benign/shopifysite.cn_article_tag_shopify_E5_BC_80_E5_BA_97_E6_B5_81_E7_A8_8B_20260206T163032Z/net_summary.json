@@ -1,0 +1,67 @@
+{
+  "final_url": "https://shopifysite.cn/article/tag/shopify%E5%BC%80%E5%BA%97%E6%B5%81%E7%A8%8B",
+  "top_frame_final_origin": "https://shopifysite.cn",
+  "request_counts": {
+    "total": 24,
+    "by_resource_type": {
+      "document": 1,
+      "stylesheet": 6,
+      "script": 6,
+      "image": 6,
+      "font": 2,
+      "fetch": 1,
+      "other": 2
+    },
+    "by_method": {
+      "GET": 24
+    }
+  },
+  "domain_counts": [
+    {
+      "domain_etld1": "shopifysite.cn",
+      "count": 21,
+      "methods": {
+        "GET": 21
+      }
+    },
+    {
+      "domain_etld1": "gstatic.com",
+      "count": 2,
+      "methods": {
+        "GET": 2
+      }
+    },
+    {
+      "domain_etld1": "fonts.googleapis.com",
+      "count": 1,
+      "methods": {
+        "GET": 1
+      }
+    }
+  ],
+  "third_party_domains": [
+    "gstatic.com",
+    "fonts.googleapis.com"
+  ],
+  "post_targets": [],
+  "status_counts": {
+    "2xx": 24,
+    "3xx": 0,
+    "4xx": 0,
+    "5xx": 0,
+    "other": 0
+  },
+  "timing_ms": {
+    "ttfb_p50": 40.394,
+    "ttfb_p95": 1175.6773999999991,
+    "response_end_p50": 134.4965,
+    "response_end_p95": 1665.7618999999988
+  },
+  "navigation_chain": [
+    {
+      "url": "https://shopifysite.cn/article/tag/shopify%E5%BC%80%E5%BA%97%E6%B5%81%E7%A8%8B",
+      "status": 200
+    }
+  ],
+  "anomalies": []
+}

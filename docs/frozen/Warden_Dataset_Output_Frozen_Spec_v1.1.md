@@ -978,7 +978,21 @@ variants/<variant_name>/
     "brand_mismatch_with_sensitive_intent": true,
     "off_domain_sensitive_form": true
   },
-  "review_priority": "p0 | p1 | p2 | p3"
+  "review_priority": "p0 | p1 | p2 | p3",
+  "threat_taxonomy_v1": {
+    "primary_threat_label_candidate": "credential_theft | payment_fraud | wallet_drain_or_web3_approval_fraud | pii_kyc_harvesting | fake_support_or_contact_diversion | malware_or_fake_download | benign | uncertain",
+    "primary_threat_label_confidence": 0.0,
+    "primary_threat_label_rules": ["..."],
+    "scenario_label_candidate": "finance_banking | ecommerce_retail | payment_platform | logistics_delivery | enterprise_mail_cloud | social_media | government_public_service | crypto_web3 | gaming | telecom_utility | tech_support | job_recruitment | other",
+    "scenario_label_confidence": 0.0,
+    "scenario_label_rules": ["..."],
+    "narrative_tags_candidate": ["brand_impersonation"],
+    "evidence_tags_candidate": ["credential_form_present"],
+    "evasion_tags_candidate": ["requires_interaction_to_reveal"],
+    "ecosystem_tags_candidate": ["illicit_service_content"],
+    "taxonomy_source": "rule_derived_from_auto_labels",
+    "taxonomy_review_status": "weak_candidate_only"
+  }
 }
 ```
 
@@ -992,6 +1006,25 @@ variants/<variant_name>/
   - `p1`：`high`
   - `p2`：`medium`
   - `p3`：其余
+- `threat_taxonomy_v1`：长期保留在 `rule_labels.json` 下的活跃弱标签命名空间，不是临时实验字段
+- `primary_threat_label_candidate`：一级主威胁候选标签，不等同于人工金标
+- `primary_threat_label_confidence`：规则派生置信度，属于启发式分数，不是校准概率
+- `primary_threat_label_rules`：触发该候选标签的规则来源列表
+- `scenario_label_candidate`：行业 / 场景外壳候选标签
+- `scenario_label_confidence`：场景候选的规则派生置信度
+- `scenario_label_rules`：触发该场景候选的规则来源列表
+- `narrative_tags_candidate`：社工叙事候选标签列表
+- `evidence_tags_candidate`：显式证据候选标签列表
+- `evasion_tags_candidate`：对抗 / 规避候选标签列表
+- `ecosystem_tags_candidate`：生态 / 内容属性候选标签列表
+- `taxonomy_source`：固定标记为规则派生来源
+- `taxonomy_review_status`：固定弱标签安全语义，当前默认值为 `weak_candidate_only`
+
+### 使用边界
+
+- `threat_taxonomy_v1` 应继续通过统一离线 backfill 提高覆盖率
+- 它承载 Warden 多威胁主问题定义，但不直接提升为 TrainSet V1 primary 默认金标
+- 当前 primary manifest 核心字段不默认展开写入该命名空间
 
 ---
 

@@ -1,0 +1,109 @@
+{
+  "schema_version": "evt_v1.1",
+  "generated_at_utc": "2026-03-20T12:48:59.078500+00:00",
+  "source": "backfill",
+  "label_hint": "phish",
+  "page_stage_candidate": "payment",
+  "language_candidate": "zh",
+  "url_features": {
+    "input_url": "https://shopifysite.cn/article/tag/shopify%E5%BC%80%E5%BA%97%E6%B5%81%E7%A8%8B",
+    "final_url": "https://shopifysite.cn/article/tag/shopify%E5%BC%80%E5%BA%97%E6%B5%81%E7%A8%8B",
+    "host": "shopifysite.cn",
+    "etld1": "shopifysite.cn",
+    "subdomain_depth": 1,
+    "is_ip_host": false,
+    "has_punycode": false,
+    "url_length": 78,
+    "path_length": 56,
+    "digit_count": 13,
+    "special_char_count": 12,
+    "suspicious_url_keywords": [],
+    "path": "/article/tag/shopify%E5%BC%80%E5%BA%97%E6%B5%81%E7%A8%8B",
+    "netloc": "shopifysite.cn",
+    "path_loginish": false
+  },
+  "form_features": {
+    "form_count": 0,
+    "input_total": 0,
+    "input_types": {},
+    "input_attr_hints": {},
+    "has_password": false,
+    "has_otp": false,
+    "has_card": false,
+    "form_methods": {},
+    "action_domains": [],
+    "off_domain_form_action": false
+  },
+  "html_features": {
+    "external_script_count": 6,
+    "external_script_domain_count": 0,
+    "external_script_domains": [],
+    "known_js_libraries": [],
+    "known_js_library_hits": {},
+    "library_version_candidates": [
+      "5.0.7",
+      "5.0.7",
+      "5.0.7"
+    ],
+    "inline_obfuscation_like_count": 0,
+    "captcha_evidence": false,
+    "download_evidence": true
+  },
+  "brand_signals": {
+    "brand_claim_present_candidate": false,
+    "claimed_brands": [],
+    "brand_claim_source": "none",
+    "text_brand_candidates": [],
+    "url_brand_candidates": [],
+    "domain_brand_consistency_candidate": "no_brand_claim",
+    "brand_token_in_url": []
+  },
+  "intent_signals": {
+    "credential_intent_candidate": true,
+    "otp_intent_candidate": false,
+    "payment_intent_candidate": true,
+    "wallet_connect_intent_candidate": false,
+    "personal_info_intent_candidate": false,
+    "urgency_or_threat_language_candidate": false,
+    "social_engineering_language_candidate": false,
+    "download_intent_candidate": true
+  },
+  "evasion_signals": {
+    "captcha_present_candidate": false,
+    "dynamic_redirect_candidate": false,
+    "cloak_suspected_candidate": false,
+    "anti_bot_or_cloaking_candidate": false,
+    "variant_failed_candidate": false,
+    "needs_interaction_candidate": true
+  },
+  "network_features": {
+    "third_party_domain_count": 2,
+    "third_party_domains": [
+      "gstatic.com",
+      "fonts.googleapis.com"
+    ],
+    "post_target_count": 0,
+    "post_to_third_party": false,
+    "many_third_party": false,
+    "too_many_redirects": false,
+    "request_total": 24,
+    "resource_type_counts": {
+      "document": 1,
+      "stylesheet": 6,
+      "script": 6,
+      "image": 6,
+      "font": 2,
+      "fetch": 1,
+      "other": 2
+    },
+    "response_headers_present": {}
+  },
+  "risk_outputs": {
+    "risk_score_weak": 38,
+    "risk_level_weak": "medium",
+    "risk_reasons": [
+      "credential_intent",
+      "payment_intent"
+    ]
+  }
+}

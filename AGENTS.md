@@ -35,7 +35,28 @@ Non-goals unless explicitly requested:
 - replacing stable logic with speculative redesign
 
 
-## 2. Global execution rules
+## 2. Mandatory governing files
+
+The following files are not optional references. They are active process contracts.
+Any thread working inside `E:\Warden` must treat them as mandatory.
+
+- `AGENTS.md`
+- `docs/workflow/GPT_CODEX_WORKFLOW.md`
+- `docs/templates/TASK_TEMPLATE.md`
+- `docs/templates/HANDOFF_TEMPLATE.md`
+
+Interpretation rule:
+
+- `AGENTS.md` defines project-wide engineering and delivery rules.
+- `GPT_CODEX_WORKFLOW.md` defines the required collaboration sequence and role boundaries.
+- `TASK_TEMPLATE.md` defines the minimum structure of an execution-ready task.
+- `HANDOFF_TEMPLATE.md` defines the minimum structure of a non-trivial delivery handoff.
+
+Do not treat these files as examples.
+Treat them as rules.
+
+
+## 3. Global execution rules
 
 You are working inside a real engineering project, not a demo sandbox.
 
@@ -51,27 +72,146 @@ Follow these rules strictly:
 8. When behavior changes, update the corresponding docs.
 9. When unsure, preserve backward compatibility.
 10. If a task conflicts with documented constraints, state the conflict explicitly rather than guessing.
+11. Do not skip required workflow artifacts just because the task seems small.
+12. Do not claim compliance with workflow, task, or handoff requirements if the artifact was not actually read or produced.
 
 
-## 3. Source of truth priority
+## 4. Source of truth priority
 
 When multiple sources exist, use this priority order:
 
 1. Explicit user request in the current task
-2. AGENTS.md
-3. PROJECT.md
-4. module specification docs
-5. task document
-6. existing code behavior
-7. comments / TODOs in code
+2. `AGENTS.md`
+3. `docs/workflow/GPT_CODEX_WORKFLOW.md`
+4. Approved active task document based on `docs/templates/TASK_TEMPLATE.md`
+5. `PROJECT.md`
+6. module specification docs
+7. relevant prior handoff documents
+8. existing code behavior
+9. comments / TODOs in code
+
+Important clarifications:
+
+- A handoff is context, not authority to override contracts.
+- A task doc cannot silently override `AGENTS.md` or workflow rules.
+- If `PROJECT.md` is referenced but missing, state that explicitly.
+- If no active task doc exists for a non-trivial task, do not pretend one exists.
 
 If two sources conflict, do not silently choose one.
 State the conflict and continue with the safest compatible interpretation.
 
 
-## 4. Warden-specific engineering constraints
+## 5. Workflow compliance is mandatory
 
-### 4.1 Schema discipline
+All non-trivial work in Warden must follow the workflow in `docs/workflow/GPT_CODEX_WORKFLOW.md`.
+The required order is:
+
+1. requirement clarification
+2. task definition
+3. execution
+4. review / acceptance
+
+Do not reorder these stages silently.
+
+### 5.1 What counts as non-trivial
+
+Treat a task as non-trivial if any of the following is true:
+
+- touches more than one file
+- changes behavior, outputs, schema, labels, CLI, routing, or docs
+- affects multiple modules
+- requires validation beyond syntax sanity
+- depends on prior handoff context
+- has unclear scope or meaningful compatibility risk
+
+### 5.2 What must happen before non-trivial execution
+
+Before non-trivial implementation, there must be an active task definition that covers the required `TASK_TEMPLATE.md` fields.
+
+Acceptable forms:
+
+- an existing repo task doc under `docs/tasks/`
+- a user-provided task doc that is explicitly adopted
+- a task definition produced in the current thread that clearly covers the template requirements
+
+Not acceptable:
+
+- vague paragraph instructions with missing scope boundaries
+- "just fix it" with no stated constraints when schema / interfaces may be affected
+- treating prior handoff as a substitute for a task doc
+
+### 5.3 When to stop and escalate instead of coding
+
+Stop and ask for clarification, or explicitly mark missing inputs, when:
+
+- the task is non-trivial and no task boundary can be derived safely
+- schema / labels / CLI / outputs may change but permission is unclear
+- the requested change conflicts with frozen contracts
+- the task spans multiple modules but no scope boundary exists
+
+
+## 6. Task document rules
+
+`docs/templates/TASK_TEMPLATE.md` is mandatory for non-trivial work.
+
+Every active non-trivial task must define, at minimum:
+
+- background
+- goal
+- scope in
+- scope out
+- inputs
+- required outputs
+- hard constraints
+- interface / schema constraints
+- acceptance criteria
+- validation checklist
+
+Rules:
+
+- Do not execute broad changes without explicit `scope_in` and `scope_out`.
+- Do not accept fuzzy phrases such as "optimize if needed", "refactor when appropriate", or "adjust structure if necessary".
+- Replace vague language with hard constraints.
+- If a task doc is partial, state exactly what is missing before proceeding.
+- If the task changes during execution, update the task boundary explicitly instead of drifting silently.
+
+Recommended repo location for active task docs:
+
+- `docs/tasks/<date>_<short_name>.md`
+
+
+## 7. Handoff rules
+
+`docs/templates/HANDOFF_TEMPLATE.md` is mandatory for any non-trivial change.
+
+For non-trivial work, the final delivery must include handoff content covering the template fields.
+When practical, create or update a repo handoff document under:
+
+- `docs/handoff/<date>_<short_name>.md`
+
+Minimum required handoff coverage:
+
+- metadata
+- executive summary
+- what changed
+- files touched
+- behavior impact
+- schema / interface impact
+- validation performed
+- open risks / caveats
+- recommended next step
+
+Rules:
+
+- Do not hand-wave behavior impact.
+- Do not omit compatibility notes when interfaces, schema, CLI, or outputs are touched.
+- Do not claim validation that was not run.
+- If docs were not updated, say whether they were unnecessary or still needed.
+
+
+## 8. Warden-specific engineering constraints
+
+### 8.1 Schema discipline
 
 Schema stability is critical.
 
@@ -90,7 +230,7 @@ Whenever a task touches schema-related logic, explicitly report:
 - whether output compatibility was preserved
 - whether downstream scripts may be affected
 
-### 4.2 Label discipline
+### 8.2 Label discipline
 
 Warden labels are part of the research and engineering contract.
 
@@ -101,8 +241,9 @@ Rules:
 - Preserve compatibility with existing labeling scripts where possible.
 - If auto-label logic is heuristic, make that explicit.
 - Separate "observed signal" from "final judgment" where relevant.
+- Do not treat weak labels as manual gold labels.
 
-### 4.3 Brand-related logic
+### 8.3 Brand-related logic
 
 Brand matching is supportive evidence, not the entire system.
 
@@ -113,7 +254,7 @@ Rules:
 - Alias matching should be transparent and auditable.
 - If brand inference is heuristic, expose confidence or rule path when practical.
 
-### 4.4 L0 / L1 / L2 discipline
+### 8.4 L0 / L1 / L2 discipline
 
 Warden is a staged system.
 
@@ -127,11 +268,11 @@ Rules:
 Default expectation:
 
 - L0 favors speed and recall
-- L1 adds stronger semantic/structural evidence
+- L1 adds stronger semantic / structural evidence
 - L2 handles hard ambiguous high-risk cases
 
 
-## 5. Module boundary rules
+## 9. Module boundary rules
 
 Unless explicitly requested, keep these responsibilities separate.
 
@@ -202,14 +343,15 @@ Does not own:
 - undocumented rewriting of method logic
 
 
-## 6. Editing policy
+## 10. Editing policy
 
 Before making changes:
 
 1. identify the target files
 2. identify the contracts that must remain stable
 3. identify explicit non-goals
-4. prefer the smallest valid patch
+4. identify whether a task doc and handoff are required
+5. prefer the smallest valid patch
 
 When editing:
 
@@ -218,15 +360,18 @@ When editing:
 - avoid touching unrelated lines
 - preserve comments unless they are clearly wrong
 - add comments only when they clarify non-obvious logic
+- do not silently broaden scope beyond the task boundary
 
 After editing:
 
 - verify imports / references / CLI flags
 - verify changed paths / filenames / keys
 - run the smallest useful validation available
+- report compatibility impact explicitly
+- produce handoff content if the task is non-trivial
 
 
-## 7. Testing and validation rules
+## 11. Testing and validation rules
 
 Use the lightest validation that can still catch obvious breakage.
 
@@ -245,9 +390,10 @@ If you cannot run tests, state exactly:
 
 For data or labeling changes, prefer small-batch smoke validation first.
 For schema or CLI changes, explicitly verify backward compatibility when possible.
+For non-trivial work, validation reporting must satisfy both the task doc and the handoff template.
 
 
-## 8. Documentation update rules
+## 12. Documentation update rules
 
 Update docs whenever one of these changes:
 
@@ -258,11 +404,13 @@ Update docs whenever one of these changes:
 - module responsibilities
 - stage routing logic
 - evaluation procedure
+- workflow behavior
+- task execution expectations
 
 At minimum, mention needed doc updates in the final handoff even if you do not edit them directly.
 
 
-## 9. Forbidden behaviors
+## 13. Forbidden behaviors
 
 Do not do the following unless explicitly requested:
 
@@ -275,9 +423,14 @@ Do not do the following unless explicitly requested:
 - replacing documented behavior with "better" guessed behavior
 - fabricating experiment results
 - claiming tests passed if they were not run
+- skipping `GPT_CODEX_WORKFLOW.md`
+- skipping `TASK_TEMPLATE.md` for non-trivial work
+- skipping `HANDOFF_TEMPLATE.md` for non-trivial work
+- treating handoff as optional when the change is non-trivial
+- pretending a repository-external task doc or handoff is safely tracked if it was never copied into the repo when ongoing collaboration depends on it
 
 
-## 10. Required final response format for engineering tasks
+## 14. Required final response format for engineering tasks
 
 For non-trivial tasks, structure the result as:
 
@@ -295,8 +448,10 @@ If schema, labels, CLI, or outputs were touched, explicitly include:
 - Backward compatible: yes / no / partially
 - Docs updated: yes / no / needed
 
+If the task is non-trivial, the final response must also map cleanly onto the project handoff template.
 
-## 11. Task interpretation defaults
+
+## 15. Task interpretation defaults
 
 Unless the task says otherwise, assume:
 
@@ -306,11 +461,12 @@ Unless the task says otherwise, assume:
 - module boundaries matter
 - documentation is part of the deliverable
 - partial safe completion is better than speculative overreach
+- workflow compliance matters as much as code correctness
 
 
-## 12. Handoff requirement
+## 16. Required handoff and acceptance discipline
 
-Any non-trivial change should be accompanied by a handoff summary using the project handoff template.
+Any non-trivial change must be accompanied by a handoff summary using the project handoff template.
 
 Minimum handoff content:
 
@@ -321,3 +477,22 @@ Minimum handoff content:
 - compatibility notes
 - known risks
 - next recommended task
+
+Final acceptance is not delegated to the model.
+The model may implement, summarize, and self-check.
+It may not pretend to be the final approver.
+
+
+## 17. Cross-thread continuity rules
+
+When work continues across threads or windows:
+
+- carry forward the active task boundary
+- carry forward the latest relevant handoff
+- state what inputs are missing
+- do not assume a new thread inherited unstated context
+- if active work artifacts live outside the repo and ongoing collaboration depends on them, copy them into the repo and reference the repo path
+
+If context gets long or brittle, summarize the state before switching threads.
+Do not continue high-risk work on half-remembered context.
+
