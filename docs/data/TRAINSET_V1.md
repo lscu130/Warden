@@ -1,5 +1,374 @@
 # TRAINSET_V1.md
 
+## 中文版
+
+> 面向 AI 的说明：GPT、Gemini、Codex、Grok、Claude 仅将下方英文版视为权威版本。中文仅供人类阅读、协作与快速导览。
+
+### 使用说明
+
+- 本文档已按“中文在前，英文在后”整理。
+- 若涉及精确字段名、命令、模板或历史事实，以英文版为准。
+- 对历史 task、handoff、report 文档，本次改造只调整呈现，不应改变原始结论、状态或验证记录。
+
+## English Version
+
+> AI note: GPT, Gemini, Codex, Grok, and Claude must treat the English section below as the authoritative version. The Chinese section is for human readers, collaboration, and quick orientation.
+
+# Warden TrainSet V1 Specification
+
+This document defines the admission criteria, exclusion rules, manifest rules, and split baseline for Warden TrainSet V1.
+
+It does not define model architecture, loss design, or inference thresholds. It answers a narrower set of questions:
+
+1. Which captured samples may enter the training set.
+2. Which files are the minimum dependency set.
+3. Which files are recommended enhancements rather than primary requirements.
+4. How the manifest should express sample usability for text, vision, and multimodal baselines.
+5. How later text / vision / multimodal training can share the same upstream dataset contract.
+
+## 1. Purpose
+
+TrainSet V1 exists to define a stable dataset baseline for training-oriented consumption of Warden capture outputs.
+
+Its job is to freeze:
+
+- what counts as an admissible sample;
+- what the primary dependency set is;
+- what a manifest must record;
+- how downstream training subsets are derived.
+
+## 2. Upstream Baseline
+
+TrainSet V1 is built strictly on top of the frozen capture-output contract.
+
+That means:
+
+- current script outputs are the upstream truth;
+- successful sample directory structure follows the frozen spec;
+- model changes must not silently rewrite upstream data fields;
+- training convenience must not silently change the sample layout.
+
+If the frozen capture specification changes, this TrainSet spec should be revised explicitly.
+
+## 3. Data Source Scope
+
+The allowed TrainSet V1 source pool consists of:
+
+- successful sample directories produced by the current capture pipeline;
+- label artifacts supplemented by later offline backfill;
+- optional manual labels as an enhancement layer rather than a mandatory precondition.
+
+The intended script chain is aligned with the current capture and backfill pipeline, including the capture script, the dataset backfill script, and the shared brand-lexicon labeling utilities.
+
+## 4. Sample Admission Principles
+
+### 4.1 Only Successful Sample Directories Are Considered
+
+Under the current capture rules, failed or obviously unusable samples do not become successful sample directories. Therefore, TrainSet V1 starts from successful sample directories only.
+
+### 4.2 Not Every Enhancement Artifact Is Required
+
+TrainSet V1 is a primary training set, not a full forensic archive.
+
+Therefore it does not require the following to exist:
+
+- `rule_labels.json`
+- `manual_labels.json`
+- `actions.jsonl`
+- `after_action/`
+- `variants/`
+- `diff_summary.json`
+- `network.har`
+
+### 4.3 The Sample Directory Must Remain Intact
+
+TrainSet construction should:
+
+- scan samples;
+- read their information;
+- generate a manifest;
+- generate splits.
+
+It should not rewrite the sample directory, rename upstream fields, or mutate the source capture artifacts.
+
+## 5. Required Files For TrainSet V1
+
+A sample must have at least the following files to enter TrainSet V1:
+
+- `meta.json`
+- `url.json`
+- `env.json`
+- `redirect_chain.json`
+- `screenshot_viewport.png`
+- `net_summary.json`
+- `auto_labels.json`
+
+Together these files provide minimum metadata, visual input, network summary, and weak-label coverage for a trainable sample.
+
+If any of them are missing, the sample should be excluded from the TrainSet V1 primary set.
+
+## 6. Strongly Recommended Files
+
+The following files are not absolute requirements, but they are strongly recommended:
+
+- `visible_text.txt`
+- `forms.json`
+- `html_rendered.html`
+
+Why they matter:
+
+- the text tower depends on `visible_text.txt`;
+- form-structure features depend on `forms.json`;
+- HTML fallback and additional parsing often depend on `html_rendered.html`.
+
+If they are missing, the sample may still remain in the overall manifest, but the usability fields should reflect the limitation so downstream training can filter appropriately.
+
+## 7. Optional Enhancement Files
+
+The following files may exist, but they are not primary TrainSet V1 dependencies:
+
+- `html_raw.html`
+- `screenshot_full.png`
+- `rule_labels.json`
+- `manual_labels.json`
+
+Their intended roles are:
+
+- `html_raw.html` for supplemental analysis;
+- `screenshot_full.png` for later visual experiments beyond the first baseline;
+- `rule_labels.json` as a unified offline backfill artifact;
+- `manual_labels.json` as an enhancement source for high-quality subsets or later evaluation.
+
+If `rule_labels.json` contains `threat_taxonomy_v1`, that namespace should be treated as a long-lived active weak-label output, not a disposable temporary experiment field.
+
+## 8. Files That Are Not Primary Training Dependencies
+
+The following should not be part of the TrainSet V1 primary dependency set:
+
+- `network.har`
+- `actions.jsonl`
+- `after_action/`
+- `variants/`
+- `diff_summary.json`
+
+They remain useful for:
+
+- hard-case diagnosis;
+- cloaking and evasion analysis;
+- interaction-heavy page studies;
+- L2 research;
+- case studies.
+
+### 8.1 Boundary With The Gate / Evasion Auxiliary Set
+
+The auxiliary protocol for gate / evasion samples is defined separately in `docs/data/GATA_EVASION_AUXILIARY_SET_V1.md`.
+
+That auxiliary set:
+
+- does not replace TrainSet V1;
+- does not expand primary admission by default;
+- does not change the core meaning of the primary manifest.
+
+The default manifest path remains focused on TrainSet V1 primary samples.
+
+## 9. Label-Layer Policy
+
+### 9.1 Default Label Layer
+
+TrainSet V1 uses `auto_labels.json` as the default weak-label source.
+
+### 9.2 Policy For `rule_labels.json`
+
+`rule_labels.json` is not required during online capture.
+
+The recommended path is:
+
+1. capture the main data under the frozen spec;
+2. run offline backfill over the full successful corpus;
+3. emit `rule_labels.json` in a unified way.
+
+This avoids inconsistent coverage where new samples have rule labels but older samples do not.
+
+If `rule_labels.json` contains `threat_taxonomy_v1`, the current boundary is:
+
+- it is an active weak-label namespace aligned with Warden's multi-threat problem definition;
+- it may remain long-lived and improve through unified offline backfill;
+- it does not automatically become the TrainSet V1 human gold-label layer;
+- the primary manifest does not need to inline this namespace by default.
+
+### 9.3 Policy For `manual_labels.json`
+
+`manual_labels.json` is not a default prerequisite for TrainSet V1.
+
+If present, it may support:
+
+- high-quality validation subsets;
+- smaller manually reviewed subsets;
+- later weak-supervision correction or hard-case analysis.
+
+It should not block production of the main training set.
+
+## 10. Manifest Rules
+
+TrainSet V1 should not be consumed by raw directory traversal alone. It should first be materialized into a unified manifest.
+
+The recommended format is:
+
+- `manifest.jsonl`
+
+That format is preferred because it keeps one sample per line, supports streaming reads, supports later filtering for text / vision / multimodal subsets, and scales better for larger corpora and compressed storage.
+
+## 11. Minimum Manifest Fields
+
+Each sample record should include at least:
+
+- `sample_id`
+- `sample_dir`
+- `label_hint`
+- `crawl_time_utc`
+- `http_status`
+- `input_url`
+- `final_url`
+
+File-presence fields:
+
+- `has_visible_text`
+- `has_forms`
+- `has_html_rendered`
+- `has_html_raw`
+- `has_screenshot_full`
+- `has_rule_labels`
+- `has_manual_labels`
+
+Training-usability fields:
+
+- `usable_for_text`
+- `usable_for_vision`
+- `usable_for_multimodal`
+
+Optional enhancement fields:
+
+- `page_stage_candidate`
+- `risk_level_weak`
+- `review_priority`
+- `domain_etld1`
+- `split`
+
+## 12. Usability Rules
+
+### 12.1 `usable_for_text`
+
+The default value should be `true` only when:
+
+- required files are complete;
+- `visible_text.txt` exists;
+- text reading succeeded.
+
+### 12.2 `usable_for_vision`
+
+The default value should be `true` only when:
+
+- required files are complete;
+- `screenshot_viewport.png` exists.
+
+### 12.3 `usable_for_multimodal`
+
+The default value should be `true` only when:
+
+- `usable_for_text == true`;
+- `usable_for_vision == true`;
+- `forms.json` exists.
+
+The first multimodal baseline does not need to require `screenshot_full.png`.
+
+## 13. Exclusion Conditions
+
+The following should exclude a sample from the TrainSet V1 primary manifest by default:
+
+- missing required files;
+- unreadable `meta.json` or `url.json`;
+- an obvious mismatch between `sample_id` and the directory name;
+- missing or corrupted `auto_labels.json`;
+- missing or corrupted `net_summary.json`;
+- missing viewport screenshot.
+
+The following should not force exclusion, but should be reflected in manifest flags:
+
+- missing `visible_text.txt`;
+- missing `forms.json`;
+- missing `html_rendered.html`;
+- missing `rule_labels.json`;
+- missing `manual_labels.json`.
+
+## 14. Split Principles
+
+Splits should be created only after the full manifest is generated.
+
+The split design should ensure:
+
+- clear `train / val / test` separation;
+- leakage control for same-source or near-duplicate samples;
+- no silent sample dropping before split accounting;
+- reproducible split rules.
+
+The recommended order is:
+
+1. generate a full `manifest.jsonl`;
+2. use a separate split script to derive:
+   - `train_manifest.jsonl`
+   - `val_manifest.jsonl`
+   - `test_manifest.jsonl`
+
+## 15. Relationship To Model Choice
+
+TrainSet V1 is intentionally decoupled from any specific backbone.
+
+Backbone changes such as:
+
+- TinyBERT versus DistilBERT;
+- MobileNetV3-Small versus MobileNetV4;
+- later student / teacher / distillation strategies
+
+should not change the upstream TrainSet V1 data contract.
+
+Model changes may affect:
+
+- which fields are read;
+- which subset filters are applied;
+- which modalities are enabled.
+
+They should not change the frozen TrainSet baseline itself.
+
+## 16. Recommended Current Workflow
+
+The current recommended workflow is:
+
+1. keep capturing data under the frozen output contract;
+2. run unified offline backfill;
+3. run `build_manifest.py` to generate `manifest.jsonl`;
+4. run `check_dataset_consistency.py` for consistency checking;
+5. generate splits;
+6. start text / vision / multimodal baseline training.
+
+## 17. Definition Of Done
+
+TrainSet V1 can be considered defined when:
+
+- admission rules are explicit;
+- exclusion rules are explicit;
+- required files are explicit;
+- optional enhancement files are explicit;
+- manifest fields are explicit;
+- split principles are explicit;
+- the boundary with model choice is explicit;
+- the spec does not conflict with the frozen capture contract.
+
+### Original Chinese Source
+
+The original Chinese source text is kept below for human readers and traceability.
+
+# TRAINSET_V1.md
+
 # Warden TrainSet V1 Specification
 
 版本：v1.0-draft  

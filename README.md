@@ -1,5 +1,302 @@
 # Warden
 
+## 中文版
+
+> 面向 AI 的说明：GPT、Gemini、Codex、Grok、Claude 仅将下方英文版视为权威版本。中文仅供人类阅读、协作与快速导览。
+
+### 使用说明
+
+- 本文档已按“中文在前，英文在后”整理。
+- 若涉及精确字段名、命令、模板或历史事实，以英文版为准。
+- 对历史 task、handoff、report 文档，本次改造只调整呈现，不应改变原始结论、状态或验证记录。
+
+## English Version
+
+> AI note: GPT, Gemini, Codex, Grok, and Claude must treat the English section below as the authoritative version. The Chinese section is for human readers, collaboration, and quick orientation.
+
+# Warden
+
+This README describes Warden as a web social-engineering threat judgment system rather than a narrow phishing-brand detector.
+
+## 1. What The Project Is Doing Now
+
+Warden is building a system that judges whether a webpage presents meaningful social-engineering risk, including credential theft, brand impersonation, misleading redirects, payment fraud, wallet abuse, and other high-risk induced actions.
+
+The project is therefore no longer limited to the narrow question "is this a phishing page for some brand." It asks whether a page is trying to push a user into dangerous behavior through layout, wording, interaction flow, and visual disguise.
+
+In practice, Warden cares about questions such as:
+
+- whether the page is performing social-engineering induction;
+- whether it is asking for passwords, OTP codes, payment details, wallet approvals, seed phrases, or other sensitive information;
+- whether it is pretending to be a known brand, platform, institution, or service;
+- whether the page is risky enough to require escalation to a stronger review stage;
+- whether the system can remain useful under lightweight and edge-deployable constraints.
+
+Warden is not meant to be a logo recognizer. It is meant to be a web threat-judgment system that combines screenshot, HTML, URL, form, brand, and intent evidence.
+
+## 2. Current Project Positioning
+
+### 2.1 Research Position
+
+The current research position is lightweight, multimodal, staged social-engineering threat judgment for real webpages.
+
+Its defining properties are:
+
+1. Multimodal inputs: screenshots, HTML text, URLs, forms, brand clues, and page metadata.
+2. Staged judgment: route cases through L0, L1, and L2 instead of sending every sample to the most expensive path.
+3. Lightweight-first engineering: deployment and cost constraints are treated as first-class requirements.
+4. Threat-oriented framing: the core question is social-engineering threat judgment, not merely brand matching.
+5. Explainable and engineering-stable design: labels, fields, manifests, weak-label rules, and interfaces should remain auditable and stable.
+
+### 2.2 Difference From Traditional Phishing Detection
+
+Warden explicitly moves beyond a simple `phishing` versus `benign` framing.
+
+It does not focus only on:
+
+- logo matching;
+- reference-list lookup;
+- static benchmark-style page recognition.
+
+Instead, it asks whether the page is structurally and semantically trying to induce a dangerous user action. That makes the project closer to web social-engineering analysis than to narrow brand-impersonation detection.
+
+## 3. Current System Shape: L0 / L1 / L2
+
+Warden currently uses a staged architecture.
+
+### L0: Lightweight Fast Screening
+
+L0 is not the final judge. Its job is low-cost screening:
+
+- quickly extract URL, DOM, form, text, and basic visual signals;
+- detect obvious high-risk anchors;
+- let low-risk samples pass cheaply when appropriate;
+- forward suspicious samples to a stronger layer.
+
+L0 should stay fast, small, and edge-friendly. It should favor conservative suspicion rather than pretending to be an all-purpose one-layer solution.
+
+### L1: Multimodal Risk-Judgment Layer
+
+L1 is the main judgment layer in the current design. It combines evidence such as:
+
+- visual impersonation from the screenshot;
+- brand, wording, and interaction semantics from HTML and visible text;
+- consistency or conflict between the URL and the page content;
+- whether forms request sensitive information;
+- whether the page shows login, verification, payment, wallet-connect, or recovery-seed intent.
+
+Its job is to produce a stronger risk judgment, provide finer risk tags, and prepare better candidates and evidence for L2.
+
+### L2: Stronger Review / Escalation Layer
+
+L2 is currently a reserved higher-cost layer for hard, high-risk, or ambiguous cases.
+
+It is intended to handle:
+
+- difficult open-world samples;
+- stronger multimodal review and consistency checks;
+- future adversarial, generalization, and hard-case analysis.
+
+The current goal is not to make L2 huge by default. The goal is to reserve a stable place for it so the system does not need a later redesign.
+
+## 4. Current Core Focus: Data And Labels
+
+The present core priority is not a flashy model score. It is making the data foundation stable enough that later training and evaluation do not collapse on bad assumptions.
+
+### 4.1 Data Collection Is Ongoing
+
+The project is building a structured capture pipeline around more than screenshots alone. The capture outputs include:
+
+- screenshots;
+- HTML;
+- URLs;
+- page metadata;
+- forms and interaction clues;
+- brand candidates;
+- auto-derived label artifacts.
+
+The goal is to build reproducible, auditable, trainable data assets that are ready for offline backfill rather than a pile of disconnected samples.
+
+### 4.2 The Label System Is Being Frozen As V1
+
+Warden is intentionally freezing a V1 label system to avoid endless field renaming, semantic drift, and broken downstream scripts.
+
+The current label design already goes beyond "is this phishing" and instead covers:
+
+- base classes;
+- risk labels;
+- brand labels;
+- page-intent labels;
+- credential / payment / wallet-related sensitive-intent labels;
+- auxiliary rule-derived labels;
+- manual correction and offline backfill outputs.
+
+The working principle is:
+
+- freeze field names where possible;
+- keep label semantics stable;
+- allow filling values later without casually redesigning structure;
+- preserve a stable baseline for papers and training pipelines.
+
+### 4.3 Auto-Backfill And Manual Correction Run In Parallel
+
+Warden is not using a pure fully manual labeling path, and it is not pretending rule-based auto-labeling is enough by itself. The current direction is auto backfill plus selective human correction plus gradual stabilization of label standards.
+
+The practical work already underway includes:
+
+- offline backfill of captured samples;
+- improving brand recognition through brand lexicons;
+- checking rule-label coverage and error modes;
+- validating on smaller batches before scaling up.
+
+If the labels are unstable, even a good model just becomes a high-performance nonsense generator.
+
+## 5. Current Model Route: Lightweight, Multimodal, Deployable
+
+The model route is already constrained in a fairly clear way.
+
+### 5.1 Text Tower And Vision Tower Direction
+
+The project currently leans toward:
+
+- a lightweight text tower such as DistilBERT or TinyBERT;
+- a lightweight vision tower such as MobileNetV3-Small or MobileNetV4;
+- stronger teacher models or CLIP-like models for distillation where useful;
+- fusion or gating logic that can combine URL, HTML, screenshot, form, and brand evidence.
+
+The point is not to chase the largest model. The point is to control parameter count, memory, and deployment cost while still supporting staged L0 / L1 / L2 responsibilities.
+
+### 5.2 Edge Constraints Are A Premise, Not An Afterthought
+
+Deployment realism is not treated as a later optimization step. It is a design premise from the beginning.
+
+That means current model and system choices are shaped by practical constraints such as:
+
+- limited hardware budget;
+- non-trivial inference cost;
+- no assumption that a giant live-updated reference list is always available;
+- no assumption that every decision can be outsourced to an expensive API;
+- the need to remain usable in local, edge, or resource-constrained settings.
+
+### 5.3 The Project Is Still In The Foundation Phase
+
+Warden is not yet in the full-scale formal-training phase. The current emphasis is still on:
+
+- data collection;
+- label freezing;
+- brand lexicon completion;
+- script and directory cleanup;
+- module-boundary definition;
+- training and inference documentation.
+
+That is not a weakness. It is the normal phase where the foundation is being built.
+
+## 6. Current Engineering Work
+
+Warden is also turning the project into an explicit engineering system rather than leaving it as a loose idea.
+
+### 6.1 Repository And Module Documentation Is Being Built Out
+
+The repository is gradually being filled with:
+
+- project overview docs;
+- repository-structure guidance;
+- data-module docs;
+- labeling-module docs;
+- training-module docs;
+- inference-module docs;
+- paper-support docs;
+- workflow and template docs.
+
+These documents are not there for decoration. They reduce semantic drift across people, windows, and model agents.
+
+### 6.2 Naming And Structure Have Been Unified Under Warden
+
+An important cleanup has already happened: the project naming has been unified from EVT to Warden.
+
+That affects:
+
+- repository naming;
+- document naming;
+- module naming;
+- data-file naming;
+- paper wording.
+
+The point is to stop mixed EVT / Warden naming from creating avoidable confusion.
+
+### 6.3 Data Fields And File Structure Are Being Stabilized
+
+The project is actively freezing:
+
+- which files exist under each captured sample;
+- what metadata files such as `env.json` and `meta.json` should mean;
+- where auto labels, rule labels, and manual labels belong;
+- which fields should stop changing casually.
+
+That work directly affects reproducibility, script stability, paper consistency, and the ability to add more data later without breaking the pipeline.
+
+## 7. The Main Research Line Has Shifted To Web Social-Engineering Threat Judgment
+
+This is the most important direction change so far.
+
+The project no longer limits itself to:
+
+- traditional phishing-site detection;
+- pure brand recognition;
+- reference-list lookup style recognition.
+
+It is explicitly moving toward web social-engineering threat judgment.
+
+That matters because:
+
+1. The research object becomes broader than classic fake-login pages.
+2. The threat semantics become richer, covering credentials, payments, wallets, verification, and induced actions.
+3. The method framing becomes more correct: brand evidence helps, but it is not the whole threat.
+4. The problem becomes more realistic for real-world webpages.
+5. The paper story becomes easier to extend toward open-world, adversarial, generalization, and explainability directions.
+
+## 8. What Is Still Not Finished
+
+Several important things are still unfinished:
+
+- the large-scale high-quality dataset is not yet fully accumulated;
+- the full label layer is not yet fully stabilized and verified;
+- the brand lexicon is still expanding;
+- formal training, system evaluation, and ablation work are not yet complete;
+- adversarial robustness and open-world generalization remain future priorities rather than completed deliverables.
+
+The current stance is straightforward: define the problem correctly and stabilize the data first, then chase model results.
+
+## 9. Current-Stage Summary
+
+As of 2026-03-16, the practical state of Warden is:
+
+- the project direction has been upgraded from narrow phishing detection to web social-engineering threat judgment;
+- the staged L0 / L1 / L2 system shape is already defined;
+- data work is still the current mainline focus;
+- the model route has converged toward lightweight text plus lightweight vision plus fusion or distillation support;
+- engineering docs and repository contracts are being built out;
+- the immediate goal is to stabilize the foundation rather than chase a leaderboard.
+
+In one sentence: Warden is turning web threat judgment from a loose idea into a reproducible data-label-model-engineering system.
+
+## 10. Recommended Current Use Of This README
+
+At the current stage, this README is best used as:
+
+- the repository front-page overview;
+- a stage-status explanation of the project;
+- shared background material for collaborators and model agents;
+- an upper-level summary that can feed later `PROJECT.md`, `MODULE_*.md`, and paper materials.
+
+As the dataset, training, and experiments mature, this README can later grow into a broader entry point for data structure, module relations, training and inference entry points, experimental milestones, and paper alignment.
+
+### Original Chinese Source
+
+The original Chinese source text is kept below for human readers and traceability.
+
+# Warden
+
 > 截至 2026-03-16，Warden 正在从“传统钓鱼网站检测”进一步收敛为一个**网页社会工程威胁判断系统**。项目当前重点不是做一个花里胡哨的大而全平台，而是先把**数据、标签、分层判断逻辑、轻量模型路线、工程化落地约束**这几件硬骨头啃下来。
 
 ---
@@ -340,4 +637,3 @@ Warden 不是只停留在“想法不错”，而是在把想法往工程结构�
 - 训练与推理入口；
 - 实验结果与里程碑；
 - 论文对应关系。
-

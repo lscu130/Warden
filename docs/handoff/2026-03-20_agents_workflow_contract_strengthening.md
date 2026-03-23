@@ -1,5 +1,21 @@
 # Handoff Metadata
 
+## 中文版
+
+> 面向 AI 的说明：GPT、Gemini、Codex、Grok、Claude 仅将下方英文版视为权威版本。中文仅供人类阅读、协作与快速导览。
+
+### 使用说明
+
+- 本文档已按“中文在前，英文在后”整理。
+- 若涉及精确字段名、命令、模板或历史事实，以英文版为准。
+- 对历史 task、handoff、report 文档，本次改造只调整呈现，不应改变原始结论、状态或验证记录。
+
+## English Version
+
+> AI note: GPT, Gemini, Codex, Grok, and Claude must treat the English section below as the authoritative version. The Chinese section is for human readers, collaboration, and quick orientation.
+
+# Handoff Metadata
+
 - Handoff ID: 2026-03-20-agents-workflow-contract-strengthening
 - Related Task ID: ad-hoc-user-request
 - Task Title: Strengthen AGENTS to enforce workflow, task, and handoff contracts

@@ -1,5 +1,215 @@
 # Warden 恶性样本标签结构草案（V1）
 
+## 中文版
+
+> 面向 AI 的说明：GPT、Gemini、Codex、Grok、Claude 仅将下方英文版视为权威版本。中文仅供人类阅读、协作与快速导览。
+
+### 使用说明
+
+- 本文档已按“中文在前，英文在后”整理。
+- 若涉及精确字段名、命令、模板或历史事实，以英文版为准。
+- 对历史 task、handoff、report 文档，本次改造只调整呈现，不应改变原始结论、状态或验证记录。
+
+## English Version
+
+> AI note: GPT, Gemini, Codex, Grok, and Claude must treat the English section below as the authoritative version. The Chinese section is for human readers, collaboration, and quick orientation.
+
+# Warden Malicious-Sample Label Taxonomy Draft (V1)
+
+This document proposes the Warden V1 label taxonomy for malicious or risky social-engineering webpages.
+
+## 1. Purpose
+
+The purpose of this taxonomy is to define a label structure that matches Warden's actual problem framing.
+
+The document is not trying to produce a loose mixture of industry names, narrative shells, and threat types. It is trying to answer one cleaner question:
+
+What harmful action is the page trying to induce?
+
+## 2. Design Principles
+
+### 2.1 Do Not Mix Incompatible Classification Axes
+
+The taxonomy should not place unrelated axes side by side as if they were the same kind of label. For example, "crypto", "black market", "social engineering", and "phishing" do not all live at the same semantic level.
+
+### 2.2 Primary Labels Should Follow The Induced Harmful Action
+
+The primary label should reflect the final dangerous action the user is being pushed toward, not simply the outer shell or page story.
+
+### 2.3 Industry, Narrative, And Evasion Should Be Secondary
+
+Industry shells, social-engineering narratives, and evasion behavior should be represented by secondary labels or auxiliary tags rather than replacing the primary threat label.
+
+## 3. Primary Threat Labels
+
+The current recommended V1 primary labels are:
+
+- `credential_theft`
+- `payment_fraud`
+- `wallet_drain_or_web3_approval_fraud`
+- `pii_kyc_harvesting`
+- `fake_support_or_contact_diversion`
+- `malware_or_fake_download`
+- `benign`
+- `uncertain`
+
+These labels are centered on the main harmful outcome:
+
+- stolen credentials;
+- fraudulent payment;
+- malicious wallet approval or drain;
+- personal-information or KYC harvesting;
+- diversion to fake support or contact channels;
+- malware delivery or fake software downloads;
+- genuinely benign pages;
+- unresolved pages where the evidence is not strong enough.
+
+## 4. Scenario / Vertical Labels
+
+Scenario labels describe the business shell or industry context around the page rather than the final harm type.
+
+Recommended scenario labels include:
+
+- finance or banking;
+- ecommerce or retail;
+- payment platforms;
+- logistics or delivery;
+- enterprise mail or cloud;
+- social media;
+- government or public service;
+- crypto or web3;
+- gaming;
+- telecom or utilities;
+- technical support;
+- job recruitment;
+- other.
+
+These should be treated as secondary context, not as the main threat type by default.
+
+## 5. Auxiliary Attribute Tags
+
+Auxiliary tags are used to preserve additional information that matters for analysis, training, and review without overloading the primary label.
+
+### 5.1 Narrative Tags
+
+These describe the social-engineering story layer, for example urgency, account suspension, reward claims, support pretexts, verification prompts, or similar inducement narratives.
+
+### 5.2 Evidence Tags
+
+These capture explicit page evidence such as credential forms, payment requests, wallet-connect prompts, QR-code use, brand mismatch, or other visible structural cues.
+
+### 5.3 Evasion / Dynamic-Behavior Tags
+
+These preserve signals such as delayed reveal, gate or challenge behavior, interaction requirements, cloaking suspicion, or other non-static behavior that affects judgment difficulty.
+
+### 5.4 Ecosystem / Content Tags
+
+These describe page context such as illicit-service content or black-market ecosystem affiliation, but they should not automatically overwrite the primary threat label.
+
+## 6. How To Handle Black-Market / Illicit-Service Content
+
+### 6.1 It Should Not Usually Be A Primary Threat Label
+
+The label "black market" or "illicit-service content" is not recommended as a primary threat class because it mixes ecosystem description with induced-harm type.
+
+### 6.2 Recommended Treatment
+
+The better treatment is:
+
+- keep the main threat label centered on the induced action;
+- use ecosystem-related tags to preserve the black-market or illicit-service context;
+- allow later analysis to separate ecosystem patterns from direct threat mechanisms.
+
+## 7. Why Promo / Support / Giveaway / Verification Are Not Primary Classes
+
+Narrative shells such as promotion, support, giveaway, or verification describe how the lure is presented, not what harmful outcome the page is trying to produce.
+
+Therefore they should usually remain in narrative or scenario tags rather than replacing the primary threat label.
+
+## 8. Recommended V1 Frozen Version
+
+The current recommended V1 design can be summarized as:
+
+1. Primary classes are divided by final harmful action.
+2. Scenario labels are divided by industry or outer shell.
+3. Narrative and evasion behavior are preserved as auxiliary attributes.
+4. Gate / evasion is not itself a primary malicious class.
+5. "Crypto" is not itself a primary malicious class.
+6. "Black market" is not itself a primary malicious class.
+7. "Support / promo / giveaway / verification" are not themselves primary malicious classes.
+
+## 9. Implications For Warden Modules
+
+This structure fits Warden's staged design more naturally.
+
+### For L0
+
+L0 can focus on low-cost anchors and risk signals, such as:
+
+- login, payment, wallet, download, or support anchors;
+- brand-impersonation clues;
+- urgency or coercion language;
+- QR codes or contact-diversion signals.
+
+### For L1
+
+L1 can perform stronger semantic and structural judgment:
+
+- what the page is mainly trying to make the user do;
+- which primary threat class fits best;
+- which narratives and evidence support that judgment.
+
+### For L2
+
+L2 can focus on harder cases such as:
+
+- gate or evasion pages;
+- click-through pages;
+- delayed-reveal samples;
+- blank or interaction-dependent pages;
+- multi-step malicious flows;
+- evidence-conflict cases.
+
+## 10. Conclusion
+
+Warden should not use a mixed-dimension label system where classes like "social-engineering page", "crypto", "black market", and "traditional phishing" all sit side by side.
+
+The more coherent structure is:
+
+- primary labels for harmful goals;
+- scenario labels for industry shells;
+- auxiliary tags for narratives, evidence, and evasion behavior.
+
+That design is better aligned with:
+
+- dataset labeling;
+- multimodal model training;
+- staged inference;
+- error analysis;
+- robustness evaluation;
+- paper writing.
+
+## 11. `threat_taxonomy_v1` Landing And Usage Boundary
+
+This taxonomy should not remain only as an experimental sketch.
+
+The current project direction is that it should remain a long-lived active weak-label namespace under:
+
+- `rule_labels.json -> threat_taxonomy_v1`
+
+The current boundary is:
+
+- `threat_taxonomy_v1` is the rule-derived candidate taxonomy layer for Warden's multi-threat problem definition;
+- it should continue improving through unified offline backfill instead of only covering new samples;
+- it should primarily support weak-supervision analysis, sample stratification, conflict discovery, human-review queuing, and later label governance;
+- high-value, high-conflict, or high-uncertainty subsets should still be improved through human review.
+
+### Original Chinese Source
+
+The original Chinese source text is kept below for human readers and traceability.
+
+# Warden 恶性样本标签结构草案（V1）
+
 ## 1. 文档目的
 
 本文用于冻结 Warden 项目中恶性网页样本的标签分层思路。  

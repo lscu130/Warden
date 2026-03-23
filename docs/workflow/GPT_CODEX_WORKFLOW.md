@@ -1,5 +1,485 @@
 # GPT_CODEX_WORKFLOW.md
 
+## 中文版
+
+> 面向 AI 的说明：GPT、Gemini、Codex、Grok、Claude 仅将下方英文版视为权威版本。中文仅供人类阅读、协作与快速导览。
+
+### 使用说明
+
+- 本文档已按“中文在前，英文在后”整理。
+- 若涉及精确字段名、命令、模板或历史事实，以英文版为准。
+- 对历史 task、handoff、report 文档，本次改造只调整呈现，不应改变原始结论、状态或验证记录。
+
+## English Version
+
+> AI note: GPT, Gemini, Codex, Grok, and Claude must treat the English section below as the authoritative version. The Chinese section is for human readers, collaboration, and quick orientation.
+
+# GPT_CODEX_WORKFLOW.md
+
+This workflow document defines the collaboration contract between GPT web chat, Codex, and the human project owner inside Warden.
+
+The goal is not to let models improvise freely. The goal is:
+
+1. GPT web handles higher-level design, long-context synthesis, task drafting, and secondary review.
+2. Codex handles repository reading, execution, editing, command running, validation, and delivery.
+3. The human owner freezes boundaries, decides acceptance, and makes merge or release decisions.
+
+This is the default collaboration method, not an optional suggestion.
+
+## 1. Purpose
+
+This workflow exists to make Warden collaboration strict, auditable, and low-ambiguity.
+
+It is designed to prevent common failure modes such as:
+
+- GPT claiming local execution facts it cannot verify;
+- Codex receiving vague work and expanding scope on its own;
+- frozen fields or labels changing without explicit approval;
+- long-context threads drifting into partial memory and unstable assumptions.
+
+## 2. Default Roles
+
+### 2.1 GPT Web Default Role
+
+GPT web is the default:
+
+- overall designer;
+- specification reviewer;
+- long-context summarizer;
+- task-definition drafter;
+- secondary reviewer;
+- handoff-summary organizer.
+
+GPT web is not the default:
+
+- local repository executor;
+- witness that tests were run;
+- sole source of truth for terminal output;
+- final merge or acceptance authority.
+
+### 2.2 Codex Default Role
+
+Codex is the default:
+
+- execution engineer;
+- repository reader;
+- file editor;
+- command runner;
+- diff deliverer;
+- first-pass self-checker.
+
+Codex is not the default:
+
+- final architecture approver;
+- semantic approver for label redesign;
+- approver for frozen-field renaming;
+- final release authority.
+
+### 2.3 Human Default Role
+
+The human owner is the default:
+
+- project manager;
+- requirement splitter;
+- boundary freezer;
+- final acceptor;
+- documentation merger;
+- cross-window continuity coordinator.
+
+Final judgment responsibility cannot be outsourced to the model.
+
+## 3. Absolute Rules
+
+The following rules are mandatory:
+
+1. Do not send ambiguous implementation requests directly to Codex.
+2. Do not let GPT web pretend it already ran local commands.
+3. Do not let Codex silently refactor an entire module.
+4. Do not skip `AGENTS.md`.
+5. Do not skip task-definition requirements from `TASK_TEMPLATE.md`.
+6. Do not skip handoff requirements from `HANDOFF_TEMPLATE.md`.
+7. Do not modify frozen fields, file names, or enumerations without explicit approval.
+8. Do not treat weak labels as human gold labels.
+9. Do not treat "the model thinks this is fine" as acceptance.
+10. Do not let two windows modify the same shared interface without freezing the contract first.
+11. Do not treat GPT web output as already-verified engineering fact.
+12. When a web-chat context becomes too long, slow, or hallucination-prone, summarize first and then continue in a fresh window.
+13. When a task needs GPT web again for requirement clarification, secondary review, or cross-window continuation, Codex should explicitly remind the user to return there.
+14. If active artifacts live outside the repository and future collaboration depends on them, copy them into the repo and return the repo path explicitly.
+
+## 4. Standard Workflow Overview
+
+The standard sequence is fixed:
+
+1. Requirement clarification.
+2. Task generation.
+3. Execution and delivery.
+4. Review and acceptance.
+
+The order should not be shuffled casually.
+
+## 5. Step One: Requirement Clarification
+
+Requirement clarification should happen in GPT web before Codex execution when the task is broad, risky, or context-heavy.
+
+### 5.1 When GPT Web Must Be Used First
+
+Use GPT web first when:
+
+- the task spans multiple modules;
+- schema, labels, directory layout, CLI, or outputs may be affected;
+- the context is long;
+- multiple prior handoffs matter;
+- the request is ambiguous;
+- `PROJECT.md` or module docs may need alignment;
+- the work depends on multiple prior chat windows;
+- the task must first be converted into a low-ambiguity engineering scope.
+
+### 5.2 Inputs For GPT Web
+
+The GPT web step should receive:
+
+- `AGENTS.md`;
+- `PROJECT.md`;
+- relevant module docs;
+- the latest relevant handoff;
+- the current target description;
+- repository-tree or script excerpts when needed;
+- a previous-window summary when the context comes from an older thread.
+
+If critical inputs are missing, that fact should be stated explicitly instead of being hidden.
+
+### 5.3 Required GPT Web Output
+
+GPT web should return a structured task conclusion rather than vague advice.
+
+The recommended output fields are:
+
+- `goal`
+- `scope_in`
+- `scope_out`
+- `constraints`
+- `files_to_touch`
+- `acceptance`
+- `risks`
+- `doc_updates_needed`
+
+### 5.4 What GPT Web Must Not Do At This Stage
+
+GPT web must not:
+
+- pretend code already ran;
+- pretend it already read the whole local repository;
+- output a large uncontrolled refactor as if the scope were frozen;
+- rename frozen fields;
+- fill pages with weak "could consider" fluff;
+- state unverified repository status as fact.
+
+## 6. Step Two: Generate The Task Document
+
+### 6.1 Who Produces It
+
+By default, GPT web drafts the structured task content first and the human owner then places it into the task template.
+
+### 6.2 What The Task Document Must Pin Down
+
+The task document must explicitly define:
+
+- background;
+- goal;
+- allowed scope;
+- forbidden scope;
+- input files;
+- required outputs;
+- hard constraints;
+- interface or schema constraints;
+- acceptance conditions;
+- minimum validation requirements.
+
+### 6.3 What The Task Document Must Avoid
+
+Avoid weak phrases such as:
+
+- "optimize as appropriate";
+- "refactor if necessary";
+- "adjust structure if needed";
+- "try to stay compatible";
+- "change as appropriate".
+
+Replace them with hard statements such as:
+
+- do not modify top-level JSON keys;
+- do not add third-party dependencies;
+- do not touch the training module;
+- only edit files under a specific path;
+- old CLI entry points must remain runnable.
+
+## 7. Step Three: Hand The Work To Codex
+
+### 7.1 Codex Inputs
+
+Codex should receive at least:
+
+- `AGENTS.md`;
+- `PROJECT.md`;
+- relevant module docs;
+- a completed task document based on `TASK_TEMPLATE.md`.
+
+When the task depends on prior history, also provide:
+
+- the latest handoff;
+- a relevant diff summary;
+- bugs or error reports if applicable.
+
+### 7.2 Fixed Execution Instructions For Codex
+
+The execution instruction given to Codex should follow this shape:
+
+1. Read relevant files before editing.
+2. State which files will be changed.
+3. Edit only inside `scope_in`.
+4. Do not touch `scope_out`.
+5. Prefer the smallest valid patch.
+6. Run the minimum necessary validation.
+7. Produce a handoff.
+
+### 7.3 Required Codex Output
+
+Codex must finally deliver:
+
+- Summary
+- Files Changed
+- Key Logic Changes
+- Validation Performed
+- Compatibility Impact
+- Risks / Caveats
+- Recommended Next Step
+
+If the task is non-trivial, Codex must also provide a handoff aligned with `HANDOFF_TEMPLATE.md`.
+
+### 7.4 What Codex Must Not Do
+
+Codex must not:
+
+- perform opportunistic large refactors;
+- rename fields to match personal preference;
+- silently fix extra items outside scope;
+- claim "should be fine" without validation;
+- omit compatibility impact;
+- hide documentation-update requirements.
+
+## 8. Step Four: Review And Acceptance
+
+After Codex finishes, the process should return to GPT web for review and then to the human owner for final acceptance.
+
+### 8.1 Why GPT Web Is Used Again
+
+Codex executes the work, but it does not make the final approval decision.
+
+GPT web is useful here for:
+
+- checking whether the task requirements were met;
+- checking whether forbidden scope was touched;
+- checking interface or schema risk;
+- checking whether documentation debt was missed;
+- checking whether the proposed next step is coherent;
+- deciding whether the work should continue in a fresh chat window.
+
+### 8.2 Materials To Provide For Review
+
+The review step should receive:
+
+- Codex's final output;
+- a key diff summary;
+- validation results;
+- the handoff content;
+- updated document excerpts if docs changed.
+
+### 8.3 Recommended GPT Web Review Output
+
+The suggested structured review format is:
+
+- `accept: yes / no / partial`
+- `requirement_coverage`
+- `interface_break_risk`
+- `missing_validation`
+- `missing_doc_updates`
+- `notable_risks`
+- `recommended_next_task`
+
+### 8.4 What GPT Web Must Not Do In Review
+
+GPT web must not:
+
+- approve work only because the reasoning sounds plausible;
+- treat unrun validation as passed validation;
+- replace the human owner as final approver;
+- downplay interface breakage;
+- state unverified repository status as certain fact.
+
+## 9. Who Performs Final Acceptance
+
+Only the human owner performs final acceptance.
+
+The acceptance order should be:
+
+1. Was the goal completed?
+2. Did the change cross scope boundaries?
+3. Were frozen fields or outputs touched?
+4. Was validation actually run?
+5. Was compatibility impact stated clearly?
+6. Do related docs also need updates?
+7. Is the next step clear?
+
+The model can assist, but it cannot replace final approval.
+
+## 10. Recommended Split For Four Task Types
+
+### 10.1 Architecture / Specification Tasks
+
+Prefer GPT web for:
+
+- module-boundary design;
+- schema-impact analysis;
+- L0 / L1 / L2 responsibility design;
+- interface-contract review;
+- paper-method skeleton drafting;
+- cross-window synthesis;
+- long-context engineering task definition.
+
+Codex should only implement code or doc skeletons after the spec is clear.
+
+### 10.2 Data / Labeling Tasks
+
+GPT web should handle:
+
+- frozen-field review;
+- label-consistency review;
+- brand-lexicon strategy review;
+- backfill-scope definition;
+- training-set admission design;
+- manifest-field design.
+
+Codex should handle:
+
+- backfill-script changes;
+- brand-matching implementation;
+- report export;
+- small-batch smoke tests;
+- consistency / manifest / split script execution and delivery.
+
+### 10.3 Training / Experiment Tasks
+
+GPT web should handle:
+
+- experiment-matrix design;
+- ablation design;
+- loss-design review;
+- metric interpretation;
+- training smoke-test decomposition.
+
+Codex should handle:
+
+- config implementation;
+- train and eval scripts;
+- log organization;
+- experiment-export tooling;
+- dataset-reader or dataloader implementation.
+
+### 10.4 Documentation / Paper Tasks
+
+GPT web should handle:
+
+- novelty framing;
+- method wording;
+- related-work comparison;
+- figure and table narrative structure;
+- cross-window summary and relay prompts.
+
+Codex should handle:
+
+- table-generation scripts;
+- formatting fixes inside the repo;
+- document-structure normalization;
+- referenceable repository artifacts.
+
+## 11. When To Use Only GPT Web
+
+Use only GPT web when the task is still purely about:
+
+- requirement clarification;
+- architectural comparison;
+- high-level specification drafting;
+- paper positioning;
+- long-context synthesis;
+- risk analysis without local execution.
+
+If repository execution is not needed yet, Codex does not need to be involved.
+
+## 12. When To Use Only Codex
+
+Use only Codex when the task is already narrow, local, and execution-ready, for example:
+
+- a small bug fix with clear scope;
+- a focused document edit inside frozen boundaries;
+- a narrow script patch with obvious validation;
+- a local check that does not require upstream task synthesis.
+
+This shortcut is acceptable only when the scope is genuinely low-risk and low-ambiguity.
+
+## 13. Recommended Prompt Templates
+
+### 13.1 Template For GPT Web
+
+The GPT web prompt should include the active contracts, the relevant context, the explicit goal, the boundaries, and the required structured task output.
+
+### 13.2 Template For Codex
+
+The Codex prompt should include the repo path, governing docs, task scope, forbidden scope, validation expectations, and required delivery format.
+
+### 13.3 Template For GPT Web Review
+
+The review prompt should include Codex's final delivery, the relevant diffs, the validation evidence, and a request for a structured accept / reject / partial review.
+
+## 14. Minimum Collaboration Loop
+
+Every collaboration round should close the loop at least this far:
+
+1. clarify the requirement;
+2. freeze the task boundary;
+3. execute;
+4. review and summarize the result.
+
+Skipping the loop increases drift and false confidence.
+
+## 15. Context-Length Handling Rules
+
+When the active GPT web thread becomes too long or unreliable:
+
+1. summarize the current state first;
+2. capture the active boundary, key decisions, and pending risks;
+3. move to a fresh window;
+4. continue with the summary as the handoff context.
+
+This is mandatory when long-context degradation starts to affect quality.
+
+## 16. Final Discipline
+
+The model may implement, summarize, and self-check.
+
+It may not:
+
+- pretend to be the final approver;
+- pretend unverified work is verified;
+- override project contracts silently;
+- replace explicit human acceptance.
+
+### Original Chinese Source
+
+The original Chinese source text is kept below for human readers and traceability.
+
+# GPT_CODEX_WORKFLOW.md
+
 # Warden 项目中 GPT 网页端与 Codex 的使用步骤与方法
 
 ## 1. 文档目的

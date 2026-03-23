@@ -1,5 +1,279 @@
 # Warden Gate / Evasion Auxiliary Set V1
 
+## 中文版
+
+> 面向 AI 的说明：GPT、Gemini、Codex、Grok、Claude 仅将下方英文版视为权威版本。中文仅供人类阅读、协作与快速导览。
+
+### 使用说明
+
+- 本文档已按“中文在前，英文在后”整理。
+- 若涉及精确字段名、命令、模板或历史事实，以英文版为准。
+- 对历史 task、handoff、report 文档，本次改造只调整呈现，不应改变原始结论、状态或验证记录。
+
+## English Version
+
+> AI note: GPT, Gemini, Codex, Grok, and Claude must treat the English section below as the authoritative version. The Chinese section is for human readers, collaboration, and quick orientation.
+
+# Warden Gate / Evasion Auxiliary Set V1
+
+This document defines how Warden should position and handle gate / evasion samples without mixing them into the TrainSet V1 primary training contract.
+
+## 1. Purpose
+
+This file explains:
+
+1. what counts as a gate / evasion sample;
+2. why such samples do not enter TrainSet V1 primary by default;
+3. how they should be handled across L0 / L1 / L2;
+4. how they may still be used for training-adjacent research, evaluation, and analysis;
+5. how this protocol stays consistent with the README, the current scripts, and the main training line.
+
+## 2. Applicable Background
+
+Warden's mainline problem is web social-engineering threat judgment, not a dedicated interaction-recovery or anti-bot-bypass system.
+
+Therefore, in Warden V1, gate / evasion behavior is treated as a real deployment-side auxiliary problem rather than the primary training objective itself.
+
+The target sample families include:
+
+- Cloudflare or challenge-style pages;
+- CAPTCHA or verify-human pages;
+- pages that reveal real content only after further clicking or interaction;
+- pages that use gate or verification surfaces to delay or hide real content;
+- fake verification or fake CAPTCHA pages that may themselves act as social-engineering pages.
+
+## 3. Relationship To The Mainline Design
+
+### 3.1 It Does Not Change Warden's Main Inputs
+
+Warden still uses multimodal webpage evidence such as:
+
+- screenshots;
+- HTML and visible text;
+- URLs;
+- forms and interaction clues;
+- brand evidence;
+- page metadata.
+
+### 3.2 It Does Not Change The Main L0 / L1 / L2 Structure
+
+This document adds a special handling protocol for one difficult sample family. It does not redesign the main staged architecture.
+
+### 3.3 It Does Not Redefine TrainSet V1 Primary
+
+TrainSet V1 remains focused on standard page-level primary training samples.
+
+Gate / evasion samples are managed separately and do not automatically enter TrainSet V1 primary.
+
+### 3.4 It Does Not Change Default Script Behavior
+
+This document does not require dataset scripts such as manifest-building or consistency-check scripts to absorb this auxiliary set by default.
+
+If a future script-side interface is added, it should be:
+
+- optional;
+- off by default;
+- backward compatible;
+- non-destructive to primary manifest semantics.
+
+## 4. Positioning Principle
+
+In Warden V1, gate / evasion samples belong to an Auxiliary Set rather than to TrainSet V1 primary.
+
+The reasons are:
+
+1. These samples are meaningful and should not simply be thrown away.
+2. They often do not stably represent a fully exposed page-level landing sample.
+3. If they are merged directly into the main primary set, the model may learn gate pages as if they were the final malicious page.
+4. They are better used as:
+   - L2 escalation candidates;
+   - auxiliary evaluation material;
+   - case-study / error-analysis / robustness-analysis material;
+   - future interaction-recovery inputs.
+
+## 5. Sample Scope
+
+### 5.1 Gate / Challenge Pages
+
+A sample may be treated as a gate / challenge candidate when it explicitly shows things like:
+
+- verify-you-are-human language;
+- CAPTCHA, Cloudflare, or challenge semantics;
+- a need for extra interaction before the main content appears;
+- page structure that looks like a gate page rather than a final business page.
+
+### 5.2 Evasion / Cloaking Pages
+
+A sample may be treated as an evasion / cloaking candidate when:
+
+- the current page content does not match the threat context of the input URL;
+- the main content is hidden until later clicks, waits, or interactions;
+- scripts, gates, or light interaction block direct capture of the real content;
+- the current evidence is insufficient but the page still does not look like a normal low-risk page.
+
+### 5.3 Fake Verification / Fake CAPTCHA Pages
+
+If a page outwardly presents gate / verification / CAPTCHA semantics but already performs social-engineering induction, for example by pushing the user to:
+
+- download or install something;
+- copy and paste commands;
+- grant dangerous approvals or perform risky actions;
+
+then its threat nature is no longer equivalent to an ordinary gate page. Such samples may later be upgraded into true social-engineering threat pages during review.
+
+## 6. Core Handling Principles
+
+### 6.1 Keep Them, But Do Not Merge Them Into TrainSet V1 Primary
+
+These samples should be preserved. They should not be deleted casually. But by default they should not be merged into the TrainSet V1 primary training set.
+
+### 6.2 Recognize First, Then Escalate
+
+Warden V1 uses a recognize-and-escalate strategy for this family rather than trying to solve interaction recovery directly in L1.
+
+### 6.3 Put Heavy Interactive Handling In L2, Not L1
+
+L1 should identify likely gate / evasion behavior and prepare escalation. L2 should carry the higher-cost interactive attempts and deeper review.
+
+### 6.4 L2 Should Only Process The Escalated Subset
+
+L2 is not supposed to process the full corpus with equal cost. It should only process the escalated gate / evasion subset.
+
+## 7. Staged Handling Protocol
+
+## 7.1 L0 Responsibilities
+
+L0 only performs cheap screening. It does not try to bypass gates or complete heavy interactions.
+
+L0 may:
+
+- extract URL, DOM, text, and basic visual signals;
+- detect obvious verify-human / CAPTCHA / Cloudflare / challenge keywords;
+- detect visible gate-page cues;
+- forward suspicious samples to L1.
+
+### 7.2 L1 Responsibilities
+
+L1 is the main judgment layer, but under this protocol it should not:
+
+- directly break through gates;
+- perform full click-through recovery;
+- hard-label a challenge page as if it were already the final page.
+
+Its responsibilities are to:
+
+1. combine screenshot, HTML, text, URL, form, and weak-label evidence;
+2. determine whether the sample currently looks more like:
+   - a normal page-level sample;
+   - a gate / challenge page;
+   - an unresolved evasion candidate;
+   - a fake verification or fake CAPTCHA social-engineering page;
+3. recommend escalation where needed;
+4. prepare evidence summaries for L2.
+
+### 7.3 L2 Responsibilities
+
+L2 handles the escalated gate / evasion subset.
+
+Possible L2 actions include:
+
+- light interaction or clicking;
+- continuing the page flow;
+- recording before / after state changes;
+- consistency and diff analysis across stages;
+- stronger review of ambiguous samples;
+- final routing into categories such as ordinary gate page, unresolved evasion, recovered landing page, fake verification page, or other abnormal sample.
+
+## 8. Relationship To Dataset And Training
+
+### 8.1 It Does Not Enter Primary Training By Default
+
+This auxiliary set does not automatically enter TrainSet V1 primary. Its existence does not redefine the main training set.
+
+### 8.2 It Should Be Preserved As An Auxiliary Set
+
+Its main uses include:
+
+- L2 escalation input;
+- robustness and deployment-oriented evaluation;
+- cloaking and evasion case studies;
+- error analysis;
+- human-review candidate pools.
+
+### 8.3 Adversarial Recovery Is Not The Main V1 Training Goal
+
+Warden V1 remains focused on page-level social-engineering threat recognition. Gate / evasion recovery is not the main supervised-training target.
+
+## 9. Recommended Usage
+
+### 9.1 As An Auxiliary Evaluation Set
+
+After the main model is trained, this set can be used to evaluate:
+
+- whether ordinary gate pages are wrongly judged as final malicious pages;
+- whether the system can reliably identify samples that should escalate to L2;
+- whether fake verification or fake CAPTCHA pages remain detectable;
+- whether the model behaves conservatively on complex evidence.
+
+### 9.2 As An Escalation Trigger Set
+
+Samples may be prioritized for L2 when they show signals such as:
+
+- verify-human / CAPTCHA / Cloudflare / challenge semantics;
+- hidden or unrevealed main content;
+- a high-risk input URL but insufficient current page evidence;
+- anti-bot, cloaking, or interaction-required signals.
+
+### 9.3 As A Case-Study / Error-Analysis Set
+
+This set is suitable for:
+
+- gate / evasion phenomenon categorization;
+- model error analysis;
+- before / after interaction comparison;
+- adversarial or robustness appendices.
+
+## 10. Consistency With The README
+
+This document does not change the main README claims that:
+
+1. Warden is a web social-engineering threat judgment system.
+2. The inputs remain screenshots, HTML, URLs, forms, brand evidence, and metadata.
+3. The system still uses an L0 / L1 / L2 staged design.
+4. The mainline focus is still data, labels, weak-rule backfill, training routes, and lightweight model design.
+5. Adversarial or anti-gate work exists, but it is not the center of V1.
+
+This document only adds one clarification:
+
+gate / evasion is a real deployment-side subproblem, and Warden V1 keeps it as an auxiliary sample set plus escalation protocol rather than redefining the main training set around it.
+
+## 11. Recommended Current Execution Stance
+
+At the current stage, the recommended stance is:
+
+- TrainSet V1 primary stays dedicated to standard page-level training;
+- current dataset scripts remain focused on that primary path by default;
+- the Gate / Evasion Auxiliary Set is kept separately, documented separately, and evaluated separately;
+- L1 recognizes and escalates but does not do heavy interaction;
+- L2 handles only the escalated subset;
+- README and paper framing stay centered on web social-engineering threat recognition rather than anti-evasion recovery.
+
+## 12. Definition Of Done
+
+This auxiliary protocol can be considered established when:
+
+- the repository contains a dedicated document for gate / evasion positioning;
+- the document explicitly states that the set is not part of TrainSet V1 primary;
+- the L1 and L2 responsibility boundary is explicit;
+- the main uses are stated as auxiliary evaluation, escalation, and case study;
+- the document explicitly states that the README main design and main input definition are unchanged.
+
+### Original Chinese Source
+
+The original Chinese source text is kept below for human readers and traceability.
+
+# Warden Gate / Evasion Auxiliary Set V1
+
 版本：v1.0  
 状态：Draft  
 放置位置：`docs/data/GATA_EVASION_AUXILIARY_SET_V1.md`
