@@ -56,8 +56,15 @@ from pathlib import Path
 from typing import Dict, Iterator, List, Optional, Tuple
 from urllib.parse import urlparse
 
-from playwright.sync_api import sync_playwright
-from evt_auto_label_utils_brandlex import derive_auto_labels, derive_rule_labels
+REPO_ROOT = Path(__file__).resolve().parents[2]
+LABELING_DIR = REPO_ROOT / "scripts" / "labeling"
+if str(LABELING_DIR) not in sys.path:
+    sys.path.insert(0, str(LABELING_DIR))
+
+try:
+    from Warden_auto_label_utils_brandlex import derive_auto_labels, derive_rule_labels
+except ModuleNotFoundError:
+    from evt_auto_label_utils_brandlex import derive_auto_labels, derive_rule_labels
 
 # Pillow 可选：用于像素级“纯色/低信息量”检测
 try:
@@ -701,6 +708,18 @@ def iter_normalized_urls(input_path: Path, fmt: str, url_col: str) -> Iterator[s
 
 def count_urls(input_path: Path, fmt: str, url_col: str) -> int:
     return sum(1 for _ in iter_normalized_urls(input_path, fmt, url_col))
+
+
+def parse_ingest_metadata(raw: str) -> Dict[str, object]:
+    if not raw.strip():
+        return {}
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"invalid --ingest_metadata_json: {exc}") from exc
+    if not isinstance(parsed, dict):
+        raise ValueError("--ingest_metadata_json must decode to a JSON object")
+    return parsed
 
 
 def ensure_dirs() -> None:
@@ -1898,11 +1917,22 @@ def main() -> None:
     parser.add_argument("--input_format", type=str, default=DEFAULT_INPUT_FORMAT, choices=["csv", "txt"])
     parser.add_argument("--csv_url_column", type=str, default=DEFAULT_CSV_URL_COLUMN)
     parser.add_argument("--brand_lexicon", type=str, default=BRAND_LEXICON_PATH)
+    parser.add_argument("--label", type=str, choices=["phish", "benign"], default="")
+    parser.add_argument("--output_root", type=str, default="")
+    parser.add_argument("--ingest_metadata_json", type=str, default="")
+    parser.add_argument("--dry_run", action="store_true")
     args = parser.parse_args()
 
-    ensure_dirs()
+    if not args.output_root.strip():
+        ensure_dirs()
 
-    if DRY_RUN:
+    try:
+        ingest_metadata = parse_ingest_metadata(args.ingest_metadata_json)
+    except ValueError as exc:
+        print(f"[FATAL] {exc}", file=sys.stderr)
+        sys.exit(2)
+
+    if DRY_RUN or args.dry_run:
         dry_run_urls = [
             "https://example.com/",
             "https://httpbin.org/redirect/1",
@@ -1910,7 +1940,7 @@ def main() -> None:
         ]
         urls_iter = iter(normalize_url(u) for u in dry_run_urls if u)
         total_urls = len(dry_run_urls)
-        label = "benign"
+        label = args.label or "benign"
         print("[INFO] DRY_RUN enabled; using 3 fixed URLs.")
     else:
         input_path = Path(args.input_path)
@@ -1925,11 +1955,14 @@ def main() -> None:
 
         urls_iter = iter_normalized_urls(input_path, args.input_format, args.csv_url_column)
 
-        label = ""
+        label = args.label.strip().lower()
         while label not in {"phish", "benign"}:
             label = input("Select label (phish/benign): ").strip().lower()
 
-    root = EVT_DATASET_PHISH_ROOT if label == "phish" else EVT_DATASET_BENIGN_ROOT
+    if args.output_root.strip():
+        root = Path(args.output_root)
+    else:
+        root = EVT_DATASET_PHISH_ROOT if label == "phish" else EVT_DATASET_BENIGN_ROOT
     root.mkdir(parents=True, exist_ok=True)
 
     print(f"[INFO] label={label} total_urls={total_urls} output_root={root}")
@@ -1938,6 +1971,12 @@ def main() -> None:
 
     ok_cnt = 0
     fail_cnt = 0
+
+    try:
+        from playwright.sync_api import sync_playwright
+    except Exception as exc:
+        print(f"[FATAL] playwright import failed: {exc}", file=sys.stderr)
+        sys.exit(2)
 
     with sync_playwright() as p:
         chromium = p.chromium
@@ -2038,6 +2077,8 @@ def main() -> None:
                     "page_title": (payload.get("page_signals") or {}).get("title"),
                     "etld1_mode": ETLD1_MODE,
                 }
+                if ingest_metadata:
+                    meta["ingest_metadata"] = ingest_metadata
                 (out_dir / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
 
                 urlj = {

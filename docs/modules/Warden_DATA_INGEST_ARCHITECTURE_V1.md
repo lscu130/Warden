@@ -604,3 +604,33 @@ Warden V1 freezes the following:
 3. the public malicious-source baseline is OpenPhish Community + PhishTank,
 4. malicious deduplication uses cluster -> subcluster -> train/reserve decisions rather than a fixed per-cluster cap,
 5. legacy data is backfilled and marked by default, not physically deleted.
+
+---
+
+## 11. Current Implementation Mapping (2026-03-23)
+
+The current script entrypoints are:
+
+- capture engine: `scripts/capture/capture_url_v6_optimized_v6_2_plus_labels_brandlex.py`
+- benign upper-layer entrypoint: `scripts/data/benign/run_benign_capture.py`
+- malicious public-feed ingest: `scripts/data/malicious/ingest_public_malicious_feeds.py`
+- malicious upper-layer entrypoint: `scripts/data/malicious/run_malicious_capture.py`
+- malicious cluster / subcluster construction: `scripts/data/malicious/build_malicious_clusters.py`
+- malicious train / reserve construction: `scripts/data/malicious/build_malicious_train_pool.py`
+- legacy-data backfill: `scripts/data/maintenance/backfill_existing_sample_fingerprints.py`
+- dedup review manifest: `scripts/data/maintenance/build_dedup_review_manifest.py`
+- training exclusion list: `scripts/data/maintenance/build_training_exclusion_lists.py`
+
+The current capture CLI exposes these orchestration hooks:
+
+- `--label`
+- `--output_root`
+- `--ingest_metadata_json`
+- `--dry_run`
+
+Current implementation status:
+
+- upper-layer orchestrators can invoke capture non-interactively;
+- malicious family share cap is exposed as a CLI configuration parameter in the train-pool and maintenance scripts;
+- the original capture logic was preserved instead of rewritten;
+- legacy-data handling defaults to review / exclusion outputs rather than physical deletion.

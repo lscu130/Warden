@@ -8,7 +8,7 @@
 - Task Title: Split benign/malicious ingest pipelines, preserve current capture engine, and implement malicious cluster/subcluster train-pool construction
 - Owner Role: Codex execution engineer
 - Priority: High
-- Status: TODO
+- Status: DONE
 - Related Module: Data module
 - Related Issue / ADR / Doc: `AGENTS.md`; `docs/workflow/GPT_CODEX_WORKFLOW.md`; `docs/templates/TASK_TEMPLATE.md`; `docs/templates/HANDOFF_TEMPLATE.md`; `docs/data/Warden_BENIGN_SAMPLING_STRATEGY_V1.md`; `docs/data/Warden_MALICIOUS_SOURCE_POLICY_V1.md`; `docs/modules/Warden_DATA_INGEST_ARCHITECTURE_V1.md`
 - Created At: 2026-03-23
@@ -235,7 +235,7 @@ Warden 当前已有可用的 capture 引擎 `scripts/capture/capture_url_v6_opti
 - Task Title: Split benign/malicious ingest pipelines, preserve the current capture engine, and implement malicious cluster/subcluster train-pool construction
 - Owner Role: Codex execution engineer
 - Priority: High
-- Status: TODO
+- Status: DONE
 - Related Module: Data module
 - Related Issue / ADR / Doc: `AGENTS.md`; `docs/workflow/GPT_CODEX_WORKFLOW.md`; `docs/templates/TASK_TEMPLATE.md`; `docs/templates/HANDOFF_TEMPLATE.md`; `docs/data/Warden_BENIGN_SAMPLING_STRATEGY_V1.md`; `docs/data/Warden_MALICIOUS_SOURCE_POLICY_V1.md`; `docs/modules/Warden_DATA_INGEST_ARCHITECTURE_V1.md`
 - Created At: 2026-03-23

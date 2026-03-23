@@ -574,3 +574,24 @@ Warden V1 freezes the following:
 3. **Malicious data must be split into Raw Archive / Train-Eligible Canonical Pool / Reserve Pool.**
 4. **Malicious deduplication uses a campaign -> subcluster two-stage sampling policy rather than a frozen fixed per-cluster cap.**
 5. **Legacy data is backfilled and marked by default, not physically deleted.**
+
+---
+
+## 11. Current Implementation Mapping (2026-03-23)
+
+The current script entrypoints that map to this policy are:
+
+- `scripts/data/malicious/ingest_public_malicious_feeds.py`
+- `scripts/data/malicious/run_malicious_capture.py`
+- `scripts/data/malicious/build_malicious_clusters.py`
+- `scripts/data/malicious/build_malicious_train_pool.py`
+- `scripts/data/maintenance/backfill_existing_sample_fingerprints.py`
+- `scripts/data/maintenance/build_dedup_review_manifest.py`
+- `scripts/data/maintenance/build_training_exclusion_lists.py`
+
+Current implementation status:
+
+- the default public sources are OpenPhish Community and PhishTank;
+- train / reserve decisions are built on top of cluster / subcluster records rather than a fixed per-cluster cap;
+- family share cap is exposed as a CLI configuration item instead of being frozen as a document-level magic number;
+- legacy-data handling emits fingerprints, cluster/subcluster outputs, review manifests, and exclusion lists without default physical deletion.

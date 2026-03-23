@@ -447,3 +447,18 @@ Warden V1 freezes the regular benign sampling policy as follows:
 
 The primary goal is not to build the cleanest possible benign pool.
 The primary goal is to build a benign pool that is closer to the real web and better suited for reducing false positives on legitimate long-tail websites.
+
+---
+
+## 10. Current Implementation Mapping (2026-03-23)
+
+The current script entrypoint that maps to this policy is:
+
+- `scripts/data/benign/run_benign_capture.py`
+
+Current implementation boundary:
+
+- this entrypoint passes benign upper-layer ingest metadata into capture;
+- the benign candidate list is still prepared outside the script and then passed through `--input_path`;
+- `source`, `rank_bucket`, `page_type`, `language`, and `hard_benign` are propagated as upper-layer ingest metadata;
+- capture remains a lower-layer evidence engine and does not implement benign quota logic by itself.
