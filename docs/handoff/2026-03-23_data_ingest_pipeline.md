@@ -1,4 +1,4 @@
-# Handoff Metadata
+﻿# Handoff Metadata
 
 ## 中文版
 
@@ -6,8 +6,21 @@
 
 ### 使用说明
 
-- 这是本次 data ingest pipeline 任务的交接记录。
-- 若中英文存在冲突，以英文版为准。
+- 这是本次交接文档的中文摘要版。
+- 若涉及精确命令、字段、状态、验证结果或兼容性结论，以英文版为准。
+
+### 摘要
+
+- 对应任务：WARDEN-DATA-INGEST-V1
+- 任务主题：Split benign/malicious ingest pipelines, preserve the current capture engine, and implement malicious cluster/subcluster train-pool construction
+- 当前状态：DONE
+- 所属模块：Data module
+
+### 当前交付要点
+
+- 英文版记录了本次交付的变更、影响、验证、风险和建议下一步。
+- 阅读时建议先看 Executive Summary，再看 Behavior Impact、Validation Performed 和 Risks / Caveats。
+- 中文区块只保留压缩摘要，不改写原始结论和状态。
 
 ## English Version
 
@@ -222,3 +235,5 @@ If none, say `none`.
 - Run a somewhat larger OpenPhish/PhishTank end-to-end ingest sample next and inspect whether the current heuristic family/grouping outputs remain stable as sample diversity increases.
 - Spot-check a few produced `meta.json.ingest_metadata` records and downstream pool decisions together to confirm that source attribution and reserve routing remain aligned on less clean malicious pages.
 - If the first-pass malicious clustering heuristics prove too coarse on larger data, refine the cluster/subcluster seeds while preserving the same auditable output interfaces.
+
+

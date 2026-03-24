@@ -1,4 +1,4 @@
-# HANDOFF_TEMPLATE.md
+﻿# HANDOFF_TEMPLATE.md
 
 ## 中文版
 
@@ -6,9 +6,21 @@
 
 ### 使用说明
 
-- 本文档已按“中文在前，英文在后”整理。
-- 若涉及精确字段名、命令、模板或历史事实，以英文版为准。
-- 对历史 task、handoff、report 文档，本次改造只调整呈现，不应改变原始结论、状态或验证记录。
+- 这是本次交接文档的中文摘要版。
+- 若涉及精确命令、字段、状态、验证结果或兼容性结论，以英文版为准。
+
+### 摘要
+
+- 对应任务：TASK-2026-03-18-AUX-SET-LINKAGE-INTERFACE
+- 任务主题：Align gate/evasion auxiliary-set document linkage and optional evaluation interface without changing TrainSet V1 primary
+- 当前状态：DONE
+- 所属模块：data / docs / workflow
+
+### 当前交付要点
+
+- 英文版记录了本次交付的变更、影响、验证、风险和建议下一步。
+- 阅读时建议先看 Executive Summary，再看 Behavior Impact、Validation Performed 和 Risks / Caveats。
+- 中文区块只保留压缩摘要，不改写原始结论和状态。
 
 ## English Version
 
@@ -138,3 +150,5 @@ git -C E:\Warden diff -- docs/data/GATA_EVASION_AUXILIARY_SET_V1.md docs/data/TR
 Reason:
 
 This task was completed as doc-only after review; `scripts/data/build_manifest.py` and `scripts/data/check_dataset_consistency.py` were intentionally not modified.
+
+

@@ -1,4 +1,4 @@
-# MODULE_INFER.md
+﻿# MODULE_INFER.md
 
 ## 中文版
 
@@ -6,9 +6,18 @@
 
 ### 使用说明
 
-- 本文档已按“中文在前，英文在后”整理。
-- 若涉及精确字段名、命令、模板或历史事实，以英文版为准。
-- 对历史 task、handoff、report 文档，本次改造只调整呈现，不应改变原始结论、状态或验证记录。
+- 本文档定义 Inference 模块的默认职责。
+- 涉及阶段路由、阈值和部署输出时，以英文版为准。
+
+## 1. 模块作用
+
+Inference 模块负责运行期判断流程，包括阶段路由、阈值应用、运行时输出、导出与性能相关路径。
+它的关注点是线上或准线上推理行为，而不是训练阶段的数据重标或 schema 改写。
+
+## 2. 责任边界
+
+- 拥有：runtime pipeline、stage routing、threshold application、export / benchmark / deployment path。
+- 不拥有：训练集重标、训练期目标定义和数据层结构重构。
 
 ## English Version
 
@@ -413,3 +422,4 @@ An Inference module task is Done only if:
 - compatibility impact is stated
 - risks are stated
 - documentation impact is stated
+

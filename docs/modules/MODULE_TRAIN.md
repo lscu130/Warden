@@ -1,4 +1,4 @@
-# MODULE_TRAIN.md
+﻿# MODULE_TRAIN.md
 
 ## 中文版
 
@@ -6,9 +6,18 @@
 
 ### 使用说明
 
-- 本文档已按“中文在前，英文在后”整理。
-- 若涉及精确字段名、命令、模板或历史事实，以英文版为准。
-- 对历史 task、handoff、report 文档，本次改造只调整呈现，不应改变原始结论、状态或验证记录。
+- 本文档定义 Training 模块的默认职责和非职责。
+- 涉及 loader、训练循环、loss 和评估实现时，以英文版为准。
+
+## 1. 模块作用
+
+Training 模块负责训练相关实现，包括数据加载、配置、训练循环、loss、checkpoint 和评估指标。
+它的重点是训练阶段的工程闭环，而不是原始数据 schema 的重新设计。
+
+## 2. 责任边界
+
+- 拥有：loaders、configs、training loop、loss logic、checkpointing、eval metrics。
+- 不拥有：raw data schema redesign 和与数据层无关的上游结构变更。
 
 ## English Version
 
@@ -434,3 +443,4 @@ A Training module task is Done only if:
 - compatibility impact is stated
 - risks are stated
 - documentation impact is stated
+

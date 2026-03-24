@@ -1,4 +1,4 @@
-# Handoff Metadata
+﻿# Handoff Metadata
 
 ## 中文版
 
@@ -6,8 +6,21 @@
 
 ### 使用说明
 
-- 这是本次“英文措辞统一润色”任务的交接记录。
-- 若中英文存在冲突，以英文版为准。
+- 这是本次交接文档的中文摘要版。
+- 若涉及精确命令、字段、状态、验证结果或兼容性结论，以英文版为准。
+
+### 摘要
+
+- 对应任务：2026-03-23-english-wording-consistency-polish
+- 任务主题：Polish wording consistency across expanded English long-form docs
+- 当前状态：DONE
+- 所属模块：project-documentation
+
+### 当前交付要点
+
+- 英文版记录了本次交付的变更、影响、验证、风险和建议下一步。
+- 阅读时建议先看 Executive Summary，再看 Behavior Impact、Validation Performed 和 Risks / Caveats。
+- 中文区块只保留压缩摘要，不改写原始结论和状态。
 
 ## English Version
 
@@ -191,3 +204,5 @@ If none, say `none`.
 - If you still want more polish, do a final style-guide pass that only targets sentence rhythm and punctuation consistency.
 - Keep any later polish restricted to English sections unless you explicitly want to reopen the Chinese wording too.
 - If future English expansions are added, reuse the same terminology choices from this pass to avoid reintroducing drift.
+
+

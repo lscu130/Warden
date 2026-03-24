@@ -1,4 +1,4 @@
-# Warden_EDGE_DEPLOYMENT_PROFILE_V1
+﻿# Warden_EDGE_DEPLOYMENT_PROFILE_V1
 
 ## 中文版
 
@@ -6,9 +6,19 @@
 
 ### 使用说明
 
-- 本文档已按“中文在前，英文在后”整理。
-- 若涉及精确字段名、命令、模板或历史事实，以英文版为准。
-- 对历史 task、handoff、report 文档，本次改造只调整呈现，不应改变原始结论、状态或验证记录。
+- 本文档冻结 Warden V1 的默认边缘部署画像。
+- 涉及硬件假设、运行时默认值和部署姿态时，以英文版为准。
+
+## 1. 文档作用
+
+本文档用于说明 Warden V1 在边缘侧部署时的现实约束、目标硬件范围和默认运行取舍。
+重点不是追求所有硬件的一致性能，而是明确“默认支持什么级别的部署环境”。
+
+## 2. 核心摘要
+
+- 目标对象包括普通个人设备、小微企业主机和预算有限的边缘节点。
+- 设计原则偏向可部署、可解释、可维护，而不是单纯追求最重模型。
+- 任何偏离默认画像的部署方案，都应视为额外配置而不是默认主线。
 
 ## English Version
 
@@ -251,3 +261,4 @@ The following remain open for later benchmark-driven refinement:
 ## 13. Practical One-Sentence Summary
 
 Warden V1 default deployment is a bounded-cost multimodal profile for ordinary PC-class and modest x86 edge environments: multilingual text encoding is always available, vision similarity and lightweight detection remain part of the default path, OCR stays trigger-based, and later Warden-specific fine-tuning is allowed without making fine-tuning a prerequisite for initial deployment.
+

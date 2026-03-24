@@ -1,4 +1,4 @@
-# MODULE_PAPER.md
+﻿# MODULE_PAPER.md
 
 ## 中文版
 
@@ -6,9 +6,18 @@
 
 ### 使用说明
 
-- 本文档已按“中文在前，英文在后”整理。
-- 若涉及精确字段名、命令、模板或历史事实，以英文版为准。
-- 对历史 task、handoff、report 文档，本次改造只调整呈现，不应改变原始结论、状态或验证记录。
+- 本文档定义 Paper / experiment support 模块的边界。
+- 涉及实验归档、结果汇总和复现说明时，以英文版为准。
+
+## 1. 模块作用
+
+Paper 模块负责实验支持和论文侧产物整理，包括配置归档、结果汇总、表格图表辅助和复现备注。
+它的目标是让实验结果可追踪，而不是未经说明地重写方法逻辑。
+
+## 2. 责任边界
+
+- 拥有：experiment configs archive、result aggregation、tables / figures helpers、reproducibility notes。
+- 不拥有：未文档化的方法改写和核心工程逻辑的静默替换。
 
 ## English Version
 
@@ -404,3 +413,4 @@ A Paper module task is Done only if:
 - limitations are not hidden
 - validation is stated honestly
 - doc/update impact is stated
+

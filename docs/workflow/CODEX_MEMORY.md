@@ -1,4 +1,4 @@
-# CODEX_MEMORY.md
+﻿# CODEX_MEMORY.md
 
 ## 中文版
 
@@ -6,9 +6,19 @@
 
 ### 使用说明
 
-- 本文档已按“中文在前，英文在后”整理。
-- 若涉及精确字段名、命令、模板或历史事实，以英文版为准。
-- 对历史 task、handoff、report 文档，本次改造只调整呈现，不应改变原始结论、状态或验证记录。
+- 本文档是给 Codex 用的短期项目记忆和上下文接续摘要。
+- 涉及最新状态、最近交接、默认做法时，以英文版为准。
+
+## 1. 文档作用
+
+`CODEX_MEMORY.md` 用于减少跨线程、跨窗口和长上下文切换时的信息丢失。
+它记录当前仓库阶段、最近约束、常见路径和近期已完成工作的连续性信息。
+
+## 2. 适用边界
+
+- 它是记忆补充，不是高优先级契约。
+- 若与 `AGENTS.md`、workflow、task 或 handoff 冲突，应以后者为准。
+- 它适合快速回忆近况，不适合替代精确字段或命令来源。
 
 ## English Version
 
@@ -85,3 +95,4 @@ The summary must include:
 ### Why this exists
 
 This rule exists to prevent long-context degradation from silently causing boundary mistakes, forgotten constraints, or duplicated work.
+

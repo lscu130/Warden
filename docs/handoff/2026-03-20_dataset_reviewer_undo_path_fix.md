@@ -1,4 +1,4 @@
-# Handoff Metadata
+﻿# Handoff Metadata
 
 ## 中文版
 
@@ -6,9 +6,21 @@
 
 ### 使用说明
 
-- 本文档已按“中文在前，英文在后”整理。
-- 若涉及精确字段名、命令、模板或历史事实，以英文版为准。
-- 对历史 task、handoff、report 文档，本次改造只调整呈现，不应改变原始结论、状态或验证记录。
+- 这是本次交接文档的中文摘要版。
+- 若涉及精确命令、字段、状态、验证结果或兼容性结论，以英文版为准。
+
+### 摘要
+
+- 对应任务：TASK-2026-03-20-DATASET-REVIEWER-UNDO-PATH-FIX
+- 任务主题：Fix undo path nesting in dataset reviewer external script
+- 当前状态：DONE
+- 所属模块：external dataset review utility
+
+### 当前交付要点
+
+- 英文版记录了本次交付的变更、影响、验证、风险和建议下一步。
+- 阅读时建议先看 Executive Summary，再看 Behavior Impact、Validation Performed 和 Risks / Caveats。
+- 中文区块只保留压缩摘要，不改写原始结论和状态。
 
 ## English Version
 
@@ -194,3 +206,5 @@ If none, say `none`.
 - Copy `E:\Warden\temp\dataset_reviewed_switchable_targets.py` back to `C:\Users\20516\Downloads\dataset_reviewed_switchable_targets.py`.
 - Run one manual remove/undo cycle against the real dataset tree that previously produced `phish/removed` and `removed/phish`.
 - If old nested directories already exist, clean them manually or with a separate repair script after confirming which samples they belong to.
+
+

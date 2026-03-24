@@ -1,4 +1,4 @@
-# HANDOFF_TEMPLATE.md
+﻿# HANDOFF_TEMPLATE.md
 
 ## 中文版
 
@@ -6,9 +6,23 @@
 
 ### 使用说明
 
-- 本文档已按“中文在前，英文在后”整理。
-- 若涉及精确字段名、命令、模板或历史事实，以英文版为准。
-- 对历史 task、handoff、report 文档，本次改造只调整呈现，不应改变原始结论、状态或验证记录。
+- 这是 Warden 的标准交接模板。
+- 涉及交接字段、状态、验证和兼容性表述时，以英文版为准。
+
+## 1. 模板用途
+
+该模板用于把一次非 trivial 交付压缩成可复盘、可续做、可审计的 handoff。
+重点不是写感想，而是写清楚：改了什么、影响什么、验证了什么、还缺什么。
+
+## 2. 填写重点
+
+- 只能写实际发生的事实，不能把计划当成结果。
+- 验证未跑就必须明确写未跑和原因。
+- 若接口、schema、CLI 或输出受影响，必须写兼容性结论。
+
+## 3. 中文阅读建议
+
+优先看英文版的 `Behavior Impact`、`Schema / Interface Impact`、`Validation Performed` 和 `Risks / Caveats`。
 
 ## English Version
 
@@ -208,3 +222,4 @@ If none, say `none`.
 - {{NEXT_STEP_3}}
 
 If the task is blocked or partial, the first next step should say exactly what is needed to continue.
+

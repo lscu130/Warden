@@ -1,4 +1,4 @@
-# TASK_TEMPLATE.md
+﻿# TASK_TEMPLATE.md
 
 ## 中文版
 
@@ -6,9 +6,23 @@
 
 ### 使用说明
 
-- 本文档已按“中文在前，英文在后”整理。
-- 若涉及精确字段名、命令、模板或历史事实，以英文版为准。
-- 对历史 task、handoff、report 文档，本次改造只调整呈现，不应改变原始结论、状态或验证记录。
+- 这是 Warden 的标准任务单模板。
+- 涉及模板字段、必填项和验收字段时，以英文版为准。
+
+## 1. 模板用途
+
+该模板用于把非 trivial 工作冻结成可执行、可审计、可交接的任务定义。
+它的核心作用是提前写清背景、目标、范围、输入输出、约束、验收和验证，而不是让实现时边做边猜。
+
+## 2. 填写重点
+
+- 必须在执行前填写，而不是事后补写。
+- `Scope In` 和 `Scope Out` 必须明确。
+- `Hard Constraints`、`Acceptance Criteria` 和 `Validation Checklist` 是最关键的执行边界。
+
+## 3. 中文阅读建议
+
+优先查看英文版的模板字段和默认规则，不要根据中文摘要自行发明新字段。
 
 ## English Version
 
@@ -305,3 +319,4 @@ List unresolved items before execution if they exist:
 - {{BLOCKER_1}}
 
 If none, write `none`.
+

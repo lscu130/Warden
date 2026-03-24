@@ -1,4 +1,4 @@
-# GPT_CODEX_WORKFLOW.md
+﻿# GPT_CODEX_WORKFLOW.md
 
 ## 中文版
 
@@ -6,9 +6,28 @@
 
 ### 使用说明
 
-- 本文档已按“中文在前，英文在后”整理。
-- 若涉及精确字段名、命令、模板或历史事实，以英文版为准。
-- 对历史 task、handoff、report 文档，本次改造只调整呈现，不应改变原始结论、状态或验证记录。
+- 本文档定义 GPT web、Codex 与项目负责人之间的默认协作流程。
+- 涉及强制顺序、角色边界和切窗规则时，以英文版为准。
+
+## 1. 文档作用
+
+本工作流用于防止上下文漂移、边界失控和“模型自以为已经验证”的伪事实。
+它把协作固定成四步：需求澄清、任务生成、执行交付、复核验收。
+
+## 2. 角色摘要
+
+- GPT web：负责长上下文综合、任务草拟、二次复核。
+- Codex：负责读仓库、编辑、执行命令、验证和交付。
+- 人类负责人：负责冻结边界、做最终接受和跨窗口延续。
+
+## 3. 阅读重点
+
+优先看英文版的：
+
+- `Absolute Rules`
+- `Standard Workflow Overview`
+- `Step Two: Generate The Task Document`
+- `Step Three: Hand The Work To Codex`
 
 ## English Version
 
@@ -1058,3 +1077,4 @@ recommended_next_task
 
 不要混岗。
 一混岗，文档、代码、责任边界就会一起煮成一锅浑汤。
+

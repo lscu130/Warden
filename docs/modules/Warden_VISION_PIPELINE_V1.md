@@ -1,4 +1,4 @@
-# Warden Vision Pipeline Specification (V1)
+﻿# Warden Vision Pipeline Specification (V1)
 
 ## 中文版
 
@@ -6,9 +6,19 @@
 
 ### 使用说明
 
-- 本文档已按“中文在前，英文在后”整理。
-- 若涉及精确字段名、命令、模板或历史事实，以英文版为准。
-- 对历史 task、handoff、report 文档，本次改造只调整呈现，不应改变原始结论、状态或验证记录。
+- 本文档定义视觉侧流水线的默认结构与边界。
+- 涉及截图输入、视觉表示和输出接口时，以英文版为准。
+
+## 1. 文档作用
+
+Vision pipeline 文档用于说明 Warden 在截图与页面视觉证据上的默认处理方式。
+它关注的是视觉证据如何服务风险判断，而不是独立追求一个泛图像分类系统。
+
+## 2. 核心摘要
+
+- 视觉侧默认围绕页面截图、视觉布局和伪装线索展开。
+- 视觉特征应服务于与文本、URL、表单和结构证据的联合判断。
+- 精确模型、接口和部署折中以后续英文规范为准。
 
 ## English Version
 
@@ -633,3 +643,4 @@ A Vision Pipeline V1 task is done only if:
 ## 22. Practical One-Sentence Summary
 
 Warden Vision V1 is a viewport-first, evidence-oriented, decoupled visual pipeline: it uses lightweight OCR to fill screenshot text blind spots, a mobile-friendly image-text encoder to score page-level social-engineering visual scenarios, and a lightweight detector to locate atomic high-risk components, then passes those outputs into downstream multimodal fusion rather than making a standalone black-box final decision.
+

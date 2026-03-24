@@ -1,4 +1,4 @@
-# AGENTS.md
+﻿# AGENTS.md
 
 ## 中文版
 
@@ -6,9 +6,31 @@
 
 ### 使用说明
 
-- 本文档已按“中文在前，英文在后”整理。
-- 若涉及精确字段名、命令、模板或历史事实，以英文版为准。
-- 对历史 task、handoff、report 文档，本次改造只调整呈现，不应改变原始结论、状态或验证记录。
+- 本文档是 Warden 的仓库级工程约束文件。
+- 涉及精确字段名、接口、模板字段、优先级或历史事实时，以英文版为准。
+- 中文区块只保留面向人类的压缩摘要，不替代英文约束正文。
+
+## 1. 文档作用
+
+`AGENTS.md` 用于冻结 Warden 的全局工程规则、工作边界、优先级顺序、模块职责和交付格式。
+它不是建议清单，而是仓库内默认生效的执行契约。
+
+## 2. 关键规则摘要
+
+- 非 trivial 工作必须遵守 workflow、task 和 handoff 三件套。
+- 默认优先最小、可验证、可回退的改动，不允许顺手大改或无关清理。
+- 冻结字段名、文件名、CLI、输出结构和标签语义时，不允许静默改动。
+- 若需求与文档约束冲突，应明确指出冲突，而不是自行猜测。
+
+## 3. 阅读重点
+
+优先阅读英文版的以下部分：
+
+- `Global execution rules`
+- `Source of truth priority`
+- `Workflow compliance is mandatory`
+- `Schema discipline` / `Label discipline`
+- `Required final response format`
 
 ## English Version
 
@@ -511,3 +533,4 @@ When work continues across threads or windows:
 
 If context gets long or brittle, summarize the state before switching threads.
 Do not continue high-risk work on half-remembered context.
+

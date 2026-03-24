@@ -1,4 +1,4 @@
-# MODULE_DATA.md
+﻿# MODULE_DATA.md
 
 ## 中文版
 
@@ -6,9 +6,22 @@
 
 ### 使用说明
 
-- 本文档已按“中文在前，英文在后”整理。
-- 若涉及精确字段名、命令、模板或历史事实，以英文版为准。
-- 对历史 task、handoff、report 文档，本次改造只调整呈现，不应改变原始结论、状态或验证记录。
+- 本文档定义 Data 模块的责任和边界。
+- 涉及冻结样本结构、入口脚本和输入契约时，以英文版为准。
+
+## 1. 模块作用
+
+Data 模块负责读取冻结样本目录、生成 manifest、做一致性检查，并为后续 split、训练和评估提供可审计的输入。
+它的重点是让数据摄取可复现，而不是重写上游 capture 或下游训练逻辑。
+
+## 2. 责任边界
+
+Data 模块拥有：目录扫描、manifest 生成、数据一致性检查、样本可用性标记和摘要输出。
+Data 模块不拥有：capture 行为重构、标签本体重写、训练目标定义和推理阈值策略。
+
+## 3. 阅读重点
+
+优先看英文版的 `Core Responsibility`、`Current Active Entry Points` 和 `Input Contract`。
 
 ## English Version
 
@@ -198,3 +211,4 @@ A non-trivial Data module task is Done only if:
 - validation is stated honestly
 - compatibility impact is stated
 - doc impact is stated
+

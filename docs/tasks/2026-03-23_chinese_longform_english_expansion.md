@@ -9,6 +9,19 @@
 - 这是本次“中文长文档逐段英译增强”任务的正式任务单。
 - 若中英文存在冲突，以英文版为准。
 
+### 摘要
+
+- 任务 ID：2026-03-23-chinese-longform-english-expansion
+- 任务主题：把若干中文原生长文档的英文区块从摘要版扩成更完整的分章版
+- 当前状态：DONE
+- 相关模块：project-documentation
+
+### 当前任务要点
+
+- 目标文件集中在 README、workflow、data 规范和 frozen spec 等中文原生长文档。
+- 本任务只增强英文区块，不改中文原文的技术事实、字段语义和历史结论。
+- 英文版需要更接近中文章节结构，便于 AI 把英文部分作为主要理解入口。
+
 ## English Version
 
 # Task Metadata

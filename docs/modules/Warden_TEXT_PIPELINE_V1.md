@@ -1,4 +1,4 @@
-# Warden_TEXT_PIPELINE_V1
+﻿# Warden_TEXT_PIPELINE_V1
 
 ## 中文版
 
@@ -6,9 +6,19 @@
 
 ### 使用说明
 
-- 本文档已按“中文在前，英文在后”整理。
-- 若涉及精确字段名、命令、模板或历史事实，以英文版为准。
-- 对历史 task、handoff、report 文档，本次改造只调整呈现，不应改变原始结论、状态或验证记录。
+- 本文档定义文本侧流水线的默认结构与边界。
+- 涉及文本输入、预处理、表示与输出接口时，以英文版为准。
+
+## 1. 文档作用
+
+Text pipeline 文档用于说明 Warden 在文本塔上的默认输入来源、文本处理路径、表示方式和输出边界。
+它回答的是“文本证据如何进入系统”，而不是训练全集如何组织。
+
+## 2. 核心摘要
+
+- 文本侧应服务于多语言网页风险判断，而不是只为英文或品牌词匹配服务。
+- 文本输入可能来自可见正文、DOM 文本、表单和其他结构化页面证据。
+- 下游接口、阈值和融合关系以后续英文规范为准。
 
 ## English Version
 
@@ -496,3 +506,4 @@ The following items are intentionally left open for later benchmark-driven refin
 
 Warden V1 Text is a visible-text-first, multilingual, evidence-oriented pipeline:
 it uses a compact encoder to represent webpage language under bounded runtime cost, preserves OCR and structural evidence as auxiliary signals, and emits auditable concept-level outputs for downstream multimodal fusion instead of producing a standalone chat-style final judgment.
+

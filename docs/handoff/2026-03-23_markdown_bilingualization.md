@@ -1,4 +1,4 @@
-# Handoff Metadata
+﻿# Handoff Metadata
 
 ## 中文版
 
@@ -6,9 +6,21 @@
 
 ### 使用说明
 
-- 本文档记录本次 Markdown 双语化任务的实际执行结果。
-- 若中英文存在冲突，以英文版为准。
-- 本次交付未声称“全部完成”；`docs/STRUCTION.md` 仍然是已确认的阻塞项。
+- 这是本次交接文档的中文摘要版。
+- 若涉及精确命令、字段、状态、验证结果或兼容性结论，以英文版为准。
+
+### 摘要
+
+- 对应任务：2026-03-23-markdown-bilingualization
+- 任务主题：Convert repository Markdown documents to bilingual Chinese-first / English-second format
+- 当前状态：PARTIAL
+- 所属模块：project-documentation
+
+### 当前交付要点
+
+- 英文版记录了本次交付的变更、影响、验证、风险和建议下一步。
+- 阅读时建议先看 Executive Summary，再看 Behavior Impact、Validation Performed 和 Risks / Caveats。
+- 中文区块只保留压缩摘要，不改写原始结论和状态。
 
 ## English Version
 
@@ -152,7 +164,29 @@ One documentation file, `docs/STRUCTION.md`, remains outside the new format due 
 
 ```bash
 rg --files -g '*.md'
-$all = rg --files -g '*.md'; $missing = foreach ($f in $all) { $t = [System.IO.File]::ReadAllText((Resolve-Path $f), [System.Text.Encoding]::UTF8); if ($t -notmatch '## 中文版' -or $t -notmatch '## English Version') { $f } }; if ($missing) { $missing } else { 'ALL_WRAPPED' }
+$all = rg --files -g '*.md'; $missing = foreach ($f in $all) { $t = [System.IO.File]::ReadAllText((Resolve-Path $f), [System.Text.Encoding]::UTF8); if ($t -notmatch '## 中文版
+
+> 面向 AI 的说明：GPT、Gemini、Codex、Grok、Claude 仅将下方英文版视为权威版本。中文仅供人类阅读、协作与快速导览。
+
+### 使用说明
+
+- 这是本次交接文档的中文摘要版。
+- 若涉及精确命令、字段、状态、验证结果或兼容性结论，以英文版为准。
+
+### 摘要
+
+- 对应任务：$taskId
+- 任务主题：Convert repository Markdown documents to bilingual Chinese-first / English-second format
+- 当前状态：$status
+- 所属模块：$module
+
+### 当前交付要点
+
+- 英文版记录了本次交付的变更、影响、验证、风险和建议下一步。
+- 阅读时建议先看 Executive Summary，再看 Behavior Impact、Validation Performed 和 Risks / Caveats。
+- 中文区块只保留压缩摘要，不改写原始结论和状态。
+
+## English Version') { $f } }; if ($missing) { $missing } else { 'ALL_WRAPPED' }
 git status --short
 ```
 
@@ -204,3 +238,5 @@ Doc debt still remaining:
 - Diagnose and clear the write block on `docs/STRUCTION.md`, then convert it into the same bilingual structure.
 - Decide whether the current “English summary + preserved Chinese source” approach is sufficient, or whether the Chinese-origin docs should be expanded into full section-by-section English mirrors.
 - If any Markdown-consuming automation exists, spot-check it against the new bilingual wrapper format.
+
+

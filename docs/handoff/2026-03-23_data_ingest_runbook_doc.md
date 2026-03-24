@@ -1,4 +1,4 @@
-# Handoff Metadata
+﻿# Handoff Metadata
 
 ## 中文版
 
@@ -6,8 +6,21 @@
 
 ### 使用说明
 
-- 这是本次 data ingest runbook 文档任务的交接记录。
-- 若中英内容冲突，以英文版为准。
+- 这是本次交接文档的中文摘要版。
+- 若涉及精确命令、字段、状态、验证结果或兼容性结论，以英文版为准。
+
+### 摘要
+
+- 对应任务：WARDEN-DATA-INGEST-RUNBOOK-V1
+- 任务主题：Add a day-to-day usage runbook for benign/malicious ingest and daily malicious capture operations
+- 当前状态：DONE
+- 所属模块：Data module
+
+### 当前交付要点
+
+- 英文版记录了本次交付的变更、影响、验证、风险和建议下一步。
+- 阅读时建议先看 Executive Summary，再看 Behavior Impact、Validation Performed 和 Risks / Caveats。
+- 中文区块只保留压缩摘要，不改写原始结论和状态。
 
 ## English Version
 
@@ -178,3 +191,5 @@ Doc debt still remaining:
 - If this runbook becomes the normal operational entry point, add a link to it from whichever top-level project doc the user treats as the main operator landing page.
 - If daily malicious batches always target a fixed count, consider adding a dedicated helper script or CLI flag for subset manifest generation later.
 - Keep the runbook updated whenever the ingest CLI or directory conventions change.
+
+
