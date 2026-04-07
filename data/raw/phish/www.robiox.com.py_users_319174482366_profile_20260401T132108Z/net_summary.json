@@ -1,0 +1,95 @@
+{
+  "final_url": "https://www.robiox.com.py/users/319174482366/profile",
+  "top_frame_final_origin": "https://www.robiox.com.py",
+  "request_counts": {
+    "total": 685,
+    "by_resource_type": {
+      "document": 2,
+      "script": 260,
+      "stylesheet": 70,
+      "image": 102,
+      "xhr": 238,
+      "font": 7,
+      "other": 2,
+      "fetch": 4
+    },
+    "by_method": {
+      "GET": 542,
+      "POST": 143
+    }
+  },
+  "domain_counts": [
+    {
+      "domain_etld1": "rbxcdn.com",
+      "count": 408,
+      "methods": {
+        "GET": 408
+      }
+    },
+    {
+      "domain_etld1": "roblox.com",
+      "count": 190,
+      "methods": {
+        "GET": 64,
+        "POST": 126
+      }
+    },
+    {
+      "domain_etld1": "injuries.lu",
+      "count": 78,
+      "methods": {
+        "GET": 66,
+        "POST": 12
+      }
+    },
+    {
+      "domain_etld1": "com.py",
+      "count": 9,
+      "methods": {
+        "GET": 4,
+        "POST": 5
+      }
+    }
+  ],
+  "third_party_domains": [
+    "rbxcdn.com",
+    "roblox.com",
+    "injuries.lu"
+  ],
+  "post_targets": [
+    {
+      "domain_etld1": "roblox.com",
+      "count": 126
+    },
+    {
+      "domain_etld1": "injuries.lu",
+      "count": 12
+    },
+    {
+      "domain_etld1": "com.py",
+      "count": 5
+    }
+  ],
+  "status_counts": {
+    "2xx": 511,
+    "3xx": 7,
+    "4xx": 2,
+    "5xx": 0,
+    "other": 0
+  },
+  "timing_ms": {
+    "ttfb_p50": 277.314,
+    "ttfb_p95": 2754.2133,
+    "response_end_p50": 995.359,
+    "response_end_p95": 8656.3876
+  },
+  "navigation_chain": [
+    {
+      "url": "https://www.robiox.com.py/users/319174482366/profile",
+      "status": 200
+    }
+  ],
+  "anomalies": [
+    "post_to_third_party"
+  ]
+}

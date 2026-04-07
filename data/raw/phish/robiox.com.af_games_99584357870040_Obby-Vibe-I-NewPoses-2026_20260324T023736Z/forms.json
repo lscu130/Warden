@@ -1,0 +1,23 @@
+{
+  "forms": [
+    {
+      "action": "/search",
+      "action_abs": "https://robiox.com.af/search",
+      "method": "GET",
+      "inputs": [
+        {
+          "tag": "input",
+          "type": "search",
+          "name": "search-bar",
+          "id": "navbar-search-input",
+          "autocomplete": "off",
+          "placeholder": "Search",
+          "aria_label": ""
+        }
+      ],
+      "has_password": false,
+      "has_otp": false,
+      "has_card": false
+    }
+  ]
+}

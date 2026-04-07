@@ -4,18 +4,19 @@
 """
 check_markdown_bilingual_structure.py
 
-用途：
-- 检查 Warden 仓库内业务 Markdown 的中英双语结构
-- 只读扫描，不自动修复文档
-- 支持终端摘要输出和可选 JSON 报告
+Checks bilingual Markdown structure across the Warden repository.
+This script is read-only and does not auto-fix documents.
 
-默认检查：
-1) 是否同时存在 `## 中文版` 和 `## English Version`
-2) 中文区块是否存在明显乱码标题，如 `## ???`
-3) 中文区块是否残留模板占位符，如 `$taskId`
-4) 中文区块是否过薄，接近“只有中文壳没有实质摘要”
+Default checks:
+1) presence of both `## ???` and `## English Version`
+2) obviously garbled Chinese headings such as `## ???`
+3) unresolved placeholder variables inside the Chinese section
+4) Chinese summary blocks that look too thin
 
-默认排除：
+Optional stricter check:
+5) presence of the AI-authoritative note in both the Chinese and English sections
+
+Default excludes:
 - data/processed/**
 - docs/STRUCTION.md
 - STRUCTION.md
@@ -30,7 +31,7 @@ import re
 import sys
 from collections import Counter
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Sequence
+from typing import Any, Dict, List, Sequence
 
 
 DEFAULT_EXCLUDE_GLOBS = [
@@ -39,14 +40,18 @@ DEFAULT_EXCLUDE_GLOBS = [
     "STRUCTION.md",
 ]
 
-CN_MARKER = "## 中文版"
+CN_MARKER = "## \u4e2d\u6587\u7248"
 EN_MARKER = "## English Version"
+CN_AUTHORITY_NOTE_FRAGMENT = "\u4ec5\u5c06\u4e0b\u65b9\u82f1\u6587\u7248\u89c6\u4e3a\u6743\u5a01\u7248\u672c"
+EN_AUTHORITY_NOTE_FRAGMENT = "must treat the English section below as the authoritative version"
 
 PLACEHOLDER_RE = re.compile(r"\$taskId|\$status|\$module|\$title")
-GARBLED_HEADING_RE = re.compile(r"(?m)^(?:##|###)\s+[?？]{2,}\s*$")
+GARBLED_HEADING_RE = re.compile(r"(?m)^(?:##|###)\s+(?:\?|\uff1f){2,}\s*$")
 CODE_BLOCK_RE = re.compile(r"(?s)```.*?```")
 CJK_RE = re.compile(r"[\u3400-\u9fff]")
-NON_USAGE_HEADING_RE = re.compile(r"(?m)^##\s+(?!中文版\s*$).+|^###\s+(?!使用说明\s*$).+")
+NON_USAGE_HEADING_RE = re.compile(
+    r"(?m)^##\s+(?!\u4e2d\u6587\u7248\s*$).+|^###\s+(?!\u4f7f\u7528\u8bf4\u660e\s*$).+"
+)
 BULLET_LINE_RE = re.compile(r"(?m)^- ")
 
 
@@ -100,6 +105,7 @@ def analyze_markdown(
     min_cn_chars: int,
     min_non_usage_headings: int,
     min_bullet_lines: int,
+    require_authority_note: bool,
 ) -> Dict[str, Any]:
     rel_path = normalize_rel_path(path, root)
     text = path.read_text(encoding="utf-8-sig", errors="ignore")
@@ -124,10 +130,25 @@ def analyze_markdown(
             add_issue(issues, "section_order_invalid", f"{rel_path}: English section appears before Chinese section")
         else:
             cn_section = text[cn_index:en_index]
+            en_section = text[en_index:]
             cn_metrics = collect_cn_metrics(cn_section)
 
             if GARBLED_HEADING_RE.search(cn_section):
                 add_issue(issues, "garbled_cn_heading", f"{rel_path}: Chinese section contains garbled heading marker")
+
+            if require_authority_note and CN_AUTHORITY_NOTE_FRAGMENT not in cn_section:
+                add_issue(
+                    issues,
+                    "missing_cn_authority_note",
+                    f"{rel_path}: Chinese section is missing the AI-authoritative note that English is the authoritative version",
+                )
+
+            if require_authority_note and EN_AUTHORITY_NOTE_FRAGMENT not in en_section:
+                add_issue(
+                    issues,
+                    "missing_en_authority_note",
+                    f"{rel_path}: English section is missing the AI-authoritative note that English is the authoritative version",
+                )
 
             if PLACEHOLDER_RE.search(cn_section):
                 add_issue(issues, "placeholder_in_cn", f"{rel_path}: Chinese section contains unresolved template placeholder")
@@ -239,6 +260,11 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
         help="Minimum bullet-line threshold used by the thin-summary heuristic.",
     )
     parser.add_argument(
+        "--require-authority-note",
+        action="store_true",
+        help="Require both the Chinese and English sections to include the AI-authoritative note.",
+    )
+    parser.add_argument(
         "--report-json",
         default="",
         help="Optional JSON report output path.",
@@ -267,6 +293,7 @@ def main(argv: Sequence[str]) -> int:
             min_cn_chars=args.min_cn_chars,
             min_non_usage_headings=args.min_non_usage_headings,
             min_bullet_lines=args.min_bullet_lines,
+            require_authority_note=args.require_authority_note,
         )
         for path in files
     ]
@@ -276,6 +303,7 @@ def main(argv: Sequence[str]) -> int:
     payload = {
         "root": str(root),
         "exclude_globs": exclude_globs,
+        "require_authority_note": args.require_authority_note,
         "summary": summary,
         "results": results,
     }

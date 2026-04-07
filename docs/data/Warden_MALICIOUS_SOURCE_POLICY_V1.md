@@ -55,6 +55,21 @@ Warden V1 的公开恶性来源基线固定为：
 - campaign / template 级聚类
 - 训练池抽样
 
+### 2.3 当前活动 rollout 范围（2026-04-02 收紧）
+
+本策略文档保留 Warden V1 的**通用能力边界**：
+- Raw Archive / Train Pool / Reserve Pool 三层概念仍成立
+- cluster / subcluster / family share cap 仍是 V1 支持的高级恶性处理能力
+
+但 **当前默认活动执行范围** 已收紧为：
+- 仅 **Roblox family** 默认启用高级 cluster / subcluster / train-reserve handling
+- 对非 Roblox family，当前默认只保留：
+  - source recording
+  - page-validity checks
+  - raw archive handling
+  - optional exact-URL hygiene dedup only
+- 非 Roblox family 当前不得默认进入更广的 family/template clustering 与 train-reserve compression
+
 ---
 
 ## 3. 恶性来源优先级
@@ -209,6 +224,10 @@ Warden V1 不冻结类似“每个重复簇最多保留 15 条”这类魔法数
 3. 对单一 family 施加**全局 share cap**，避免训练池被少数 campaign 主导。
 4. 原始 archive 不做默认物理删除。
 
+当前活动执行范围补充：
+- 上述高级 cluster / subcluster / train-pool sampling 链路，在当前阶段默认只对 Roblox family 启用。
+- 非 Roblox family 当前默认不进入该高级链路；它们停留在基础 ingest/archive 路径，并只保留可选 exact-URL hygiene dedup。
+
 ### 6.4 Family Share Cap
 
 V1 默认不写死绝对样本上限，但要求：
@@ -343,6 +362,21 @@ Therefore, malicious data must pass through:
 - URL-level deduplication,
 - campaign/template clustering,
 - train-pool sampling.
+
+### 2.3 Current Active Rollout Scope (Tightened On 2026-04-02)
+
+This policy document still preserves the **general V1 capability boundary**:
+- the Raw Archive / Train Pool / Reserve Pool separation remains valid,
+- cluster / subcluster / family-share-cap handling remains part of the supported V1 malicious-processing capability.
+
+However, the **current default active execution scope** is now tightened to:
+- enable advanced cluster / subcluster / train-reserve handling by default only for the **Roblox family**,
+- keep non-Roblox malicious families on:
+  - source recording,
+  - page-validity checks,
+  - raw archive handling,
+  - optional exact-URL hygiene dedup only,
+- keep non-Roblox malicious families out of broader family/template clustering and train-reserve compression by default at the current stage.
 
 ---
 
@@ -498,6 +532,15 @@ Recommended default behavior:
 3. apply a **global family share cap** so that no single family dominates the train pool,
 4. do not physically delete the raw archive by default.
 
+Current active rollout note:
+- the advanced cluster / subcluster / train-pool sampling chain above is currently enabled by default only for the Roblox family;
+- non-Roblox malicious families do not enter that advanced chain by default at the current stage and remain on the basic ingest/archive path with optional exact-URL hygiene dedup only.
+
+Current V1 planning target:
+- the default malicious train-pool planning target is **20,000**
+- this is aligned with the current regular benign target so the paired dataset planning target is **40,000 total**
+- this is a practical planning value under the current public-source constraint, not a claim of universal optimality
+
 ### 6.4 Family Share Cap
 
 V1 does not freeze one absolute numeric per-cluster maximum, but it does require:
@@ -594,4 +637,5 @@ Current implementation status:
 - the default public sources are OpenPhish Community and PhishTank;
 - train / reserve decisions are built on top of cluster / subcluster records rather than a fixed per-cluster cap;
 - family share cap is exposed as a CLI configuration item instead of being frozen as a document-level magic number;
+- the broader V1 advanced malicious dedup / cluster / pool path remains available as a supported capability boundary, while the current default active advanced scope is Roblox-family-only;
 - legacy-data handling emits fingerprints, cluster/subcluster outputs, review manifests, and exclusion lists without default physical deletion.

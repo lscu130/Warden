@@ -1,0 +1,13 @@
+{
+  "sample_id": "roblox.com.py_users_2774780129_profile_20260402T015535Z",
+  "label": "phish",
+  "crawl_time_utc": "20260402T015535Z",
+  "http_status": 200,
+  "page_title": "Ashley - Roblox",
+  "etld1_mode": "fallback",
+  "ingest_metadata": {
+    "pipeline": "malicious",
+    "source": "openphish_community",
+    "run_timestamp_utc": "2026-04-02T01:55:31Z"
+  }
+}

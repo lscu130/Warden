@@ -1,0 +1,23 @@
+{
+  "forms": [
+    {
+      "action": "",
+      "action_abs": "https://10q2026.github.io/Updte/",
+      "method": "GET",
+      "inputs": [
+        {
+          "tag": "input",
+          "type": "password",
+          "name": "pr",
+          "id": "pr",
+          "autocomplete": "",
+          "placeholder": "Enter Password",
+          "aria_label": ""
+        }
+      ],
+      "has_password": true,
+      "has_otp": false,
+      "has_card": false
+    }
+  ]
+}

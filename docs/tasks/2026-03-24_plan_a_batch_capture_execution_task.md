@@ -77,7 +77,7 @@ Warden 当前已经具备：
 - `docs/handoff/`
 - 当前 benign / malicious batch 目录下的本地 README 或操作说明文档
 - 当前 capture / ingest 入口相关脚本（仅当需要最小修复以支持 Day 1 执行时）
-- Day 1 运行产生的 output roots、log、summary、review artifact
+- Day 1 运行产生的 output roots、summary、review artifact
 
 本任务允许修改或新增：
 
@@ -130,7 +130,7 @@ Warden 当前已经具备：
 - 本地 PhishTank 32 个 batch CSV/TXT 产物
 - 本地 Tranco 20 个 batch CSV/TXT 产物
 - 现有 output root 根目录
-- 现有 log / summary / review artifact 根目录（若已存在）
+- 现有 summary / review artifact 根目录（若已存在）
 
 ### Prior Handoff
 
@@ -361,11 +361,12 @@ The decision is no longer whether to batch. The decision is already to use **Pla
 
 The core purpose of this task is not a large code rewrite. It is to turn Plan A into an execution-ready operator task and, if the local environment allows, actually run **Day 1**.
 
-VM execution note:
+Execution-environment note:
 
-- live capture for this task is executed in the user's VM rather than in this local workspace;
-- the repo-side role in the current thread is to freeze the exact Day 1 VM commands, output roots, stop rules, and returned-artifact requirements;
-- the final Day 1 execution handoff under `docs/handoff/2026-03-24_plan_a_batch_capture_day1.md` must only be written after the user returns the VM artifacts.
+- malicious live capture for this task is executed in the user's VM;
+- benign live capture for this task is executed on the user's physical machine, where local Playwright and Pillow are present and Playwright Chromium launch has been confirmed;
+- the repo-side role in the current thread is to freeze the exact Day 1 commands, output roots, stop rules, dependency checks, and returned-artifact requirements per environment;
+- the final Day 1 execution handoff under `docs/handoff/2026-03-24_plan_a_batch_capture_day1.md` must only be written after the user returns the actual batch artifacts from the corresponding environment(s).
 
 ---
 
@@ -396,13 +397,14 @@ This task is allowed to touch:
 - `docs/handoff/`
 - local README or operator notes under the current benign / malicious batch directories
 - current capture / ingest entrypoint scripts, but only if a minimal fix is required to support Day 1 execution
-- Day 1 output roots, logs, summaries, and review artifacts
+- Day 1 output roots, execution summaries, and review artifacts
 
 This task is allowed to add or modify:
 
 - one formal task document, if it still needs to be written into the repo
 - one formal handoff document
 - one Day 1 execution summary or operator note
+- one approved third-party dependency if it is required for the minimum viable Day 1 capture hardening patch
 - only the **minimum patch** needed to support valid Day 1 execution
 
 ---
@@ -414,7 +416,7 @@ This task must NOT:
 - pretend to complete Day 2–Day 10 asynchronous capture
 - broadly redesign the current data-ingest / capture pipeline
 - rename frozen fields, frozen top-level files, or frozen directory contracts
-- add a new third-party dependency
+- add any third-party dependency other than the explicitly approved `playwright-stealth` hardening dependency
 - modify training logic, inference logic, or label semantics
 - reorder or rename existing split artifacts merely to make the schedule look cleaner
 - run all 20 benign batches or all 32 malicious batches in this single task
@@ -449,7 +451,7 @@ This task must NOT:
 - local PhishTank batch CSV/TXT artifacts
 - local Tranco batch CSV/TXT artifacts
 - the current output-root base directory
-- the current log / summary / review-artifact root, if it already exists
+- the current summary / review-artifact root, if it already exists
 
 ### Prior Handoff
 
@@ -461,6 +463,8 @@ This task must NOT:
 
 - the exact current runner filenames and CLI flags for benign / malicious execution must be resolved by reading the local repo; do not guess
 - if the local environment is missing required proxy, browser dependencies, account state, or permissions, that must be stated explicitly in handoff instead of being disguised as script success
+- current known dependency status for the physical-machine benign lane: Python package import is available for `playwright` and `PIL`, and Playwright Chromium launch has been confirmed
+- current approved hardening dependency status: `playwright-stealth` may be introduced if required for the minimum viable anti-bot capture patch and must be documented explicitly in handoff
 
 ---
 
@@ -469,7 +473,7 @@ This task must NOT:
 This task must produce:
 
 1. one formal task document, if this file still needs to be written into the repo
-2. one formal Day 1 handoff document after VM execution artifacts are returned
+2. one formal Day 1 handoff document after the physical-machine benign artifacts and VM malicious artifacts are returned
 3. a Day 1 batch execution record covering at least:
    - batch id
    - source type (benign / malicious)
@@ -490,14 +494,15 @@ The following constraints are mandatory:
 - preserve backward compatibility unless explicitly impossible, and explain it if so
 - do not rename frozen schema fields or frozen top-level file names
 - do not silently change output formats
-- do not add new third-party dependencies
+- do not add new third-party dependencies other than the explicitly approved `playwright-stealth` capture-hardening dependency
 - prefer a minimal patch over opportunistic refactor
 - update docs if behavior changes
 - follow `AGENTS.md`
 - follow `docs/workflow/GPT_CODEX_WORKFLOW.md`
 - use the local repository as the source of truth, not an older GitHub-visible snapshot
 - do not report Day 2–Day 10 as completed if they were not actually run
-- do not attempt live capture in the current local workspace once the execution path has been frozen as VM-only for this task
+- do not treat malicious capture as locally executable in this workspace for this task; malicious remains VM-only
+- do not treat benign physical-machine execution as complete until real benign batch artifacts are returned, even though local Playwright browser readiness has now been confirmed
 
 Task-specific constraints:
 
@@ -521,8 +526,8 @@ These public interfaces must remain stable:
 
 Schema / field constraints:
 
-- Schema changed allowed: NO, unless only additive backward-compatible execution-summary sidecars are introduced
-- If yes, required compatibility plan: not applicable by default
+- Schema changed allowed: NO for this hardening patch
+- If yes, required compatibility plan: not applicable
 - Frozen field names involved: `meta.json`, `url.json`, `env.json`, `redirect_chain.json`, `visible_text.txt`, `forms.json`, `screenshot_viewport.png`, `screenshot_full.png`, `net_summary.json`, `auto_labels.json`
 
 CLI / output compatibility constraints:
@@ -611,7 +616,7 @@ Expected evidence to capture:
 - the actual Day 1 commands executed
 - representative output-root paths
 - the per-batch status table
-- representative error log or summary snippets, if any
+- representative error-output or summary snippets, if any
 
 ---
 

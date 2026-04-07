@@ -1,0 +1,13 @@
+{
+  "sample_id": "www.robiox.com.py_users_319174482366_profile_20260401T132108Z",
+  "label": "phish",
+  "crawl_time_utc": "20260401T132108Z",
+  "http_status": 200,
+  "page_title": "JADE - Roblox",
+  "etld1_mode": "fallback",
+  "ingest_metadata": {
+    "pipeline": "malicious",
+    "source": "openphish_community",
+    "run_timestamp_utc": "2026-04-01T13:21:07Z"
+  }
+}

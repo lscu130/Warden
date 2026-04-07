@@ -90,6 +90,11 @@ Warden V1 的数据摄取应采用：
 - train pool / reserve pool 构建
 - malicious manifest 输出
 
+当前活动执行范围（2026-04-02 收紧）：
+- **V1 通用能力边界仍保留**：恶性上层 pipeline 仍允许支持 cluster / subcluster / train-reserve 三池架构。
+- **当前默认活动 rollout 只对 Roblox family 启用高级流程**：advanced cluster / subcluster / train-reserve handling 默认只对 Roblox family 生效。
+- **非 Roblox family 当前默认只保留基础路径**：source recording、page-validity checks、raw archive handling，以及可选的 exact-URL hygiene dedup；不默认进入更广的 family/template clustering。
+
 ### 3.5 维护层：Maintenance Pipeline
 
 负责：
@@ -246,6 +251,20 @@ Warden V1 不再采用固定的 per-cluster magic number。
 - 具体阈值应作为配置项，由实现脚本暴露。
 - 若 family 占比超标，优先压缩其近重复与同模板子簇，而不是机械压缩所有 family。
 
+## 7.5 当前活动 rollout 与 V1 能力边界
+
+Warden V1 的通用能力边界仍然保留恶性 cluster -> subcluster -> train/reserve 的高级处理链路。
+
+但在 **当前活动执行范围** 中，默认只对 **Roblox family** 启用该高级链路。
+
+对非 Roblox family，当前默认执行范围应收紧为：
+- 来源记录
+- 页面有效性检查
+- raw archive handling
+- 可选 exact-URL hygiene dedup
+
+而不是默认进入更广的 family/template clustering、subcluster splitting 与 train-reserve compression。
+
 ---
 
 ## 8. Benign 与 Malicious 为什么不能共用单策略脚本
@@ -393,6 +412,11 @@ Responsible for:
 - subcluster splitting,
 - train-pool / reserve-pool construction,
 - malicious manifest generation.
+
+Current active execution scope (tightened on 2026-04-02):
+- **The general V1 capability boundary remains intact**: the malicious upper-layer pipeline still allows cluster / subcluster / train-reserve handling as a supported V1 architecture.
+- **The current default rollout enables that advanced path only for the Roblox family**.
+- **Non-Roblox malicious families stay on the basic path by default**: source recording, page-validity checks, raw archive handling, and optional exact-URL hygiene dedup only, without broader family/template clustering by default.
 
 ### 3.5 Maintenance Layer: Legacy Data Backfill
 
@@ -551,6 +575,20 @@ The document freezes the principle, not one numeric threshold:
 - the exact threshold should be exposed as configuration,
 - if a family exceeds the cap, compress its near-duplicates and same-template subclusters first rather than shrinking all families equally.
 
+### 7.5 Current Rollout Scope Versus V1 Capability Boundary
+
+Warden V1 still retains the general advanced malicious path of cluster -> subcluster -> train/reserve handling.
+
+However, in the **current active rollout scope**, that advanced path is enabled by default only for the **Roblox family**.
+
+For non-Roblox malicious families, the current default execution scope is intentionally tightened to:
+- source recording,
+- page-validity checks,
+- raw archive handling,
+- optional exact-URL hygiene dedup.
+
+They should not enter broader family/template clustering, subcluster splitting, or train-reserve compression by default at the current stage.
+
 ---
 
 ## 8. Why Benign and Malicious Must Not Share One Strategy Script
@@ -632,5 +670,6 @@ Current implementation status:
 
 - upper-layer orchestrators can invoke capture non-interactively;
 - malicious family share cap is exposed as a CLI configuration parameter in the train-pool and maintenance scripts;
+- the broader V1 malicious cluster/pool architecture remains available as a general capability boundary, but the current default active advanced scope is Roblox-family-only;
 - the original capture logic was preserved instead of rewritten;
 - legacy-data handling defaults to review / exclusion outputs rather than physical deletion.

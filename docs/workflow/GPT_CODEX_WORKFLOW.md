@@ -8,6 +8,7 @@
 
 - 本文档定义 GPT web、Codex 与项目负责人之间的默认协作流程。
 - 涉及强制顺序、角色边界和切窗规则时，以英文版为准。
+- 若交付物是 Markdown 文档，默认必须双语：中文摘要在前，英文全文在后，且英文对 AI 保持权威。
 
 ## 1. 文档作用
 
@@ -19,6 +20,7 @@
 - GPT web：负责长上下文综合、任务草拟、二次复核。
 - Codex：负责读仓库、编辑、执行命令、验证和交付。
 - 人类负责人：负责冻结边界、做最终接受和跨窗口延续。
+- 若交付的是 Markdown 文档，默认按“中文摘要在前、英文全文在后、英文权威”执行。
 
 ## 3. 阅读重点
 
@@ -125,6 +127,8 @@ The following rules are mandatory:
 12. When a web-chat context becomes too long, slow, or hallucination-prone, summarize first and then continue in a fresh window.
 13. When a task needs GPT web again for requirement clarification, secondary review, or cross-window continuation, Codex should explicitly remind the user to return there.
 14. If active artifacts live outside the repository and future collaboration depends on them, copy them into the repo and return the repo path explicitly.
+15. When the deliverable is a Markdown document, write it as bilingual by default: a Chinese summary first for human reading, followed by the full English version for AI reading.
+16. For Markdown deliverables, English remains the authoritative version whenever exact wording, fields, commands, priorities, validation claims, or historical facts matter.
 
 ## 4. Standard Workflow Overview
 
@@ -261,6 +265,7 @@ The execution instruction given to Codex should follow this shape:
 5. Prefer the smallest valid patch.
 6. Run the minimum necessary validation.
 7. Produce a handoff.
+8. If the deliverable is Markdown, write it as bilingual Chinese-summary-first / full-English-second, with English authoritative.
 
 ### 7.3 Required Codex Output
 

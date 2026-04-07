@@ -1,0 +1,83 @@
+{
+  "final_url": "https://roblox.com.py/users/2774780129/profile",
+  "top_frame_final_origin": "https://roblox.com.py",
+  "request_counts": {
+    "total": 260,
+    "by_resource_type": {
+      "document": 1,
+      "script": 129,
+      "stylesheet": 35,
+      "image": 46,
+      "font": 4,
+      "xhr": 43,
+      "fetch": 1,
+      "other": 1
+    },
+    "by_method": {
+      "GET": 244,
+      "POST": 16
+    }
+  },
+  "domain_counts": [
+    {
+      "domain_etld1": "rbxcdn.com",
+      "count": 189,
+      "methods": {
+        "GET": 189
+      }
+    },
+    {
+      "domain_etld1": "com.py",
+      "count": 48,
+      "methods": {
+        "GET": 32,
+        "POST": 16
+      }
+    },
+    {
+      "domain_etld1": "roblox.com",
+      "count": 22,
+      "methods": {
+        "GET": 22
+      }
+    },
+    {
+      "domain_etld1": "google-analytics.com",
+      "count": 1,
+      "methods": {
+        "GET": 1
+      }
+    }
+  ],
+  "third_party_domains": [
+    "rbxcdn.com",
+    "roblox.com",
+    "google-analytics.com"
+  ],
+  "post_targets": [
+    {
+      "domain_etld1": "com.py",
+      "count": 16
+    }
+  ],
+  "status_counts": {
+    "2xx": 253,
+    "3xx": 1,
+    "4xx": 0,
+    "5xx": 0,
+    "other": 0
+  },
+  "timing_ms": {
+    "ttfb_p50": 322.54449999999997,
+    "ttfb_p95": 1835.8573999999999,
+    "response_end_p50": 1919.877,
+    "response_end_p95": 7349.0768
+  },
+  "navigation_chain": [
+    {
+      "url": "https://roblox.com.py/users/2774780129/profile",
+      "status": 200
+    }
+  ],
+  "anomalies": []
+}

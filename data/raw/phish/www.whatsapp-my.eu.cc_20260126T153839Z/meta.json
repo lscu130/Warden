@@ -1,8 +1,0 @@
-{
-  "sample_id": "www.whatsapp-my.eu.cc_20260126T153839Z",
-  "label": "phish",
-  "crawl_time_utc": "20260126T153839Z",
-  "http_status": 200,
-  "page_title": "WhatsApp 安全检测中心",
-  "etld1_mode": "publicsuffix2"
-}

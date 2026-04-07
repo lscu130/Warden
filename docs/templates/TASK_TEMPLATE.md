@@ -8,6 +8,7 @@
 
 - 这是 Warden 的标准任务单模板。
 - 涉及模板字段、必填项和验收字段时，以英文版为准。
+- 若任务产出包含 Markdown 文档，默认按双语交付：中文摘要在前，英文全文在后，英文仍为权威版本。
 
 ## 1. 模板用途
 
@@ -50,6 +51,7 @@ Rules:
 - Replace every placeholder or explicitly write `none`, `not applicable`, or `missing`.
 - If scope is unclear, stop and clarify before implementation.
 - If the task is trivial enough to skip a formal task doc, say why in the thread explicitly.
+- If the task will produce Markdown deliverables, define them as bilingual by default: Chinese summary first, full English version second, with English authoritative for exact facts and contract wording.
 
 ---
 
@@ -188,6 +190,7 @@ Must obey all of the following:
 - Follow `AGENTS.md`.
 - Follow `docs/workflow/GPT_CODEX_WORKFLOW.md`.
 - Produce handoff content for non-trivial changes.
+- If this task outputs Markdown documents, those documents must be bilingual by default: Chinese summary first, full English version second, with English authoritative.
 
 Task-specific constraints:
 

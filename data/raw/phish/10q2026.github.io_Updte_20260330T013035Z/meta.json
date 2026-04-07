@@ -1,0 +1,13 @@
+{
+  "sample_id": "10q2026.github.io_Updte_20260330T013035Z",
+  "label": "phish",
+  "crawl_time_utc": "20260330T013035Z",
+  "http_status": 200,
+  "page_title": "Microsoft | Login",
+  "etld1_mode": "fallback",
+  "ingest_metadata": {
+    "pipeline": "malicious",
+    "source": "openfish",
+    "run_timestamp_utc": "2026-03-30T01:30:34Z"
+  }
+}

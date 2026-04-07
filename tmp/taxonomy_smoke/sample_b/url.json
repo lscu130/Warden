@@ -1,9 +1,0 @@
-{
-  "input_url": "http://www.amazon.eg/cpe/yourpayments/transactions/",
-  "final_url": "https://www.amazon.eg/ap/signin?openid.pape.max_auth_age=3600&openid.return_to=https%3A%2F%2Fwww.amazon.eg%2Fcpe%2Fyourpayments%2Ftransactions%2F&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.assoc_handle=egflex&openid.mode=checkid_setup&marketPlaceId=ARBP9OOSHTCHU&language=zh_CN&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0",
-  "redirect_chain": [
-    "http://www.amazon.eg/cpe/yourpayments/transactions/",
-    "https://www.amazon.eg/cpe/yourpayments/transactions/",
-    "https://www.amazon.eg/ap/signin?openid.pape.max_auth_age=3600&openid.return_to=https%3A%2F%2Fwww.amazon.eg%2Fcpe%2Fyourpayments%2Ftransactions%2F&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.assoc_handle=egflex&openid.mode=checkid_setup&marketPlaceId=ARBP9OOSHTCHU&language=zh_CN&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0"
-  ]
-}

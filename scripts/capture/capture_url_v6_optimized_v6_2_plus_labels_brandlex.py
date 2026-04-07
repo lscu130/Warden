@@ -73,6 +73,11 @@ except Exception:
     Image = None
     ImageStat = None
 
+try:
+    from playwright_stealth import Stealth
+except Exception:
+    Stealth = None
+
 
 # =========================
 # 可配置路径（你按需改）
@@ -89,9 +94,24 @@ DEFAULT_CSV_URL_COLUMN = "url"
 BROWSER_CHANNEL = "chrome"  # 机器没装对应通道会报错；删掉 channel 就用 Playwright 自带 Chromium
 HEADLESS = True
 VIEWPORT = {"width": 1365, "height": 768}
-NAV_TIMEOUT_MS = 25_000
+NAV_TIMEOUT_MS = 60_000
 POST_NAV_NETIDLE_MS = 2_500
 RETRY_VISIT = 2
+DEFAULT_GOTO_WAIT_UNTIL = "commit"
+BROWSER_LAUNCH_ARGS = [
+    "--disable-blink-features=AutomationControlled",
+    "--no-sandbox",
+    "--disable-setuid-sandbox",
+]
+POST_GOTO_DOMCONTENTLOADED_TIMEOUT_MS = 30_000
+POST_GOTO_HYDRATION_WAIT_MS = 2_000
+GOOGLE_CONSENT_WAIT_MS = 1_500
+GOOGLE_CONSENT_SELECTORS = [
+    'button:has-text("I agree")',
+    'button:has-text("Accept all")',
+    'button:has-text("同意")',
+    'button:has-text("全部接受")',
+]
 
 # 显式代理（可选）
 PROXY_SERVER: Optional[str] = None
@@ -168,6 +188,7 @@ VARIANTS = [
 
 # 轻度网络收敛：阻断 websocket / eventsource / media（减少无关请求）
 BLOCK_RESOURCE_TYPES = {"websocket", "eventsource", "media", "font", "manifest"}
+ROUTE_INTERCEPT_ENABLED = True
 
 ERROR_HINT_PATTERNS = [
     r"\b502\b", r"bad gateway",
@@ -180,6 +201,8 @@ ERROR_HINT_PATTERNS = [
 
 # Precompiled regexes (tiny speed-up + avoids recompiling inside hot loops)
 ERROR_HINT_REGEXES = [re.compile(p, re.I) for p in ERROR_HINT_PATTERNS]
+BENIGN_RELAXED_ERROR_HINT_PATTERNS = [p for p in ERROR_HINT_PATTERNS if p != r"cloudflare"]
+BENIGN_RELAXED_ERROR_HINT_REGEXES = [re.compile(p, re.I) for p in BENIGN_RELAXED_ERROR_HINT_PATTERNS]
 RE_WS = re.compile(r"\s+")
 RE_MANY_NL = re.compile(r"\n{3,}")
 RE_URL_SCHEME = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.-]*://")
@@ -430,6 +453,72 @@ def is_driver_connection_closed_error(exc: Exception) -> bool:
     return False
 
 
+def is_navigation_timeout_error(exc: Exception) -> bool:
+    hay = f"{type(exc).__name__}: {exc} {repr(exc)}".lower()
+    return "timeout" in hay and "exceeded" in hay
+
+
+def require_stealth_runtime() -> "Stealth":
+    if Stealth is None:
+        raise RuntimeError(
+            "playwright-stealth is required for the current capture hardening patch. "
+            "Install it with: python -m pip install playwright-stealth"
+        )
+    return Stealth()
+
+
+def apply_stealth_sync(page) -> bool:
+    helper = require_stealth_runtime()
+    helper.apply_stealth_sync(page)
+    return True
+
+
+def is_google_like_url(url: str) -> bool:
+    host = (urlparse(url).hostname or "").lower()
+    if not host:
+        return False
+    return "google" in host.split(".")
+
+
+def handle_google_consent(page) -> Tuple[bool, bool]:
+    current_url = ""
+    try:
+        current_url = page.url or ""
+    except Exception:
+        current_url = ""
+    if not is_google_like_url(current_url):
+        return False, False
+
+    attempted = True
+    for selector in GOOGLE_CONSENT_SELECTORS:
+        try:
+            page.locator(selector).first.click(timeout=2_500)
+            try:
+                page.wait_for_timeout(GOOGLE_CONSENT_WAIT_MS)
+            except Exception:
+                pass
+            return attempted, True
+        except Exception:
+            continue
+    return attempted, False
+
+
+def goto_with_fallback(page, url: str, nav_timeout_ms: int, goto_wait_until: str):
+    wait_until = (goto_wait_until or DEFAULT_GOTO_WAIT_UNTIL).strip().lower() or DEFAULT_GOTO_WAIT_UNTIL
+    fallback_used = False
+    try:
+        resp = page.goto(url, wait_until=wait_until, timeout=nav_timeout_ms)
+        return resp, wait_until, fallback_used
+    except Exception as exc:
+        if wait_until == "load" and is_navigation_timeout_error(exc):
+            fallback_wait_until = "domcontentloaded"
+            print(f"  [INFO] goto wait_until=load timed out; retrying with wait_until={fallback_wait_until}")
+            resp = page.goto(url, wait_until=fallback_wait_until, timeout=nav_timeout_ms)
+            fallback_used = True
+            return resp, fallback_wait_until, fallback_used
+        raise
+
+
 class BrowserPoolManager:
     """Cache browsers by (headless, proxy) and relaunch on driver disconnect."""
 
@@ -437,20 +526,33 @@ class BrowserPoolManager:
         self.chromium = chromium
         self.browser_channel = (browser_channel or "").strip()
         self.pool: Dict[Tuple, object] = {}
+        self.effective_channels: Dict[Tuple, str] = {}
 
-    def _launch(self, headless: bool, proxy_cfg: Optional[dict]):
-        launch_kwargs = {"headless": headless}
+    def _launch(self, key: Tuple, headless: bool, proxy_cfg: Optional[dict]):
+        launch_kwargs = {"headless": headless, "args": list(BROWSER_LAUNCH_ARGS)}
         if proxy_cfg:
             launch_kwargs["proxy"] = proxy_cfg
         if self.browser_channel:
-            # If the machine doesn't have that channel installed, launch() will raise.
-            launch_kwargs["channel"] = self.browser_channel
-        return self.chromium.launch(**launch_kwargs)
+            try:
+                launch_kwargs["channel"] = self.browser_channel
+                browser = self.chromium.launch(**launch_kwargs)
+                self.effective_channels[key] = self.browser_channel
+                return browser
+            except Exception as exc:
+                print(
+                    f"  [WARN] launch with channel={self.browser_channel} failed; "
+                    f"retrying with bundled Chromium. error={repr(exc)}"
+                )
+                launch_kwargs.pop("channel", None)
+
+        browser = self.chromium.launch(**launch_kwargs)
+        self.effective_channels[key] = "chromium"
+        return browser
 
     def get_browser(self, headless: bool, proxy_cfg: Optional[dict]):
         key = (headless,) + proxy_key(proxy_cfg)
         if key not in self.pool:
-            self.pool[key] = self._launch(headless, proxy_cfg)
+            self.pool[key] = self._launch(key, headless, proxy_cfg)
         return self.pool[key]
 
     def relaunch(self, headless: bool, proxy_cfg: Optional[dict]):
@@ -461,8 +563,12 @@ class BrowserPoolManager:
                 old.close()
             except Exception:
                 pass
-        self.pool[key] = self._launch(headless, proxy_cfg)
+        self.pool[key] = self._launch(key, headless, proxy_cfg)
         return self.pool[key]
+
+    def get_effective_channel(self, headless: bool, proxy_cfg: Optional[dict]) -> str:
+        key = (headless,) + proxy_key(proxy_cfg)
+        return self.effective_channels.get(key, self.browser_channel or "chromium")
 
     def new_context_resilient(
         self,
@@ -1093,13 +1199,14 @@ def collect_page_signals(page) -> dict:
     }
 
 
-def looks_blocked_or_error(signals: dict, html_text: Optional[str]) -> bool:
+def looks_blocked_or_error(signals: dict, html_text: Optional[str], sample_label: str = "") -> bool:
     hay = (signals.get("title", "") + " " + signals.get("text_head", "")).lower()
     if html_text:
         h = re.sub(r"\s+", " ", html_text[:4000]).lower()
         hay += " " + h
 
-    for rx in ERROR_HINT_REGEXES:
+    regexes = BENIGN_RELAXED_ERROR_HINT_REGEXES if (sample_label or "").strip().lower() == "benign" else ERROR_HINT_REGEXES
+    for rx in regexes:
         if rx.search(hay):
             return True
     return False
@@ -1508,6 +1615,10 @@ def capture_variant(
     headless: bool,
     route_handler,
     proxy_cfg: Optional[dict],
+    nav_timeout_ms: int,
+    goto_wait_until: str,
+    enable_route_intercept: bool,
+    sample_label: str,
 ) -> dict:
     context = None
     page = None
@@ -1532,9 +1643,11 @@ def capture_variant(
             context_kwargs["proxy"] = proxy_cfg
 
         context = browser_mgr.new_context_resilient(headless, proxy_cfg, context_kwargs)
-        context.set_default_timeout(NAV_TIMEOUT_MS)
-        context.route("**/*", route_handler)
+        context.set_default_timeout(nav_timeout_ms)
+        if enable_route_intercept:
+            context.route("**/*", route_handler)
         page = context.new_page()
+        apply_stealth_sync(page)
         if RECORD_NET_EVIDENCE_LITE:
             net_collector = NetEvidenceLiteCollector()
             net_collector.attach(page)
@@ -1544,6 +1657,9 @@ def capture_variant(
             url,
             enable_step1_action=False,
             capture_raw_html=False,
+            nav_timeout_ms=nav_timeout_ms,
+            goto_wait_until=goto_wait_until,
+            sample_label=sample_label,
         )
 
         try:
@@ -1762,6 +1878,9 @@ def crawl_one_url_to_memory(
     url: str,
     enable_step1_action: Optional[bool] = None,
     capture_raw_html: Optional[bool] = None,
+    nav_timeout_ms: Optional[int] = None,
+    goto_wait_until: Optional[str] = None,
+    sample_label: str = "",
 ) -> Tuple[bool, Optional[Dict], Optional[str]]:
     """不落盘、不建目录。成功时返回 payload（写盘用）。"""
     ts = now_utc_compact()
@@ -1769,6 +1888,10 @@ def crawl_one_url_to_memory(
         enable_step1_action = ENABLE_STEP1_ACTION
     if capture_raw_html is None:
         capture_raw_html = SAVE_RAW_HTML
+    if nav_timeout_ms is None or nav_timeout_ms <= 0:
+        nav_timeout_ms = NAV_TIMEOUT_MS
+    if not goto_wait_until:
+        goto_wait_until = DEFAULT_GOTO_WAIT_UNTIL
 
     scheme = urlparse(url).scheme.lower()
     if scheme not in {"http", "https"}:
@@ -1780,9 +1903,16 @@ def crawl_one_url_to_memory(
         resp = None
         try:
             # 1) 导航
-            resp = page.goto(url, wait_until="load", timeout=NAV_TIMEOUT_MS)
+            resp, used_wait_until, goto_fallback_used = goto_with_fallback(
+                page,
+                url,
+                nav_timeout_ms,
+                goto_wait_until,
+            )
             if resp is None:
                 raise RuntimeError("page.goto returned None")
+            if goto_fallback_used:
+                print(f"  [INFO] navigation succeeded after fallback wait_until={used_wait_until}")
 
             status = resp.status
             if status not in OK_STATUSES:
@@ -1801,7 +1931,24 @@ def crawl_one_url_to_memory(
             except Exception:
                 response_header_flags = {}
 
-            # 2) 稍等网络空闲 + hydration
+            # 2) 先等 DOM 可用，再给 hydration 一点时间
+            try:
+                page.wait_for_load_state("domcontentloaded", timeout=POST_GOTO_DOMCONTENTLOADED_TIMEOUT_MS)
+            except Exception:
+                pass
+            try:
+                page.wait_for_timeout(POST_GOTO_HYDRATION_WAIT_MS)
+            except Exception:
+                pass
+
+            google_consent_attempted = False
+            google_consent_clicked = False
+            try:
+                google_consent_attempted, google_consent_clicked = handle_google_consent(page)
+            except Exception:
+                google_consent_attempted, google_consent_clicked = False, False
+
+            # 3) 稍等网络空闲；best-effort，不作为唯一成功标准
             try:
                 page.wait_for_load_state("networkidle", timeout=POST_NAV_NETIDLE_MS)
             except Exception:
@@ -1815,7 +1962,7 @@ def crawl_one_url_to_memory(
             redirects = build_redirect_chain_from_response(resp)
             navigation_chain = build_navigation_chain_with_status(resp)
 
-            # 3) 抓 raw（主文档响应体）
+            # 4) 抓 raw（主文档响应体）
             html_raw_text = None
             if capture_raw_html:
                 try:
@@ -1823,7 +1970,7 @@ def crawl_one_url_to_memory(
                 except Exception:
                     html_raw_text = None
 
-            # 4) 抓 rendered DOM
+            # 5) 抓 rendered DOM
             html_rendered = None
             try:
                 html_rendered = truncate_large_text(page.content(), MAX_HTML_CHARS, "\n<!-- TRUNCATED -->\n")
@@ -1831,10 +1978,10 @@ def crawl_one_url_to_memory(
                 html_rendered = None
 
             signals = collect_page_signals(page)
-            if looks_blocked_or_error(signals, html_rendered):
+            if looks_blocked_or_error(signals, html_rendered, sample_label=sample_label):
                 return False, None, f"blocked_or_error:title={signals.get('title','')[:80]}"
 
-            # 5) 抓截图（viewport + full）
+            # 6) 抓截图（viewport + full）
             shot_view = page.screenshot(full_page=False)
             shot_full = capture_fullpage_screenshot(page) if SAVE_FULLPAGE_SHOT else None
 
@@ -1849,7 +1996,7 @@ def crawl_one_url_to_memory(
 
                 # 补救后再看一次是否错误页
                 signals2 = collect_page_signals(page)
-                if looks_blocked_or_error(signals2, html_rendered):
+                if looks_blocked_or_error(signals2, html_rendered, sample_label=sample_label):
                     return False, None, f"blocked_or_error_after_wait:title={signals2.get('title','')[:80]}"
 
                 shot_view2 = page.screenshot(full_page=False)
@@ -1861,18 +2008,18 @@ def crawl_one_url_to_memory(
             if bad1 and signals.get("text_len", 0) < DOM_TEXT_MIN_LEN:
                 raise RuntimeError(f"bad_capture:{why1};text_len={signals.get('text_len')}")
 
-            # 6) 可见文本 / 表单
+            # 7) 可见文本 / 表单
             visible_text = extract_visible_text(page) if SAVE_VISIBLE_TEXT else ""
             forms_json = extract_forms_json(page, final_url) if SAVE_FORMS_JSON else {"forms": []}
 
-            # 7) userAgent
+            # 8) userAgent
             user_agent = None
             try:
                 user_agent = page.evaluate("() => navigator.userAgent")
             except Exception:
                 user_agent = None
 
-            # 8) step1 轻量交互（可选；失败不影响主样本）
+            # 9) step1 轻量交互（可选；失败不影响主样本）
             actions: List[dict] = []
             step1: Optional[dict] = None
             if enable_step1_action:
@@ -1921,7 +2068,25 @@ def main() -> None:
     parser.add_argument("--output_root", type=str, default="")
     parser.add_argument("--ingest_metadata_json", type=str, default="")
     parser.add_argument("--dry_run", action="store_true")
+    parser.add_argument("--proxy_server", type=str, default="")
+    parser.add_argument("--proxy_username", type=str, default="")
+    parser.add_argument("--proxy_password", type=str, default="")
+    parser.add_argument("--nav_timeout_ms", type=int, default=0)
+    parser.add_argument("--disable_route_intercept", action="store_true")
+    parser.add_argument(
+        "--goto_wait_until",
+        type=str,
+        default=DEFAULT_GOTO_WAIT_UNTIL,
+        choices=["load", "domcontentloaded", "commit", "networkidle"],
+    )
     args = parser.parse_args()
+
+    nav_timeout_ms = args.nav_timeout_ms if args.nav_timeout_ms and args.nav_timeout_ms > 0 else NAV_TIMEOUT_MS
+    proxy_server = args.proxy_server.strip() or PROXY_SERVER
+    proxy_username = args.proxy_username if args.proxy_server.strip() else PROXY_USERNAME
+    proxy_password = args.proxy_password if args.proxy_server.strip() else PROXY_PASSWORD
+    enable_route_intercept = ROUTE_INTERCEPT_ENABLED and not args.disable_route_intercept
+    goto_wait_until = (args.goto_wait_until or DEFAULT_GOTO_WAIT_UNTIL).strip().lower() or DEFAULT_GOTO_WAIT_UNTIL
 
     if not args.output_root.strip():
         ensure_dirs()
@@ -1978,10 +2143,16 @@ def main() -> None:
         print(f"[FATAL] playwright import failed: {exc}", file=sys.stderr)
         sys.exit(2)
 
+    try:
+        require_stealth_runtime()
+    except Exception as exc:
+        print(f"[FATAL] playwright-stealth import failed: {exc}", file=sys.stderr)
+        sys.exit(2)
+
     with sync_playwright() as p:
         chromium = p.chromium
 
-        base_proxy = make_proxy_config(PROXY_SERVER, PROXY_USERNAME, PROXY_PASSWORD)
+        base_proxy = make_proxy_config(proxy_server, proxy_username, proxy_password)
 
         browser_mgr = BrowserPoolManager(chromium, browser_channel=BROWSER_CHANNEL)
 
@@ -2022,9 +2193,11 @@ def main() -> None:
                     context_kwargs["record_har_path"] = str(tmp_har_path)
 
                 context = browser_mgr.new_context_resilient(HEADLESS, base_proxy, context_kwargs)
-                context.set_default_timeout(NAV_TIMEOUT_MS)
-                context.route("**/*", route_handler)
+                context.set_default_timeout(nav_timeout_ms)
+                if enable_route_intercept:
+                    context.route("**/*", route_handler)
                 page = context.new_page()
+                apply_stealth_sync(page)
                 if RECORD_NET_EVIDENCE_LITE:
                     net_collector = NetEvidenceLiteCollector()
                     net_collector.attach(page)
@@ -2044,7 +2217,13 @@ def main() -> None:
 
                     page.on("requestfailed", _on_req_failed)
 
-                success, payload, err = crawl_one_url_to_memory(page, url)
+                success, payload, err = crawl_one_url_to_memory(
+                    page,
+                    url,
+                    nav_timeout_ms=nav_timeout_ms,
+                    goto_wait_until=goto_wait_until,
+                    sample_label=label,
+                )
 
                 # close() 触发 HAR 落盘
                 try:
@@ -2089,14 +2268,14 @@ def main() -> None:
                 (out_dir / "url.json").write_text(json.dumps(urlj, ensure_ascii=False, indent=2), encoding="utf-8")
 
                 env = {
-                    "browser_channel": BROWSER_CHANNEL,
+                    "browser_channel": browser_mgr.get_effective_channel(HEADLESS, base_proxy),
                     "headless": HEADLESS,
                     "viewport": VIEWPORT,
                     "java_script_enabled": JAVA_SCRIPT_ENABLED,
                     "service_workers": SERVICE_WORKERS,
                     "ignore_https_errors": IGNORE_HTTPS_ERRORS,
                     "bypass_csp": BYPASS_CSP,
-                    "proxy_server": PROXY_SERVER,
+                    "proxy_server": proxy_server,
                     "user_agent": payload.get("user_agent"),
                 }
                 (out_dir / "env.json").write_text(json.dumps(env, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -2283,7 +2462,18 @@ def main() -> None:
                         variant_headless = cfg.get("headless")
                         if variant_headless is None:
                             variant_headless = HEADLESS
-                        result = capture_variant(url, cfg, browser_mgr, variant_headless, route_handler, variant_proxy)
+                        result = capture_variant(
+                            url,
+                            cfg,
+                            browser_mgr,
+                            variant_headless,
+                            route_handler,
+                            variant_proxy,
+                            nav_timeout_ms,
+                            goto_wait_until,
+                            enable_route_intercept,
+                            label,
+                        )
                         meta_variant = {
                             "name": name,
                             "config": {

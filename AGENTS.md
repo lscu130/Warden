@@ -9,6 +9,7 @@
 - 本文档是 Warden 的仓库级工程约束文件。
 - 涉及精确字段名、接口、模板字段、优先级或历史事实时，以英文版为准。
 - 中文区块只保留面向人类的压缩摘要，不替代英文约束正文。
+- 给用户的 Markdown 文档默认必须采用双语结构：前置中文摘要供人工阅读，后置英文全文供 AI 读取。
 
 ## 1. 文档作用
 
@@ -20,6 +21,7 @@
 - 非 trivial 工作必须遵守 workflow、task 和 handoff 三件套。
 - 默认优先最小、可验证、可回退的改动，不允许顺手大改或无关清理。
 - 冻结字段名、文件名、CLI、输出结构和标签语义时，不允许静默改动。
+- 给用户的 Markdown 文档必须中英双语，中文摘要在前，英文全文在后。
 - 若需求与文档约束冲突，应明确指出冲突，而不是自行猜测。
 
 ## 3. 阅读重点
@@ -112,6 +114,8 @@ Follow these rules strictly:
 10. If a task conflicts with documented constraints, state the conflict explicitly rather than guessing.
 11. Do not skip required workflow artifacts just because the task seems small.
 12. Do not claim compliance with workflow, task, or handoff requirements if the artifact was not actually read or produced.
+13. Markdown documents delivered to the user must be bilingual by default: a Chinese summary first for human reading, followed by the full English version for AI reading.
+14. For Markdown documents, English remains the authoritative version whenever exact wording, fields, commands, priorities, or historical facts matter.
 
 
 ## 4. Source of truth priority

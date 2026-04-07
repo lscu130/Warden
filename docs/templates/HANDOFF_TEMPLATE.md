@@ -8,6 +8,7 @@
 
 - 这是 Warden 的标准交接模板。
 - 涉及交接字段、状态、验证和兼容性表述时，以英文版为准。
+- 本模板本身就是 Markdown 交付物，默认按双语结构书写：中文摘要在前，英文全文在后，英文仍为权威版本。
 
 ## 1. 模板用途
 
@@ -48,6 +49,7 @@ Rules:
 - If something was not run, say so explicitly.
 - If no change happened in a category, write `none`.
 - Keep claims auditable against diffs, commands, and current files.
+- Write this Markdown handoff in bilingual form by default: Chinese summary first, full English version second, with English authoritative for exact facts, commands, validation, and compatibility statements.
 
 ---
 

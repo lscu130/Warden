@@ -4,8 +4,48 @@
 from __future__ import annotations
 
 import math
+import re
 from collections import Counter, defaultdict
 from typing import Any, Dict, Iterable, List, Sequence, Tuple
+
+TOKEN_RE = re.compile(r"[a-z0-9]+")
+DEFAULT_ACTIVE_ADVANCED_FAMILY_BRANDS: Tuple[str, ...] = ("roblox",)
+
+
+def parse_advanced_family_scope(raw_scope: str | None) -> Tuple[str, ...] | None:
+    if raw_scope is None:
+        return DEFAULT_ACTIVE_ADVANCED_FAMILY_BRANDS
+    normalized_scope = raw_scope.strip().lower()
+    if not normalized_scope:
+        return DEFAULT_ACTIVE_ADVANCED_FAMILY_BRANDS
+    if normalized_scope in {"all", "*"}:
+        return None
+    brands = tuple(sorted({item.strip().lower() for item in raw_scope.split(",") if item.strip()}))
+    return brands or DEFAULT_ACTIVE_ADVANCED_FAMILY_BRANDS
+
+
+def _record_family_tokens(record: Dict[str, Any]) -> set[str]:
+    tokens: set[str] = set()
+    for brand in record.get("claimed_brands") or []:
+        brand_text = str(brand).strip().lower()
+        if brand_text:
+            tokens.add(brand_text)
+    family_key = str(record.get("family_key") or "").strip().lower()
+    if family_key:
+        tokens.update(TOKEN_RE.findall(family_key))
+    return tokens
+
+
+def record_in_advanced_family_scope(record: Dict[str, Any], advanced_family_brands: Tuple[str, ...] | None) -> bool:
+    if advanced_family_brands is None:
+        return True
+    return bool(_record_family_tokens(record) & set(advanced_family_brands))
+
+
+def filter_advanced_family_scope(
+    records: Sequence[Dict[str, Any]], advanced_family_brands: Tuple[str, ...] | None
+) -> List[Dict[str, Any]]:
+    return [row for row in records if record_in_advanced_family_scope(row, advanced_family_brands)]
 
 
 def summarize_cluster_records(records: Sequence[Dict[str, Any]]) -> Dict[str, Any]:

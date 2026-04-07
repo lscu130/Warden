@@ -1,0 +1,101 @@
+{
+  "final_url": "https://10q2026.github.io/Updte/",
+  "top_frame_final_origin": "https://10q2026.github.io",
+  "request_counts": {
+    "total": 12,
+    "by_resource_type": {
+      "document": 2,
+      "script": 6,
+      "stylesheet": 2,
+      "image": 1,
+      "font": 1
+    },
+    "by_method": {
+      "GET": 12
+    }
+  },
+  "domain_counts": [
+    {
+      "domain_etld1": "jquery.com",
+      "count": 3,
+      "methods": {
+        "GET": 3
+      }
+    },
+    {
+      "domain_etld1": "fontawesome.com",
+      "count": 2,
+      "methods": {
+        "GET": 2
+      }
+    },
+    {
+      "domain_etld1": "github.io",
+      "count": 2,
+      "methods": {
+        "GET": 2
+      }
+    },
+    {
+      "domain_etld1": "googleapis.com",
+      "count": 2,
+      "methods": {
+        "GET": 2
+      }
+    },
+    {
+      "domain_etld1": "bootstrapcdn.com",
+      "count": 1,
+      "methods": {
+        "GET": 1
+      }
+    },
+    {
+      "domain_etld1": "cloudflare.com",
+      "count": 1,
+      "methods": {
+        "GET": 1
+      }
+    },
+    {
+      "domain_etld1": "msauth.net",
+      "count": 1,
+      "methods": {
+        "GET": 1
+      }
+    }
+  ],
+  "third_party_domains": [
+    "jquery.com",
+    "fontawesome.com",
+    "googleapis.com",
+    "bootstrapcdn.com",
+    "cloudflare.com",
+    "msauth.net"
+  ],
+  "post_targets": [],
+  "status_counts": {
+    "2xx": 9,
+    "3xx": 1,
+    "4xx": 0,
+    "5xx": 0,
+    "other": 0
+  },
+  "timing_ms": {
+    "ttfb_p50": 629.1524999999999,
+    "ttfb_p95": 1243.8589,
+    "response_end_p50": 671.1985000000348,
+    "response_end_p95": 1500.1479499999998
+  },
+  "navigation_chain": [
+    {
+      "url": "http://10q2026.github.io/Updte/",
+      "status": 301
+    },
+    {
+      "url": "https://10q2026.github.io/Updte/",
+      "status": 200
+    }
+  ],
+  "anomalies": []
+}
