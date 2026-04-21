@@ -23,7 +23,7 @@ def main() -> None:
     parser.add_argument(
         "--advanced_family_brands",
         type=str,
-        default="roblox",
+        default="roblox,netflix",
         help="Comma-separated brand/family tokens included in the current advanced review-manifest path. Use 'all' to review every family.",
     )
     args = parser.parse_args()

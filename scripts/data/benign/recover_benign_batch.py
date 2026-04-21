@@ -14,6 +14,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from scripts.data.common.html_payload_utils import html_payload_exists
 from scripts.data.common.io_utils import ensure_dir, log, read_json, write_json, write_lines
 from scripts.data.common.url_utils import canonicalize_url
 
@@ -28,10 +29,7 @@ REQUIRED_SAMPLE_FILES = [
     "screenshot_viewport.png",
     "auto_labels.json",
 ]
-CONTENT_SAMPLE_FILES = [
-    "html_rendered.html",
-    "visible_text.txt",
-]
+CONTENT_SAMPLE_FILES = ["visible_text.txt"]
 
 
 def now_utc_compact() -> str:
@@ -107,9 +105,9 @@ def inspect_sample_dir(sample_dir: Path, input_canonical_urls: set[str]) -> Dict
     record["outside_input"] = bool(canonical_input_url and canonical_input_url not in input_canonical_urls)
 
     missing_files = [name for name in REQUIRED_SAMPLE_FILES if not (sample_dir / name).exists()]
-    has_content_file = any((sample_dir / name).exists() for name in CONTENT_SAMPLE_FILES)
+    has_content_file = any((sample_dir / name).exists() for name in CONTENT_SAMPLE_FILES) or html_payload_exists(sample_dir, "html_rendered.json")
     if not has_content_file:
-        missing_files.append("html_rendered.html|visible_text.txt")
+        missing_files.append("html_rendered.json|visible_text.txt")
 
     record["missing_files"] = missing_files
     record["has_content_file"] = has_content_file

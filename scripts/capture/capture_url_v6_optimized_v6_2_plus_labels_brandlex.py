@@ -13,7 +13,7 @@ A) 元信息
 B) 跳转链
   - redirect_chain.json
 C) 页面内容
-  - html_raw.html / html_rendered.html / visible_text.txt
+  - html_raw.json / html_rendered.json / visible_text.txt
 D) 表单结构
   - forms.json
 E) 视觉
@@ -57,9 +57,13 @@ from typing import Dict, Iterator, List, Optional, Tuple
 from urllib.parse import urlparse
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 LABELING_DIR = REPO_ROOT / "scripts" / "labeling"
 if str(LABELING_DIR) not in sys.path:
     sys.path.insert(0, str(LABELING_DIR))
+
+from scripts.data.common.html_payload_utils import write_html_payload
 
 try:
     from Warden_auto_label_utils_brandlex import derive_auto_labels, derive_rule_labels
@@ -2304,9 +2308,9 @@ def main() -> None:
 
                 # C) html + visible text
                 if SAVE_RAW_HTML and payload.get("html_raw_text"):
-                    (out_dir / "html_raw.html").write_text(payload["html_raw_text"], encoding="utf-8", errors="ignore")
+                    write_html_payload(out_dir, "html_raw.json", payload["html_raw_text"])
                 if SAVE_RENDERED_HTML and payload.get("html_rendered"):
-                    (out_dir / "html_rendered.html").write_text(payload["html_rendered"], encoding="utf-8", errors="ignore")
+                    write_html_payload(out_dir, "html_rendered.json", payload["html_rendered"])
                 payload.pop("html_raw_text", None)
                 payload.pop("html_rendered", None)
                 if SAVE_VISIBLE_TEXT and payload.get("visible_text"):
@@ -2333,7 +2337,7 @@ def main() -> None:
                     step_dir.mkdir(parents=True, exist_ok=True)
                     (step_dir / "step1_screenshot_viewport.png").write_bytes(step1["screenshot_viewport_bytes"])
                     if step1.get("html_rendered"):
-                        (step_dir / "step1_html_rendered.html").write_text(step1["html_rendered"], encoding="utf-8", errors="ignore")
+                        write_html_payload(step_dir, "step1_html_rendered.json", step1["html_rendered"])
                     if step1.get("visible_text"):
                         (step_dir / "step1_visible_text.txt").write_text(step1["visible_text"], encoding="utf-8", errors="ignore")
                     if step1.get("forms"):
@@ -2499,9 +2503,7 @@ def main() -> None:
 
                             (vdir / "screenshot_viewport.png").write_bytes(vpayload["screenshot_viewport_bytes"])
                             if vpayload.get("html_rendered"):
-                                (vdir / "html_rendered.html").write_text(
-                                    vpayload["html_rendered"], encoding="utf-8", errors="ignore"
-                                )
+                                write_html_payload(vdir, "html_rendered.json", vpayload["html_rendered"])
                             if vpayload.get("visible_text"):
                                 (vdir / "visible_text.txt").write_text(
                                     vpayload["visible_text"], encoding="utf-8", errors="ignore"

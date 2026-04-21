@@ -1,4 +1,4 @@
-﻿# MODULE_TRAIN.md
+# MODULE_TRAIN.md
 
 ## 中文版
 
@@ -102,8 +102,8 @@ The Training module may read from frozen sample artifacts and derived label arti
 - `url.json`
 - `visible_text.txt`
 - `forms.json`
-- `html_rendered.html`
-- `html_raw.html` where explicitly needed
+- `html_rendered.json`
+- `html_raw.json` where explicitly needed
 - `screenshot_viewport.png`
 - `screenshot_full.png` where available
 - `net_summary.json`
@@ -443,4 +443,5 @@ A Training module task is Done only if:
 - compatibility impact is stated
 - risks are stated
 - documentation impact is stated
+
 

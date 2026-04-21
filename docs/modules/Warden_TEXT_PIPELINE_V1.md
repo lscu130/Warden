@@ -1,4 +1,4 @@
-﻿# Warden_TEXT_PIPELINE_V1
+# Warden_TEXT_PIPELINE_V1
 
 ## 中文版
 
@@ -71,8 +71,8 @@ This is the default text-side primary source and should be treated as the main r
 ### 3.2 Auxiliary text-capable inputs
 
 - OCR output from screenshots
-- `html_raw.html`
-- `html_rendered.html`
+- `html_raw.json`
+- `html_rendered.json`
 
 These are useful, but they should not automatically replace the primary text channel.
 
@@ -506,4 +506,5 @@ The following items are intentionally left open for later benchmark-driven refin
 
 Warden V1 Text is a visible-text-first, multilingual, evidence-oriented pipeline:
 it uses a compact encoder to represent webpage language under bounded runtime cost, preserves OCR and structural evidence as auxiliary signals, and emits auditable concept-level outputs for downstream multimodal fusion instead of producing a standalone chat-style final judgment.
+
 

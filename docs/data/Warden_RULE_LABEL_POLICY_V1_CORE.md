@@ -130,8 +130,8 @@
 - `forms.json`
 - `net_summary.json`
 - `visible_text.txt`
-- `html_rendered.html`
-- `html_raw.html`（必要时回退）
+- `html_rendered.json`
+- `html_raw.json`（必要时回退）
 - `diff_summary.json`（若存在）
 
 因此，`rule` 不应被理解为“只吃 `auto.risk_score_weak` 的二次包装层”。
@@ -592,8 +592,8 @@ Manual writing of rule files should not be the primary path.
 - `forms.json`
 - `net_summary.json`
 - `visible_text.txt`
-- `html_rendered.html`
-- `html_raw.html` as fallback
+- `html_rendered.json`
+- `html_raw.json` as fallback
 - `diff_summary.json` when present
 
 Therefore rule generation must not be interpreted as “repackaging `auto.risk_score_weak` only.”
@@ -928,3 +928,4 @@ The following are frozen as the stable v1-core skeleton:
 - the default generation path is explicit;
 - the current non-goals and later extension path are explicit;
 - the policy does not conflict with the current frozen dataset-output contract.
+

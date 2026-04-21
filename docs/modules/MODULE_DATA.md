@@ -1,4 +1,4 @@
-﻿# MODULE_DATA.md
+# MODULE_DATA.md
 
 ## 中文版
 
@@ -18,6 +18,12 @@ Data 模块负责读取冻结样本目录、生成 manifest、做一致性检查
 
 Data 模块拥有：目录扫描、manifest 生成、数据一致性检查、样本可用性标记和摘要输出。
 Data 模块不拥有：capture 行为重构、标签本体重写、训练目标定义和推理阈值策略。
+
+补充边界说明：
+
+- 默认正式入口脚本应保持只读，不修改上游样本目录。
+- 若存在数据维护脚本，它们必须明确标注为 maintenance utility，而不是默认 intake 流程。
+- `scripts/data/maintenance/dedup_channel_by_url_keep_oldest.py` 属于显式 opt-in 维护工具：按目录名中的 URL 键去重，默认 dry-run，仅在显式 `--delete` 时删除较新的重复目录。
 
 ## 3. 阅读重点
 
@@ -69,6 +75,19 @@ Current formal data entry scripts are:
 
 They operate on the current TRAINSET_V1 frozen sample layout and are intentionally read-only with respect to sample directories.
 
+Separate opt-in maintenance utilities may exist under `scripts/data/maintenance/`, but they are not part of the default manifest-intake path.
+
+Current maintenance utility explicitly added for channel hygiene:
+
+- `scripts/data/maintenance/dedup_channel_by_url_keep_oldest.py`
+
+This utility:
+
+- scans direct child sample directories under a channel root,
+- groups directories by the URL key encoded in `<url_key>_<YYYYMMDDTHHMMSSZ>`,
+- keeps the oldest timestamped directory for each URL key,
+- defaults to dry-run and only deletes duplicates when `--delete` is explicitly provided.
+
 Current default boundary:
 
 - they target TrainSet V1 primary intake
@@ -85,8 +104,8 @@ Current default boundary:
 The Data module currently assumes the TRAINSET_V1 directory baseline:
 
 - required: `meta.json`, `url.json`, `env.json`, `redirect_chain.json`, `screenshot_viewport.png`, `net_summary.json`, `auto_labels.json`
-- recommended: `visible_text.txt`, `forms.json`, `html_rendered.html`
-- optional: `html_raw.html`, `screenshot_full.png`, `rule_labels.json`, `manual_labels.json`
+- recommended: `visible_text.txt`, `forms.json`, `html_rendered.json`
+- optional: `html_raw.json`, `screenshot_full.png`, `rule_labels.json`, `manual_labels.json`
 
 ### 4.2 Label discipline
 
@@ -211,4 +230,5 @@ A non-trivial Data module task is Done only if:
 - validation is stated honestly
 - compatibility impact is stated
 - doc impact is stated
+
 

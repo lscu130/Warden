@@ -113,13 +113,13 @@ The following files are not absolute requirements, but they are strongly recomme
 
 - `visible_text.txt`
 - `forms.json`
-- `html_rendered.html`
+- `html_rendered.json`
 
 Why they matter:
 
 - the text tower depends on `visible_text.txt`;
 - form-structure features depend on `forms.json`;
-- HTML fallback and additional parsing often depend on `html_rendered.html`.
+- HTML fallback and additional parsing often depend on `html_rendered.json`.
 
 If they are missing, the sample may still remain in the overall manifest, but the usability fields should reflect the limitation so downstream training can filter appropriately.
 
@@ -127,14 +127,14 @@ If they are missing, the sample may still remain in the overall manifest, but th
 
 The following files may exist, but they are not primary TrainSet V1 dependencies:
 
-- `html_raw.html`
+- `html_raw.json`
 - `screenshot_full.png`
 - `rule_labels.json`
 - `manual_labels.json`
 
 Their intended roles are:
 
-- `html_raw.html` for supplemental analysis;
+- `html_raw.json` for supplemental analysis;
 - `screenshot_full.png` for later visual experiments beyond the first baseline;
 - `rule_labels.json` as a unified offline backfill artifact;
 - `manual_labels.json` as an enhancement source for high-quality subsets or later evaluation.
@@ -296,7 +296,7 @@ The following should not force exclusion, but should be reflected in manifest fl
 
 - missing `visible_text.txt`;
 - missing `forms.json`;
-- missing `html_rendered.html`;
+- missing `html_rendered.json`;
 - missing `rule_labels.json`;
 - missing `manual_labels.json`.
 
@@ -482,13 +482,13 @@ TrainSet V1 的构建方式是：
 
 - `visible_text.txt`
 - `forms.json`
-- `html_rendered.html`
+- `html_rendered.json`
 
 原因：
 
 - 文本塔依赖 `visible_text.txt`
 - 表单结构特征依赖 `forms.json`
-- HTML 补充解析与部分文本回退分析依赖 `html_rendered.html`
+- HTML 补充解析与部分文本回退分析依赖 `html_rendered.json`
 
 若它们缺失，样本仍可进入总 manifest，但应在可用性字段中明确标记，供 text / multimodal 训练时过滤。
 
@@ -498,14 +498,14 @@ TrainSet V1 的构建方式是：
 
 以下文件可存在，但不作为 TrainSet V1 主依赖：
 
-- `html_raw.html`
+- `html_raw.json`
 - `screenshot_full.png`
 - `rule_labels.json`
 - `manual_labels.json`
 
 说明：
 
-- `html_raw.html` 可用于补充分析，但不是主读取依赖
+- `html_raw.json` 可用于补充分析，但不是主读取依赖
 - `screenshot_full.png` 可用于后续增强视觉实验，但首版视觉基线不强依赖
 - `rule_labels.json` 建议通过后续统一离线 backfill 补齐
 - 若 `rule_labels.json` 含 `threat_taxonomy_v1`，应视为长期保留的活跃弱标签输出，而不是临时实验字段
@@ -681,7 +681,7 @@ multimodal 首版不强制要求 `screenshot_full.png`。
 
 - 无 `visible_text.txt`
 - 无 `forms.json`
-- 无 `html_rendered.html`
+- 无 `html_rendered.json`
 - 无 `rule_labels.json`
 - 无 `manual_labels.json`
 
@@ -753,3 +753,4 @@ TrainSet V1 定稿的完成条件：
 - split 原则明确
 - 与模型选择的边界明确
 - 与冻结规范不冲突
+

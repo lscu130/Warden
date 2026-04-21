@@ -1,0 +1,19 @@
+{
+  "sample_id": "fixture-negative-sample",
+  "sample_dir": "data/raw/example/fixture-negative-sample",
+  "label_hint": "benign",
+  "crawl_time_utc": "2026-04-20T00:00:00Z",
+  "http_status": 200,
+  "input_url": "https://example.com/login",
+  "final_url": "https://example.com/login",
+  "has_visible_text": true,
+  "has_forms": true,
+  "has_html_rendered": true,
+  "has_html_raw": true,
+  "has_screenshot_full": false,
+  "has_rule_labels": false,
+  "has_manual_labels": false,
+  "usable_for_text": true,
+  "usable_for_vision": true,
+  "usable_for_multimodal": "true"
+}

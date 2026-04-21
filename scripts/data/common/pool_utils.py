@@ -9,7 +9,7 @@ from collections import Counter, defaultdict
 from typing import Any, Dict, Iterable, List, Sequence, Tuple
 
 TOKEN_RE = re.compile(r"[a-z0-9]+")
-DEFAULT_ACTIVE_ADVANCED_FAMILY_BRANDS: Tuple[str, ...] = ("roblox",)
+DEFAULT_ACTIVE_ADVANCED_FAMILY_BRANDS: Tuple[str, ...] = ("netflix", "roblox")
 
 
 def parse_advanced_family_scope(raw_scope: str | None) -> Tuple[str, ...] | None:

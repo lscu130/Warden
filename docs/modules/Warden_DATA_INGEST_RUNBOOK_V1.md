@@ -25,6 +25,7 @@
 - benign 抓取入口：`scripts/data/benign/run_benign_capture.py`
 - 恶意 feed 导入：`scripts/data/malicious/ingest_public_malicious_feeds.py`
 - malicious 抓取入口：`scripts/data/malicious/run_malicious_capture.py`
+- 旧 HTML 转 JSON：`scripts/data/maintenance/convert_legacy_html_to_json.py`
 - 恶意聚类：`scripts/data/malicious/build_malicious_clusters.py`
 - train / reserve 划分：`scripts/data/malicious/build_malicious_train_pool.py`
 - review manifest：`scripts/data/maintenance/build_dedup_review_manifest.py`
@@ -504,6 +505,7 @@ It explains normal day-to-day usage of the current ingest scripts, especially:
 - benign capture entry: `scripts/data/benign/run_benign_capture.py`
 - malicious public-feed ingest: `scripts/data/malicious/ingest_public_malicious_feeds.py`
 - malicious capture entry: `scripts/data/malicious/run_malicious_capture.py`
+- legacy HTML-to-JSON conversion: `scripts/data/maintenance/convert_legacy_html_to_json.py`
 - malicious clustering: `scripts/data/malicious/build_malicious_clusters.py`
 - train/reserve routing: `scripts/data/malicious/build_malicious_train_pool.py`
 - dedup review manifest: `scripts/data/maintenance/build_dedup_review_manifest.py`
@@ -572,6 +574,12 @@ python <WARDEN_ROOT>\scripts\data\benign\run_benign_capture.py `
 - `benign_capture_run.json` under the output root,
 - the normal capture-engine files inside each sample directory,
 - an additive `ingest_metadata` object inside `meta.json`.
+
+HTML payload note:
+
+- newly captured HTML payloads are stored as JSON wrappers such as `html_rendered.json` and `html_raw.json`
+- older sample directories may still contain legacy `.html` files until they are migrated
+- use `scripts/data/maintenance/convert_legacy_html_to_json.py` when you need to convert old sample directories
 
 ### 5.4 What to do if benign sample count is still short
 
@@ -883,6 +891,36 @@ python <WARDEN_ROOT>\scripts\data\malicious\convert_url_csv_to_txt.py `
   --input_csv <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\pt_verified_since_2026-03-27_urls.csv `
   --output_txt <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\pt_verified_since_2026-03-27_urls.txt
 ```
+
+### 7.2 Convert legacy sample HTML files to JSON wrappers
+
+If you have older sample directories that still contain legacy `.html` capture artifacts, convert them with:
+
+```powershell
+python <WARDEN_ROOT>\scripts\data\maintenance\convert_legacy_html_to_json.py `
+  --input_roots <WARDEN_ROOT>\data\raw\phish <WARDEN_ROOT>\data\raw\benign
+```
+
+If you want a report only without writing files:
+
+```powershell
+python <WARDEN_ROOT>\scripts\data\maintenance\convert_legacy_html_to_json.py `
+  --input_roots <WARDEN_ROOT>\data\raw\phish <WARDEN_ROOT>\data\raw\benign `
+  --dry_run
+```
+
+In this mode the script only reports `would_convert` / `would_overwrite` style counts.
+It does not write any JSON files.
+
+If you want to remove the legacy `.html` files after successful conversion:
+
+```powershell
+python <WARDEN_ROOT>\scripts\data\maintenance\convert_legacy_html_to_json.py `
+  --input_roots <WARDEN_ROOT>\data\raw\phish <WARDEN_ROOT>\data\raw\benign `
+  --delete_original_html
+```
+
+If you run the conversion without `--delete_original_html`, the new JSON wrappers are written and the old `.html` files are intentionally kept.
 
 ## 8. Files To Inspect After Each Run
 

@@ -146,8 +146,8 @@
 - `forms.json`
 - `net_summary.json`
 - `visible_text.txt`
-- `html_rendered.html`
-- `html_raw.html`（必要时回退）
+- `html_rendered.json`
+- `html_raw.json`（必要时回退）
 - `diff_summary.json`（若存在，可用于部分 evasion 相关候选）
 
 说明：
@@ -568,8 +568,8 @@ But it must not, by default:
 - `forms.json`
 - `net_summary.json`
 - `visible_text.txt`
-- `html_rendered.html`
-- `html_raw.html` as fallback
+- `html_rendered.json`
+- `html_raw.json` as fallback
 - `diff_summary.json` when present for some evasion-related candidates
 
 Important implications:
@@ -835,3 +835,4 @@ The following boundaries should remain stable:
 - the allowed semantic output families of `auto` are explicit;
 - the current non-goals are explicit;
 - the policy does not conflict with the frozen dataset-output spec, TrainSet V1, or rule policy.
+

@@ -26,7 +26,7 @@ def main() -> None:
     parser.add_argument(
         "--advanced_family_brands",
         type=str,
-        default="roblox",
+        default="roblox,netflix",
         help="Comma-separated brand/family tokens included in the current advanced exclusion-list path. Use 'all' to keep every family.",
     )
     args = parser.parse_args()

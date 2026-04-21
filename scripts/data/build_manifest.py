@@ -13,8 +13,8 @@ build_manifest.py
 - 本脚本按当前仓库中的真实数据结构对齐：
   required: meta.json, url.json, env.json, redirect_chain.json,
             screenshot_viewport.png, net_summary.json, auto_labels.json
-  recommended: visible_text.txt, forms.json, html_rendered.html
-  optional: html_raw.html, screenshot_full.png, rule_labels.json, manual_labels.json
+  recommended: visible_text.txt, forms.json, html_rendered.json
+  optional: html_raw.json, screenshot_full.png, rule_labels.json, manual_labels.json
 - label_hint 属于弱标签层，优先来自 auto_labels.json，其次回退到 meta.json 的 label。
 """
 
@@ -47,9 +47,9 @@ FILE_AUTO_LABELS = "auto_labels.json"
 
 FILE_VISIBLE_TEXT = "visible_text.txt"
 FILE_FORMS = "forms.json"
-FILE_HTML_RENDERED = "html_rendered.html"
+FILE_HTML_RENDERED = "html_rendered.json"
 
-FILE_HTML_RAW = "html_raw.html"
+FILE_HTML_RAW = "html_raw.json"
 FILE_SCREENSHOT_FULL = "screenshot_full.png"
 FILE_RULE_LABELS = "rule_labels.json"
 FILE_MANUAL_LABELS = "manual_labels.json"
@@ -74,6 +74,12 @@ from collections import Counter
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 from urllib.parse import urlparse
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from scripts.data.common.html_payload_utils import html_payload_exists
 
 
 # =========================
@@ -176,8 +182,8 @@ def collect_presence(sample_dir: Path) -> Dict[str, bool]:
     return {
         "has_visible_text": (sample_dir / FILE_VISIBLE_TEXT).exists(),
         "has_forms": (sample_dir / FILE_FORMS).exists(),
-        "has_html_rendered": (sample_dir / FILE_HTML_RENDERED).exists(),
-        "has_html_raw": (sample_dir / FILE_HTML_RAW).exists(),
+        "has_html_rendered": html_payload_exists(sample_dir, FILE_HTML_RENDERED),
+        "has_html_raw": html_payload_exists(sample_dir, FILE_HTML_RAW),
         "has_screenshot_full": (sample_dir / FILE_SCREENSHOT_FULL).exists(),
         "has_rule_labels": (sample_dir / FILE_RULE_LABELS).exists(),
         "has_manual_labels": (sample_dir / FILE_MANUAL_LABELS).exists(),

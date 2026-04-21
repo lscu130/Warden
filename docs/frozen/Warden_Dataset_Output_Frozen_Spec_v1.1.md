@@ -70,8 +70,8 @@ A successful sample directory may contain core files such as:
 - `url.json`
 - `env.json`
 - `redirect_chain.json`
-- `html_raw.html`
-- `html_rendered.html`
+- `html_raw.json`
+- `html_rendered.json`
 - `visible_text.txt`
 - `forms.json`
 - `screenshot_viewport.png`
@@ -101,7 +101,7 @@ Under the current capture pipeline, failed or clearly invalid samples do not bec
 
 Under the current implementation:
 
-- `html_raw.html`, `html_rendered.html`, `visible_text.txt`, `forms.json`, `auto_labels.json`, and `net_summary.json` are normally enabled;
+- `html_raw.json`, `html_rendered.json`, `visible_text.txt`, `forms.json`, `auto_labels.json`, and `net_summary.json` are normally enabled;
 - `screenshot_full.png` is normally attempted but may be absent if the page is too large or the full-page capture fails;
 - `actions.jsonl`, `after_action/`, `variants/`, `diff_summary.json`, and `rule_labels.json` are mode-dependent and not always emitted by default.
 
@@ -137,13 +137,15 @@ Important semantics:
 
 `redirect_chain.json` stores the redirect chain as a standalone array so downstream consumers do not have to read it only through `url.json`.
 
-### 6.5 `html_raw.html`
+### 6.5 `html_raw.json`
 
-`html_raw.html` is the raw main-document response body. It may be truncated according to the active HTML-length limit.
+`html_raw.json` stores a JSON wrapper for the raw main-document response body.
+The HTML text is stored inside the wrapper payload and may be truncated according to the active HTML-length limit.
 
-### 6.6 `html_rendered.html`
+### 6.6 `html_rendered.json`
 
-`html_rendered.html` is the browser-rendered DOM content. It may differ from `html_raw.html` and is one of the main downstream text-analysis sources.
+`html_rendered.json` stores a JSON wrapper for the browser-rendered DOM content.
+It may differ from `html_raw.json` and remains one of the main downstream text-analysis sources.
 
 ### 6.7 `visible_text.txt`
 
@@ -248,8 +250,8 @@ The backfill script reads files such as:
 - `net_summary.json`
 - `diff_summary.json`
 - `visible_text.txt`
-- `html_rendered.html`
-- or falls back to `html_raw.html` when needed.
+- `html_rendered.json`
+- or falls back to `html_raw.json` when needed.
 
 It emits:
 
@@ -396,8 +398,8 @@ sample_dir/
 ├─ url.json
 ├─ env.json
 ├─ redirect_chain.json
-├─ html_raw.html                  # 可选，默认开启
-├─ html_rendered.html             # 可选，默认开启
+├─ html_raw.json                  # 可选，默认开启
+├─ html_rendered.json             # 可选，默认开启
 ├─ visible_text.txt               # 可选，默认开启
 ├─ forms.json                     # 可选，默认开启
 ├─ screenshot_viewport.png        # 必有（成功样本）
@@ -410,7 +412,7 @@ sample_dir/
 ├─ actions.jsonl                  # 仅 ENABLE_STEP1_ACTION=True 时生成
 ├─ after_action/                  # 仅 step1 成功时生成
 │  ├─ step1_screenshot_viewport.png
-│  ├─ step1_html_rendered.html
+│  ├─ step1_html_rendered.json
 │  ├─ step1_visible_text.txt
 │  ├─ step1_forms.json
 │  └─ step1_net_summary.json
@@ -419,7 +421,7 @@ sample_dir/
    ├─ <variant_name_1>/
    │  ├─ meta_variant.json
    │  ├─ screenshot_viewport.png
-   │  ├─ html_rendered.html
+   │  ├─ html_rendered.json
    │  ├─ visible_text.txt
    │  ├─ forms.json
    │  └─ net_summary.json
@@ -444,8 +446,8 @@ sample_dir/
 按当前脚本默认值：
 
 - 默认开启：
-  - `html_raw.html`
-  - `html_rendered.html`
+  - `html_raw.json`
+  - `html_rendered.json`
   - `visible_text.txt`
   - `forms.json`
   - `screenshot_full.png`（但若页面过高或截图失败，可缺失）
@@ -583,26 +585,28 @@ sample_dir/
 
 ---
 
-## 6.5 `html_raw.html`
+## 6.5 `html_raw.json`
 
-用途：主文档原始响应体（raw HTML）。
+用途：主文档原始响应体（raw HTML）的 JSON 封装。
 
 ### 特点
 
 - 来自响应体 `resp.text()`
+- HTML 文本保存在 JSON payload 内
 - 可能包含 `<!-- TRUNCATED -->` 标记
 - 长度受 `MAX_HTML_CHARS` 限制
 
 ---
 
-## 6.6 `html_rendered.html`
+## 6.6 `html_rendered.json`
 
-用途：浏览器渲染后的 DOM 内容。
+用途：浏览器渲染后 DOM 内容的 JSON 封装。
 
 ### 特点
 
 - 来自 `page.content()`
-- 可能与 `html_raw.html` 不同
+- HTML 文本保存在 JSON payload 内
+- 可能与 `html_raw.json` 不同
 - 长度受 `MAX_HTML_CHARS` 限制
 
 ---
@@ -875,7 +879,7 @@ sample_dir/
 ```text
 after_action/
 ├─ step1_screenshot_viewport.png
-├─ step1_html_rendered.html
+├─ step1_html_rendered.json
 ├─ step1_visible_text.txt
 ├─ step1_forms.json
 └─ step1_net_summary.json
@@ -902,7 +906,7 @@ after_action/
 variants/<variant_name>/
 ├─ meta_variant.json
 ├─ screenshot_viewport.png
-├─ html_rendered.html
+├─ html_rendered.json
 ├─ visible_text.txt
 ├─ forms.json
 └─ net_summary.json
@@ -1397,8 +1401,8 @@ variants/<variant_name>/
 - `net_summary.json`（不存在则 `{}`）
 - `diff_summary.json`（不存在则 `null`）
 - `visible_text.txt`
-- `html_rendered.html`
-- 若 `html_rendered.html` 不存在，则回退读 `html_raw.html`
+- `html_rendered.json`
+- 若 `html_rendered.json` 不存在，则回退读 `html_raw.json`
 
 ### 生成的文件
 
@@ -1499,3 +1503,4 @@ variants/<variant_name>/
 - 后续人工标注建议使用的 `manual_labels.json` 结构
 
 **从这版起，EVT 数据结构默认不再变动。除非审稿要求，或者你明确升版本。**
+

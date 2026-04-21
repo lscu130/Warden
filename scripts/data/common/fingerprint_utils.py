@@ -9,6 +9,7 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List
 
+from scripts.data.common.html_payload_utils import read_html_payload_text
 from scripts.data.common.io_utils import read_json
 from scripts.data.common.url_utils import canonicalize_url, registrable_domain, stable_hash
 
@@ -92,7 +93,7 @@ def build_sample_fingerprint_record(sample_dir: Path) -> Dict[str, Any]:
     final_or_input = normalized_final_url or normalized_input_url
 
     visible_text = _read_text_if_exists(sample_dir / "visible_text.txt")
-    html_rendered = _read_text_if_exists(sample_dir / "html_rendered.html")
+    html_rendered = read_html_payload_text(sample_dir, "html_rendered.json", max_chars=4000)
     text_fp = stable_hash(visible_text, prefix="txt_", length=16) if visible_text else ""
     html_fp = stable_hash(html_rendered, prefix="dom_", length=16) if html_rendered else ""
     forms_summary = _forms_summary(forms_payload)

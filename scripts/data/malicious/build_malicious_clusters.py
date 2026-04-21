@@ -27,7 +27,7 @@ def main() -> None:
     parser.add_argument(
         "--advanced_family_brands",
         type=str,
-        default="roblox",
+        default="roblox,netflix",
         help="Comma-separated brand/family tokens for the current advanced cluster scope. Use 'all' to keep the broader V1 capability active.",
     )
     args = parser.parse_args()

@@ -27,6 +27,8 @@ BUCKETS = [
     {"label": "top_500001_1000000", "rank_start": 500001, "rank_end": 1000000, "quota": 3000},
 ]
 
+BUCKET_MAP = {bucket["label"]: bucket for bucket in BUCKETS}
+
 CSV_PATTERN = re.compile(r"^tranco_(.+)_batch_(\d{4})\.csv$")
 
 
@@ -100,6 +102,21 @@ def _write_batch_csv(path: Path, rows: Iterable[Dict[str, str]]) -> None:
             writer.writerow({"rank": row["rank"], "domain": row["domain"], "url": row["url"]})
 
 
+def _resolve_requested_buckets(bucket_labels_arg: str | None) -> List[Dict[str, int | str]]:
+    if not bucket_labels_arg:
+        return list(BUCKETS)
+
+    requested_labels = [label.strip() for label in str(bucket_labels_arg).split(",") if label.strip()]
+    if not requested_labels:
+        return list(BUCKETS)
+
+    unknown = [label for label in requested_labels if label not in BUCKET_MAP]
+    if unknown:
+        raise ValueError(f"Unknown bucket label(s): {', '.join(sorted(unknown))}")
+
+    return [BUCKET_MAP[label] for label in requested_labels]
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Create a supplemental Tranco benign split while excluding domains/ranks already split under the output directory."
@@ -108,11 +125,18 @@ def main() -> None:
     parser.add_argument("--output_dir", type=str, default=str(REPO_ROOT / "tranco csv"))
     parser.add_argument("--batch_size", type=int, default=1000)
     parser.add_argument("--summary_name", type=str, default="supplement_split_summary_2026-03-26.json")
+    parser.add_argument(
+        "--bucket_labels",
+        type=str,
+        default=None,
+        help="Comma-separated bucket labels to generate. Default: all frozen buckets.",
+    )
     args = parser.parse_args()
 
     source_csv = Path(args.source_csv)
     output_dir = ensure_dir(Path(args.output_dir))
     batch_size = args.batch_size
+    requested_buckets = _resolve_requested_buckets(args.bucket_labels)
 
     source_rows = _read_source_rows(source_csv)
     used_ranks, used_domains, max_batch_index = _load_existing_tranco_rows(output_dir)
@@ -122,6 +146,7 @@ def main() -> None:
         "output_dir": str(output_dir),
         "selection_policy": "Warden_BENIGN_SAMPLING_STRATEGY_V1 rank-bucket quotas",
         "selection_method": "deterministic evenly spaced sampling within each rank bucket after excluding previously split ranks/domains",
+        "requested_bucket_labels": [bucket["label"] for bucket in requested_buckets],
         "batch_size": batch_size,
         "source_total_rows": len(source_rows),
         "excluded_existing_rank_count": len(used_ranks),
@@ -133,7 +158,7 @@ def main() -> None:
     }
 
     global_batch_index = 1
-    for bucket in BUCKETS:
+    for bucket in requested_buckets:
         bucket_label = bucket["label"]
         rank_start = bucket["rank_start"]
         rank_end = bucket["rank_end"]

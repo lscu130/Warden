@@ -39,7 +39,7 @@ def main() -> None:
     parser.add_argument(
         "--advanced_family_brands",
         type=str,
-        default="roblox",
+        default="roblox,netflix",
         help="Comma-separated brand/family tokens allowed through the current advanced train/reserve path. Use 'all' to keep the broader V1 capability active.",
     )
     args = parser.parse_args()

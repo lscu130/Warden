@@ -8,6 +8,9 @@
 
 - 本文档定义 Inference 模块的默认职责。
 - 涉及阶段路由、阈值和部署输出时，以英文版为准。
+- 当前口径保留官方阶段命名 `L0 / L1 / L2`，允许在总 runtime pipeline 中使用内嵌式 `L0-fast` 子路径，但不改变阶段语义。
+- 当前 auto-label 参考实现的活动 L0 逻辑位于 `src/warden/module/l0.py`，`scripts/labeling/Warden_auto_label_utils_brandlex.py` 保留兼容入口与顶层编排职责。
+- 当前 auto-label 参考实现的默认 L0 热路径已收窄：默认不做完整 `HTML` 特征提取，也不做默认 `brand` 提取；相关字段保留为兼容默认值，非 specialized 页面默认继续交给 `L1`。
 
 ## 1. 模块作用
 
@@ -18,6 +21,8 @@ Inference 模块负责运行期判断流程，包括阶段路由、阈值应用�
 
 - 拥有：runtime pipeline、stage routing、threshold application、export / benchmark / deployment path。
 - 不拥有：训练集重标、训练期目标定义和数据层结构重构。
+- 当前推荐运行流：共享证据准备可先于分层判断发生；`L0` 负责低成本筛查与路由；`L1` 仍是主判断层，多数样本应在此完成主判断，可先走 text-first，再在需要时补充 multimodal 证据；`L2` 负责 gate / evasion / 强交互 / 高歧义样本的升级复核。
+- `early low-risk exit` 只是路由结果，不是真值安全结论；运行时输出应显式保留这种 routing outcome 语义。
 
 ## English Version
 
@@ -93,6 +98,30 @@ A sample should be able to answer:
 
 Inference outputs must remain inspectable and not collapse into opaque single-value mystery decisions.
 
+### 3.5 Current runtime-flow interpretation
+
+The current recommended runtime flow may include a shared evidence-preparation step before stage-specific routing or judgment.
+This does not redefine the official stage names.
+
+At the module-contract level, the intended flow is:
+
+1. prepare shared cheap runtime evidence where available;
+2. run an embedded `L0-fast` screening/router path while preserving official `L0` semantics;
+3. send non-exiting samples to `L1`, which remains the main judgment stage;
+4. allow conditional multimodal supplementation under `L1` rather than inventing a new official stage;
+5. escalate only the harder gate / evasion / interaction-heavy / high-ambiguity subset to `L2`.
+
+This document treats `L0-fast` as an implementation-form clarification inside the overall runtime pipeline, not as a renamed stage and not as a replacement for the official `L0 / L1 / L2` contract.
+
+For the current auto-label-backed reference path, the active L0 implementation lives in `src/warden/module/l0.py`, while `scripts/labeling/Warden_auto_label_utils_brandlex.py` remains the compatibility entrypoint and top-level orchestration layer.
+
+In the current narrowed default hot path for that reference implementation:
+
+- full `HTML` feature extraction is skipped by default;
+- default `brand` extraction is skipped by default;
+- `html_features` and `brand_signals` remain present with compatibility-safe default values;
+- non-specialized pages should normally continue toward `L1`, while `L0` stays focused on cheap `gambling / adult / gate` specialized screening and routing hints.
+
 ---
 
 ## 4. Allowed Runtime Inputs
@@ -116,6 +145,7 @@ The runtime input contract must be explicit for each inference path.
 ### 5.1 L0 rules
 
 L0 is the cheapest stage.
+It may be implemented as an embedded `L0-fast` runtime sub-path inside the broader pipeline, but it still remains the official `L0` stage in module semantics.
 
 Default responsibilities:
 
@@ -124,23 +154,28 @@ Default responsibilities:
 - simple structured/rule signals
 - cheap text/URL/image-lite evidence
 - initial escalation candidate generation
+- observability-aware routing when cheap evidence is missing, including raw visible-text missing cases
+- early low-risk exit only as an explicit routing outcome under sufficient low-risk evidence
 
 Strict rules:
 
 - do not silently add heavy model inference to L0
 - do not bury most of the system cost in L0
 - do not make L0 routing opaque
+- do not reinterpret embedded `L0-fast` as `L1-fast`
+- do not treat `early_stop_low_risk` as a ground-truth safety claim
 
 ### 5.2 L1 rules
 
-L1 is the stronger middle stage.
+L1 is the stronger middle stage and the current main judgment layer.
 
 Default responsibilities:
 
-- stronger semantic/structural fusion
-- moderate-cost multimodal reasoning
+- text-first main judgment by default
+- stronger semantic/structural judgment
+- conditional multimodal supplementation when text-only judgment is insufficient
 - richer consistency checks
-- more reliable intermediate judgment
+- more reliable main-stage judgment for samples that stop at L1
 - escalation filtering toward L2
 
 Strict rules:
@@ -148,6 +183,7 @@ Strict rules:
 - keep L1 purpose distinct from both L0 and L2
 - do not let L1 become a copy of L0 with different thresholds
 - do not let L1 become effectively “always final” unless explicitly intended
+- do not reinterpret conditional multimodal supplementation as a separate official stage
 
 ### 5.3 L2 rules
 
@@ -157,6 +193,8 @@ Default responsibilities:
 
 - ambiguous difficult cases
 - high-risk cases needing stronger evidence
+- gate / evasion candidates needing stronger review
+- interaction-heavy samples
 - conflict resolution across signals
 - hard evasion or edge cases
 
@@ -184,6 +222,7 @@ Possible trigger families include:
 - sensitive intent + mismatch indicators
 - evasion/cloaking indicators
 - quality issues requiring stronger stage
+- empty or missing raw visible-text observability that prevents a trustworthy cheap-stage stop
 
 The exact triggers may vary by implementation, but they must be explicit.
 
@@ -200,6 +239,12 @@ The inference result should be able to expose at least:
 - why escalation happened
 - final risk output
 - optional intermediate stage summary
+
+### 6.5 Early exit semantics
+
+Any early low-risk stop at `L0` remains a routing decision under the currently observed evidence and active policy thresholds.
+It must not be documented or exposed as a final ground-truth safety statement.
+Downstream output should preserve this distinction explicitly.
 
 ---
 
@@ -247,6 +292,7 @@ A non-trivial inference output should be able to express:
 
 - sample or request identifier
 - final risk decision or risk level
+- routing outcome/status, especially when distinguishing an `early low-risk exit` from a stronger final benign judgment
 - score or confidence if available
 - final stage
 - escalation path
@@ -283,6 +329,10 @@ If a runtime feature is unavailable:
 - stage-routing consequences must be explicit
 
 Silent fallback is not allowed.
+
+When raw visible text is empty or materially missing, the default safe behavior is to treat that as a routing-quality problem.
+By default, `L0` should avoid low-risk early stop and prefer sending the sample to `L1` for fuller-content judgment.
+This remains a routing semantic rather than a direct risk label.
 
 ---
 
