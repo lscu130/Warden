@@ -187,7 +187,6 @@ Relevant inputs for this task:
 
 ### Missing Inputs
 
-- final target-root confirmation: the current task uses `E:\WardenData`, while the current user wording says `WardenDate`
 - a pre-approved exact rollback trigger threshold, if the migration validation is only partially successful
 
 If any required input is missing, state that explicitly before execution.
@@ -385,7 +384,6 @@ Repo handoff path if one should be created:
 
 ## 13. Open Questions / Blocking Issues
 
-- Should the target external root be `E:\WardenData` or the user-requested spelling `E:\WardenDate`?
 - Should the final steady-state repo root keep an empty placeholder `data/` directory, or should `data/` disappear entirely from the repo root?
 - If any active operator workflow still requires repo-local relative commands, should that workflow be updated now or explicitly deferred as doc debt?
 - If `E:\WardenData` already exists with partial content, what exact merge policy should be applied before file move execution?

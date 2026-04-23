@@ -17,6 +17,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from scripts.data.common.io_utils import ensure_dir, now_utc_iso, write_json, write_jsonl, write_lines
+from scripts.data.common.runtime_data_root import data_path
 from scripts.data.common.url_utils import canonicalize_url, stable_hash
 
 OPENPHISH_COMMUNITY_URL = "https://openphish.com/feed.txt"
@@ -74,7 +75,7 @@ def _normalize_rows(rows: Iterable[Dict[str, str]]) -> List[Dict[str, str]]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Ingest OpenPhish Community and PhishTank feed candidates.")
-    parser.add_argument("--output_dir", type=str, default="./data/ingest/malicious")
+    parser.add_argument("--output_dir", type=str, default=str(data_path("ingest", "malicious")))
     parser.add_argument("--openphish_url", type=str, default=OPENPHISH_COMMUNITY_URL)
     parser.add_argument("--phishtank_url", type=str, default=PHISHTANK_FEED_URL)
     parser.add_argument("--openphish_input_path", type=str, default="")

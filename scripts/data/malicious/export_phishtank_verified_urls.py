@@ -15,6 +15,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from scripts.data.common.io_utils import ensure_dir, log, write_lines
+from scripts.data.common.runtime_data_root import data_path
 
 
 def _prompt_start_date() -> date:
@@ -69,7 +70,7 @@ def main() -> None:
     parser.add_argument(
         "--output_dir",
         type=str,
-        default=str(REPO_ROOT / "data" / "processed" / "pt_csv_exports"),
+        default=str(data_path("processed", "pt_csv_exports")),
         help="Used only when --output_csv is not provided. The default TXT path is derived from the CSV path.",
     )
     args = parser.parse_args()

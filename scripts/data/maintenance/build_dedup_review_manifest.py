@@ -13,17 +13,18 @@ if str(REPO_ROOT) not in sys.path:
 
 from scripts.data.common.io_utils import ensure_dir, read_jsonl, write_jsonl
 from scripts.data.common.pool_utils import build_review_manifest, filter_advanced_family_scope, parse_advanced_family_scope
+from scripts.data.common.runtime_data_root import data_path
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build a dedup review manifest from cluster records and pool decisions.")
     parser.add_argument("--clusters_path", type=str, required=True)
     parser.add_argument("--pool_decisions_path", type=str, required=True)
-    parser.add_argument("--output_dir", type=str, default=str(REPO_ROOT / "data" / "processed" / "malicious_review"))
+    parser.add_argument("--output_dir", type=str, default=str(data_path("processed", "malicious_review")))
     parser.add_argument(
         "--advanced_family_brands",
         type=str,
-        default="roblox,netflix",
+        default="roblox,netflix,trezor,ledger",
         help="Comma-separated brand/family tokens included in the current advanced review-manifest path. Use 'all' to review every family.",
     )
     args = parser.parse_args()

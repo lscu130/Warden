@@ -74,7 +74,7 @@ python scripts/ci/check_schema_compat.py --kind manifest_record --path tests/smo
 Optional local read-only spot-check on one real sample directory:
 
 ```bash
-python scripts/ci/check_schema_compat.py --kind sample_dir --path data/raw/benign/2026-04-02_planA_day8_tranco_top_10001_100000_batch_0010/0x7c0.com_20260408T092757Z
+python scripts/ci/check_schema_compat.py --kind sample_dir --path E:\WardenData\raw\benign\2026-04-02_planA_day8_tranco_top_10001_100000_batch_0010\0x7c0.com_20260408T092757Z
 ```
 
 ## 5. Current Non-Goals

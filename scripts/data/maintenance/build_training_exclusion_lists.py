@@ -17,16 +17,17 @@ from scripts.data.common.pool_utils import (
     filter_advanced_family_scope,
     parse_advanced_family_scope,
 )
+from scripts.data.common.runtime_data_root import data_path
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build malicious training exclusion lists from pool decisions.")
     parser.add_argument("--pool_decisions_path", type=str, required=True)
-    parser.add_argument("--output_dir", type=str, default=str(REPO_ROOT / "data" / "processed" / "malicious_exclusions"))
+    parser.add_argument("--output_dir", type=str, default=str(data_path("processed", "malicious_exclusions")))
     parser.add_argument(
         "--advanced_family_brands",
         type=str,
-        default="roblox,netflix",
+        default="roblox,netflix,trezor,ledger",
         help="Comma-separated brand/family tokens included in the current advanced exclusion-list path. Use 'all' to keep every family.",
     )
     args = parser.parse_args()

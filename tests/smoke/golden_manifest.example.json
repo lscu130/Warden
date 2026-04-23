@@ -1,6 +1,6 @@
 {
   "sample_id": "example.com_20260410T000000Z",
-  "sample_dir": "E:\\Warden\\data\\raw\\example\\example.com_20260410T000000Z",
+  "sample_dir": "E:\\WardenData\\raw\\example\\example.com_20260410T000000Z",
   "label_hint": "benign",
   "crawl_time_utc": "2026-04-10T00:00:00Z",
   "http_status": 200,

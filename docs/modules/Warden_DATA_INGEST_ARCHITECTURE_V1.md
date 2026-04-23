@@ -415,7 +415,7 @@ Responsible for:
 
 Current active execution scope (tightened on 2026-04-08):
 - **The general V1 capability boundary remains intact**: the malicious upper-layer pipeline still allows cluster / subcluster / train-reserve handling as a supported V1 architecture.
-- **The current default rollout enables that advanced path only for the Roblox and Netflix families**.
+- **The current default rollout enables that advanced path only for the Roblox, Netflix, Trezor, and Ledger families**.
 - **All other malicious families stay on the basic path by default**: source recording, page-validity checks, raw archive handling, and optional exact-URL hygiene dedup only, without broader family/template clustering by default.
 
 ### 3.5 Maintenance Layer: Legacy Data Backfill
@@ -579,7 +579,7 @@ The document freezes the principle, not one numeric threshold:
 
 Warden V1 still retains the general advanced malicious path of cluster -> subcluster -> train/reserve handling.
 
-However, in the **current active rollout scope**, that advanced path is enabled by default only for the **Roblox and Netflix families**.
+However, in the **current active rollout scope**, that advanced path is enabled by default only for the **Roblox, Netflix, Trezor, and Ledger families**.
 
 For all other malicious families, the current default execution scope is intentionally tightened to:
 - source recording,
@@ -670,6 +670,7 @@ Current implementation status:
 
 - upper-layer orchestrators can invoke capture non-interactively;
 - malicious family share cap is exposed as a CLI configuration parameter in the train-pool and maintenance scripts;
-- the broader V1 malicious cluster/pool architecture remains available as a general capability boundary, but the current default active advanced scope is Roblox+Netflix-only;
+- the current default family share cap for the active train-pool / backfill paths is `0.25`, while the CLI override remains available;
+- the broader V1 malicious cluster/pool architecture remains available as a general capability boundary, but the current default active advanced scope is Roblox+Netflix+Trezor+Ledger-only;
 - the original capture logic was preserved instead of rewritten;
 - legacy-data handling defaults to review / exclusion outputs rather than physical deletion.

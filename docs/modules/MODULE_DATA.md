@@ -181,13 +181,13 @@ This is an intentional scheduling decision, not an omission.
 Smoke-level manifest build:
 
 ```bash
-python scripts/data/build_manifest.py --data-root ./data --input-roots ./data/raw/phish ./data/raw/benign --out-dir ./data/processed/trainset_v1_smoke
+python scripts/data/build_manifest.py --data-root E:\WardenData --input-roots E:\WardenData\raw\phish E:\WardenData\raw\benign --out-dir E:\WardenData\processed\trainset_v1_smoke
 ```
 
 Smoke-level consistency check:
 
 ```bash
-python scripts/data/check_dataset_consistency.py --data-root ./data --manifest ./data/processed/trainset_v1_smoke/manifest.jsonl --out-dir ./data/processed/trainset_v1_smoke/consistency_check
+python scripts/data/check_dataset_consistency.py --data-root E:\WardenData --manifest E:\WardenData\processed\trainset_v1_smoke\manifest.jsonl --out-dir E:\WardenData\processed\trainset_v1_smoke\consistency_check
 ```
 
 ---

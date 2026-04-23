@@ -13,6 +13,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from scripts.data.common.io_utils import ensure_dir, read_jsonl, write_json, write_jsonl
 from scripts.data.common.pool_utils import assign_pool_decisions, filter_advanced_family_scope, parse_advanced_family_scope
+from scripts.data.common.runtime_data_root import data_path
 
 
 def _join(records, decisions, bucket: str):
@@ -34,12 +35,12 @@ def _join(records, decisions, bucket: str):
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build malicious train/reserve manifests from cluster records.")
     parser.add_argument("--clusters_path", type=str, required=True)
-    parser.add_argument("--output_dir", type=str, default=str(REPO_ROOT / "data" / "processed" / "malicious_train_pool"))
-    parser.add_argument("--family_share_cap", type=float, default=0.10)
+    parser.add_argument("--output_dir", type=str, default=str(data_path("processed", "malicious_train_pool")))
+    parser.add_argument("--family_share_cap", type=float, default=0.25)
     parser.add_argument(
         "--advanced_family_brands",
         type=str,
-        default="roblox,netflix",
+        default="roblox,netflix,trezor,ledger",
         help="Comma-separated brand/family tokens allowed through the current advanced train/reserve path. Use 'all' to keep the broader V1 capability active.",
     )
     args = parser.parse_args()

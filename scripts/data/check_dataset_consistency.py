@@ -20,13 +20,28 @@ check_dataset_consistency.py
 
 from __future__ import annotations
 
+import argparse
+import json
+import sys
+from collections import Counter
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Sequence
+from urllib.parse import urlparse
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from scripts.data.common.html_payload_utils import html_payload_exists
+from scripts.data.common.runtime_data_root import data_path, get_data_root
+
 # =========================
 # 头部配置区：默认输入位置 / 输出位置
 # 命令行参数可覆盖
 # =========================
-CONFIG_DATA_ROOT = "./data"
-CONFIG_MANIFEST_PATH = "./data/processed/trainset_v1/manifest.jsonl"
-CONFIG_OUTPUT_DIR = "./data/processed/trainset_v1/consistency_check"
+CONFIG_DATA_ROOT = str(get_data_root())
+CONFIG_MANIFEST_PATH = str(data_path("processed", "trainset_v1", "manifest.jsonl"))
+CONFIG_OUTPUT_DIR = str(data_path("processed", "trainset_v1", "consistency_check"))
 CONFIG_REPORT_JSON_NAME = "consistency_report.json"
 CONFIG_REPORT_MD_NAME = "consistency_report.md"
 CONFIG_SUMMARY_NAME = "summary.json"
@@ -90,20 +105,6 @@ OPTIONAL_COLUMNS = [
 ]
 
 ALLOWED_SPLITS = {"train", "val", "test"}
-
-import argparse
-import json
-import sys
-from collections import Counter
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence
-from urllib.parse import urlparse
-
-REPO_ROOT = Path(__file__).resolve().parents[2]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
-
-from scripts.data.common.html_payload_utils import html_payload_exists
 
 
 # =========================

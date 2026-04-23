@@ -18,9 +18,10 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from scripts.data.common.io_utils import ensure_dir, log, now_utc_iso, write_json
+from scripts.data.common.runtime_data_root import data_path
 
 CONFIG_INPUT_ROOT = str(REPO_ROOT / "channel")
-CONFIG_OUTPUT_DIR = str(REPO_ROOT / "data" / "processed" / "channel_url_dedup")
+CONFIG_OUTPUT_DIR = str(data_path("processed", "channel_url_dedup"))
 KEEP_MANIFEST_NAME = "keep_manifest.jsonl"
 DELETE_MANIFEST_NAME = "delete_manifest.jsonl"
 SUMMARY_NAME = "summary.json"

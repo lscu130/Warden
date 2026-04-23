@@ -14,13 +14,14 @@ if str(REPO_ROOT) not in sys.path:
 from scripts.data.common.fingerprint_utils import build_sample_fingerprint_record
 from scripts.data.common.io_utils import discover_sample_dirs, ensure_dir, write_json, write_jsonl
 from scripts.data.common.pool_utils import assign_pool_decisions, build_review_manifest, build_training_exclusion_list, summarize_cluster_records
+from scripts.data.common.runtime_data_root import data_path
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Backfill malicious sample fingerprints and emit review artifacts.")
-    parser.add_argument("--input_roots", nargs="+", default=[str(REPO_ROOT / "data" / "raw" / "phish")])
-    parser.add_argument("--output_dir", type=str, default=str(REPO_ROOT / "data" / "processed" / "malicious_backfill"))
-    parser.add_argument("--family_share_cap", type=float, default=0.10)
+    parser.add_argument("--input_roots", nargs="+", default=[str(data_path("raw", "phish"))])
+    parser.add_argument("--output_dir", type=str, default=str(data_path("processed", "malicious_backfill")))
+    parser.add_argument("--family_share_cap", type=float, default=0.25)
     parser.add_argument("--emit_clusters", action="store_true")
     parser.add_argument("--emit_review_manifest", action="store_true")
     parser.add_argument("--emit_exclusion_list", action="store_true")

@@ -18,16 +18,17 @@ from scripts.data.common.pool_utils import (
     parse_advanced_family_scope,
     summarize_cluster_records,
 )
+from scripts.data.common.runtime_data_root import data_path
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build malicious fingerprint / cluster / subcluster assignments.")
-    parser.add_argument("--input_roots", nargs="+", default=[str(REPO_ROOT / "data" / "raw" / "phish")])
-    parser.add_argument("--output_dir", type=str, default=str(REPO_ROOT / "data" / "processed" / "malicious_clusters"))
+    parser.add_argument("--input_roots", nargs="+", default=[str(data_path("raw", "phish"))])
+    parser.add_argument("--output_dir", type=str, default=str(data_path("processed", "malicious_clusters")))
     parser.add_argument(
         "--advanced_family_brands",
         type=str,
-        default="roblox,netflix",
+        default="roblox,netflix,trezor,ledger",
         help="Comma-separated brand/family tokens for the current advanced cluster scope. Use 'all' to keep the broader V1 capability active.",
     )
     args = parser.parse_args()

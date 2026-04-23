@@ -185,3 +185,4 @@ data/*
 !data/README.md
 tranco csv/*
 tmp/*
+channel/*

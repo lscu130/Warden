@@ -18,6 +18,11 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Iterable, List, Tuple
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from scripts.data.common.runtime_data_root import data_path
 from Warden_auto_label_utils_brandlex import derive_auto_labels_from_sample_dir, derive_rule_labels, iter_sample_dirs
 
 
@@ -27,8 +32,8 @@ from Warden_auto_label_utils_brandlex import derive_auto_labels_from_sample_dir,
 # 命令行参数仍可覆盖这些默认值
 # -----------------------------
 CONFIG_DATASET_ROOTS = [
-    "./data/raw/phish",
-    "./data/raw/benign",
+    str(data_path("raw", "phish")),
+    str(data_path("raw", "benign")),
 ]
 CONFIG_AUTO_LABEL_OUTPUT_NAME = "auto_labels.json"
 CONFIG_RULE_LABEL_OUTPUT_NAME = "rule_labels.json"

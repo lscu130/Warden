@@ -197,9 +197,9 @@ Doc debt still remaining:
 ## 9. Recommended Next Step
 
 - Use these exact output roots for the 2026-04-17 benign queue:
-  - `E:\Warden\data\raw\benign\2026-04-17_planA_day14_tranco_top_10001_100000_batch_0004`
-  - `E:\Warden\data\raw\benign\2026-04-17_planA_day14_tranco_top_10001_100000_batch_0005`
-  - `E:\Warden\data\raw\benign\2026-04-17_planA_day14_tranco_top_10001_100000_batch_0006`
+  - `E:\WardenData\raw\benign\tranco\2026-04-17_planA_day14_tranco_top_10001_100000_batch_0004`
+  - `E:\WardenData\raw\benign\tranco\2026-04-17_planA_day14_tranco_top_10001_100000_batch_0005`
+  - `E:\WardenData\raw\benign\tranco\2026-04-17_planA_day14_tranco_top_10001_100000_batch_0006`
 - Run this preflight first:
 
 ```powershell
@@ -212,7 +212,7 @@ python E:\Warden\scripts\capture\capture_url_v6_optimized_v6_2_plus_labels_brand
 ```powershell
 python E:\Warden\scripts\data\benign\run_benign_capture.py `
   --input_path "E:\Warden\tranco csv\tranco_top_10001_100000_batch_0004_urls.txt" `
-  --output_root E:\Warden\data\raw\benign\2026-04-17_planA_day14_tranco_top_10001_100000_batch_0004 `
+  --output_root E:\WardenData\raw\benign\tranco\2026-04-17_planA_day14_tranco_top_10001_100000_batch_0004 `
   --source tranco `
   --rank_bucket top_10001_100000 `
   --page_type homepage `
@@ -225,7 +225,7 @@ python E:\Warden\scripts\data\benign\run_benign_capture.py `
 
 python E:\Warden\scripts\data\benign\run_benign_capture.py `
   --input_path "E:\Warden\tranco csv\tranco_top_10001_100000_batch_0005_urls.txt" `
-  --output_root E:\Warden\data\raw\benign\2026-04-17_planA_day14_tranco_top_10001_100000_batch_0005 `
+  --output_root E:\WardenData\raw\benign\tranco\2026-04-17_planA_day14_tranco_top_10001_100000_batch_0005 `
   --source tranco `
   --rank_bucket top_10001_100000 `
   --page_type homepage `
@@ -238,7 +238,7 @@ python E:\Warden\scripts\data\benign\run_benign_capture.py `
 
 python E:\Warden\scripts\data\benign\run_benign_capture.py `
   --input_path "E:\Warden\tranco csv\tranco_top_10001_100000_batch_0006_urls.txt" `
-  --output_root E:\Warden\data\raw\benign\2026-04-17_planA_day14_tranco_top_10001_100000_batch_0006 `
+  --output_root E:\WardenData\raw\benign\tranco\2026-04-17_planA_day14_tranco_top_10001_100000_batch_0006 `
   --source tranco `
   --rank_bucket top_10001_100000 `
   --page_type homepage `

@@ -370,7 +370,7 @@ This policy document still preserves the **general V1 capability boundary**:
 - cluster / subcluster / family-share-cap handling remains part of the supported V1 malicious-processing capability.
 
 However, the **current default active execution scope** is now tightened to:
-- enable advanced cluster / subcluster / train-reserve handling by default only for the **Roblox and Netflix families**,
+- enable advanced cluster / subcluster / train-reserve handling by default only for the **Roblox, Netflix, Trezor, and Ledger families**,
 - keep all other malicious families on:
   - source recording,
   - page-validity checks,
@@ -533,7 +533,7 @@ Recommended default behavior:
 4. do not physically delete the raw archive by default.
 
 Current active rollout note:
-- the advanced cluster / subcluster / train-pool sampling chain above is currently enabled by default only for the Roblox and Netflix families;
+- the advanced cluster / subcluster / train-pool sampling chain above is currently enabled by default only for the Roblox, Netflix, Trezor, and Ledger families;
 - all other malicious families do not enter that advanced chain by default at the current stage and remain on the basic ingest/archive path with optional exact-URL hygiene dedup only.
 
 Current V1 planning target:
@@ -637,5 +637,6 @@ Current implementation status:
 - the default public sources are OpenPhish Community and PhishTank;
 - train / reserve decisions are built on top of cluster / subcluster records rather than a fixed per-cluster cap;
 - family share cap is exposed as a CLI configuration item instead of being frozen as a document-level magic number;
-- the broader V1 advanced malicious dedup / cluster / pool path remains available as a supported capability boundary, while the current default active advanced scope is Roblox+Netflix-only;
+- the current default family share cap used by the active train-pool / maintenance paths is `0.25`, while CLI override remains available;
+- the broader V1 advanced malicious dedup / cluster / pool path remains available as a supported capability boundary, while the current default active advanced scope is Roblox+Netflix+Trezor+Ledger-only;
 - legacy-data handling emits fingerprints, cluster/subcluster outputs, review manifests, and exclusion lists without default physical deletion.

@@ -49,8 +49,9 @@ Important rule:
 | Day 11 | 2026-04-08 | results_received | `none` | `tranco_top_10001_100000_batch_0013`; `tranco_top_10001_100000_batch_0014`; `tranco_top_100001_500000_batch_0008` | `docs/tasks/2026-04-08_plan_a_batch_capture_day11_execution_task.md` | `docs/handoff/2026-04-08_plan_a_batch_capture_day11_vm_prep.md` |
 | Day 12 | 2026-04-15 | results_received | `none` | `tranco_top_100001_500000_batch_0009`; `tranco_top_100001_500000_batch_0010`; `tranco_top_100001_500000_batch_0011` | `docs/tasks/2026-04-15_plan_a_batch_capture_day12_execution_task.md` | `docs/handoff/2026-04-15_plan_a_batch_capture_day12_vm_prep.md` |
 | Day 13 | 2026-04-16 | results_received | `none` | `tranco_top_1_10000_batch_0005`; `tranco_top_1_10000_batch_0006`; `tranco_top_10001_100000_batch_0003` | `docs/tasks/2026-04-16_plan_a_batch_capture_day13_execution_task.md` | `docs/handoff/2026-04-16_plan_a_batch_capture_day13_vm_prep.md` |
-| Day 14 | 2026-04-17 | selected | `none` | `tranco_top_10001_100000_batch_0004`; `tranco_top_10001_100000_batch_0005`; `tranco_top_10001_100000_batch_0006` | `docs/tasks/2026-04-17_plan_a_batch_capture_day14_execution_task.md` | `docs/handoff/2026-04-17_plan_a_batch_capture_day14_vm_prep.md` |
-| Day 15 | 2026-04-21 | selected | `none` | `tranco_top_10001_100000_batch_0007`; `tranco_top_10001_100000_batch_0008`; `tranco_top_10001_100000_batch_0009` | `docs/tasks/2026-04-21_plan_a_batch_capture_day15_execution_task.md` | `docs/handoff/2026-04-21_plan_a_batch_capture_day15_vm_prep.md` |
+| Day 14 | 2026-04-17 | results_received | `none` | `tranco_top_10001_100000_batch_0004`; `tranco_top_10001_100000_batch_0005`; `tranco_top_10001_100000_batch_0006` | `docs/tasks/2026-04-17_plan_a_batch_capture_day14_execution_task.md` | `docs/handoff/2026-04-17_plan_a_batch_capture_day14_vm_prep.md` |
+| Day 15 | 2026-04-21 | results_received | `none` | `tranco_top_10001_100000_batch_0007`; `tranco_top_10001_100000_batch_0008`; `tranco_top_10001_100000_batch_0009` | `docs/tasks/2026-04-21_plan_a_batch_capture_day15_execution_task.md` | `docs/handoff/2026-04-21_plan_a_batch_capture_day15_vm_prep.md` |
+| Day 16 | 2026-04-22 | selected | `none` | `tranco_top_100001_500000_batch_0012`; `tranco_top_100001_500000_batch_0013`; `tranco_top_100001_500000_batch_0014` | `docs/tasks/2026-04-22_plan_a_batch_capture_day16_final_execution_task.md` | `docs/handoff/2026-04-22_plan_a_batch_capture_day16_final_vm_prep.md` |
 
 ---
 
@@ -71,7 +72,7 @@ Important rule:
 - Day 8 is marked `results_received` based on the returned Day 8 benign JSON package paths provided in the thread.
 - Day 9 is marked `results_received` based on the returned Day 9 benign JSON package paths provided in the thread.
 - Day 10 is marked `results_received` based on two returned `benign_capture_run.json` files plus the user-approved fallback of `batch_0012` `.review_state.json` and `review_actions.log`, because the `batch_0012` `benign_capture_run.json` is missing.
-- Day 11 is marked `results_received` based on the three returned Day 11 `benign_capture_run.json` files now present under `data/raw/benign/2026-04-08_planA_day11_*`.
+- Day 11 is marked `results_received` based on the three returned Day 11 `benign_capture_run.json` files now present under `E:\WardenData\raw\benign\2026-04-08_planA_day11_*`.
 - Day 12 is marked `results_received` based on the three returned Day 12 `benign_capture_run.json` files, with an explicit caveat that `batch_0011` is a partial-interruption artifact (`321` JSON result rows and `592` current subdirectories at inspection time) and not a full 1000-row batch.
 - Day 8 through Day 11 do not use a new `top_1_10000` tranche because `tranco_top_1_10000_batch_0005_urls.txt` is absent in the current repo-local split.
 - Day 11 is the first queued day after `top_500001_1000000` is exhausted at `batch_0006`, so it continues with two `top_10001_100000` batches plus one `top_100001_500000` batch to preserve remaining rank priority.
@@ -79,12 +80,16 @@ Important rule:
 - As of 2026-04-15, a new repo-local Tranco replenishment from `tranco csv/sources/tranco_PL9GJ.csv` restored `top_1_10000` as `tranco_top_1_10000_batch_0005` and `batch_0006`, so future Day 13+ benign planning can use that tranche again.
 - Day 13 is the first queued day after that replenishment and therefore returns to the restored highest-rank tranche with `top_1_10000_batch_0005`, `top_1_10000_batch_0006`, and then `top_10001_100000_batch_0003`.
 - Day 13 is now marked `results_received` based on the user-provided returned Day 13 `benign_capture_run.json` paths and counts recorded in `docs/handoff/2026-04-17_plan_a_batch_capture_day13_result_receipt.md`; unlike Day 12, no partial caveat was reported for Day 13.
-- In the current Codex turn, a second repo-local Day 13 output-directory read was not available under `data/raw/benign`, so the Day 13 receipt closure explicitly documents that validation boundary instead of hiding it.
+- In the current Codex turn, a second Day 13 output-directory read was not available under `E:\WardenData\raw\benign`, so the Day 13 receipt closure explicitly documents that validation boundary instead of hiding it.
 - Day 14 continues the benign-only daily cap of `3` batches.
 - Day 14 uses `tranco_top_10001_100000_batch_0004`, `batch_0005`, and `batch_0006` because Day 13 already consumed the restored `top_1_10000` `batch_0005` and `batch_0006`, while `top_500001_1000000` remains exhausted.
-- In the current 2026-04-21 Codex turn, Day 14 was not upgraded to `results_received`; the workspace exposed the `batch_0006` output directory, but the expected repo-local `batch_0004` and `batch_0005` output directories were not visible at the referenced paths.
+- Day 14 is marked `results_received` based on the three returned `benign_capture_run.json` files under `E:\WardenData\raw\benign\tranco`; all three Day 14 batches have `1000` result rows.
 - Day 15 continues the benign-only daily cap of `3` batches.
 - Day 15 uses `tranco_top_10001_100000_batch_0007`, `batch_0008`, and `batch_0009` because Day 14 already froze `batch_0004` through `batch_0006`, making `batch_0007` through `batch_0009` the next highest-priority remaining unassigned Tranco benign batches.
+- Day 15 is marked `results_received` based on the three returned `benign_capture_run.json` files under `E:\WardenData\raw\benign\tranco`; `batch_0007` is explicitly partial with `565` result rows, while `batch_0008` and `batch_0009` each have `1000` result rows.
+- Any strict actual-row calculation for the benign `20k` target must account for the Day 15 `batch_0007` partial state.
+- Day 16 is the final benign target-closure day for the current plan, using `tranco_top_100001_500000_batch_0012`, `batch_0013`, and `batch_0014` because the user clarified that one more `3`-batch day is sufficient to bring the benign total to `20k`.
+- Under that target-based stopping rule, `tranco_top_100001_500000_batch_0015` and `batch_0016` remain intentionally unqueued after Day 16.
 - This tracker records selected queue membership and receipt state only. Final benign / malicious effectiveness analysis may still require separate reconciliation.
 
 ---

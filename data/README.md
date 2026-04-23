@@ -42,8 +42,9 @@ Current stage note:
 
 ## Current Relevant Paths
 
-- raw samples: `data/raw/`
-- smoke manifest outputs: `data/processed/trainset_v1_smoke/`
+- runtime data root: `E:\WardenData`
+- raw samples: `E:\WardenData\raw\`
+- smoke manifest outputs: `E:\WardenData\processed\trainset_v1_smoke\`
 
 Formal data entry scripts:
 
@@ -60,7 +61,7 @@ Auxiliary-set note:
 
 ## Minimal Workflow For Current Stage
 
-1. Continue collecting raw samples under `data/raw/phish` and `data/raw/benign`
+1. Continue collecting raw samples under `E:\WardenData\raw\phish` and `E:\WardenData\raw\benign`
 2. Use `build_manifest.py` only for smoke checks or spot checks
 3. Use `check_dataset_consistency.py` only for smoke checks or spot checks
 4. Defer full manifest build, full consistency sweep, and large-scale rule backfill until data collection is sufficiently complete
@@ -72,13 +73,13 @@ Auxiliary-set note:
 Build smoke manifest:
 
 ```bash
-python scripts/data/build_manifest.py --data-root ./data --input-roots ./data/raw/phish ./data/raw/benign --out-dir ./data/processed/trainset_v1_smoke
+python scripts/data/build_manifest.py --data-root E:\WardenData --input-roots E:\WardenData\raw\phish E:\WardenData\raw\benign --out-dir E:\WardenData\processed\trainset_v1_smoke
 ```
 
 Check smoke manifest consistency:
 
 ```bash
-python scripts/data/check_dataset_consistency.py --data-root ./data --manifest ./data/processed/trainset_v1_smoke/manifest.jsonl --out-dir ./data/processed/trainset_v1_smoke/consistency_check
+python scripts/data/check_dataset_consistency.py --data-root E:\WardenData --manifest E:\WardenData\processed\trainset_v1_smoke\manifest.jsonl --out-dir E:\WardenData\processed\trainset_v1_smoke\consistency_check
 ```
 
 ---

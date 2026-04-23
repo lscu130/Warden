@@ -1,87 +1,90 @@
-# Warden_DATA_INGEST_RUNBOOK_V1
+﻿# Warden_DATA_INGEST_RUNBOOK_V1
 
-## 中文版
+## 涓枃鐗?
 
-> 面向 AI 的说明：GPT、Gemini、Codex、Grok、Claude 仅将下方英文版视为权威版本。中文仅供人类阅读、协作与快速导览。
+> 闈㈠悜 AI 鐨勮鏄庯細GPT銆丟emini銆丆odex銆丟rok銆丆laude 浠呭皢涓嬫柟鑻辨枃鐗堣涓烘潈濞佺増鏈€備腑鏂囦粎渚涗汉绫婚槄璇汇€佸崗浣滀笌蹇€熷瑙堛€?
 
-### 使用说明
+### 浣跨敤璇存槑
 
-- 本文档是日常采样抓取的操作手册，不是架构设计文档。
-- 文中命令使用绝对路径占位符，你只需要把 `<WARDEN_ROOT>`、`<RUN_DATE>`、`<BATCH_NAME>` 之类占位符替换成你自己的实际路径和批次名。
-- 若中英内容冲突，以英文版为准。
+- 鏈枃妗ｆ槸鏃ュ父閲囨牱鎶撳彇鐨勬搷浣滄墜鍐岋紝涓嶆槸鏋舵瀯璁捐鏂囨。銆?
+- 鏂囦腑鍛戒护浣跨敤缁濆璺緞鍗犱綅绗︼紝浣犲彧闇€瑕佹妸 `<WARDEN_ROOT>`銆乣<WARDEN_DATA_ROOT>`銆乣<RUN_DATE>`銆乣<BATCH_NAME>` 涔嬬被鍗犱綅绗︽浛鎹㈡垚浣犺嚜宸辩殑瀹為檯璺緞鍜屾壒娆″悕銆?- 鑻ヤ腑鑻卞唴瀹瑰啿绐侊紝浠ヨ嫳鏂囩増涓哄噯銆?
 
-## 1. 目的
+## 1. 鐩殑
 
-这份 runbook 解决的是“平常怎么用”。
-重点覆盖：
+杩欎唤 runbook 瑙ｅ喅鐨勬槸鈥滃钩甯告€庝箞鐢ㄢ€濄€?
+閲嶇偣瑕嗙洊锛?
 
-- 小规模 benign 抓取
-- 每日 malicious 批量抓取，尤其是大约 300 条
-- 抓取完成后的 cluster / train-reserve / review / exclusion 产物生成
-- Windows 下常见坑
+- 灏忚妯?benign 鎶撳彇
+- 姣忔棩 malicious 鎵归噺鎶撳彇锛屽挨鍏舵槸澶х害 300 鏉?
+- 鎶撳彇瀹屾垚鍚庣殑 cluster / train-reserve / review / exclusion 浜х墿鐢熸垚
+- Windows 涓嬪父瑙佸潙
 
-## 2. 相关脚本
+## 2. 鐩稿叧鑴氭湰
 
-- benign 抓取入口：`scripts/data/benign/run_benign_capture.py`
-- 恶意 feed 导入：`scripts/data/malicious/ingest_public_malicious_feeds.py`
-- malicious 抓取入口：`scripts/data/malicious/run_malicious_capture.py`
-- 旧 HTML 转 JSON：`scripts/data/maintenance/convert_legacy_html_to_json.py`
-- 恶意聚类：`scripts/data/malicious/build_malicious_clusters.py`
-- train / reserve 划分：`scripts/data/malicious/build_malicious_train_pool.py`
-- review manifest：`scripts/data/maintenance/build_dedup_review_manifest.py`
-- exclusion list：`scripts/data/maintenance/build_training_exclusion_lists.py`
+- benign 鎶撳彇鍏ュ彛锛歚scripts/data/benign/run_benign_capture.py`
+- 鎭舵剰 feed 瀵煎叆锛歚scripts/data/malicious/ingest_public_malicious_feeds.py`
+- malicious 鎶撳彇鍏ュ彛锛歚scripts/data/malicious/run_malicious_capture.py`
+- 鏃?HTML 杞?JSON锛歚scripts/data/maintenance/convert_legacy_html_to_json.py`
+- 鎭舵剰鑱氱被锛歚scripts/data/malicious/build_malicious_clusters.py`
+- train / reserve 鍒掑垎锛歚scripts/data/malicious/build_malicious_train_pool.py`
+- review manifest锛歚scripts/data/maintenance/build_dedup_review_manifest.py`
+- exclusion list锛歚scripts/data/maintenance/build_training_exclusion_lists.py`
 
-## 3. 前置条件
+## 3. 鍓嶇疆鏉′欢
 
-- 可以正常运行 `python`
-- 抓取环境中已经安装并可用 `playwright`
-- 抓取环境中已经安装并可用 `playwright-stealth`
-- 在仓库根目录执行命令最省事
-- 例子里的绝对路径要替换成你自己的真实路径
+- 鍙互姝ｅ父杩愯 `python`
+- 鎶撳彇鐜涓凡缁忓畨瑁呭苟鍙敤 `playwright`
+- 鎶撳彇鐜涓凡缁忓畨瑁呭苟鍙敤 `playwright-stealth`
+- 鍦ㄤ粨搴撴牴鐩綍鎵ц鍛戒护鏈€鐪佷簨
+- 渚嬪瓙閲岀殑缁濆璺緞瑕佹浛鎹㈡垚浣犺嚜宸辩殑鐪熷疄璺緞
 
-建议先跑：
-
+寤鸿鍏堣窇锛?
 ```powershell
 python <WARDEN_ROOT>\scripts\data\benign\run_benign_capture.py --help
 python <WARDEN_ROOT>\scripts\data\malicious\run_malicious_capture.py --help
 ```
 
-## 4. 路径约定
+## 4. 璺緞绾﹀畾
 
-建议每次运行都单独建一个批次目录，不要把每天的临时中间结果全混在一起。
+寤鸿姣忔杩愯閮藉崟鐙缓涓€涓壒娆＄洰褰曪紝涓嶈鎶婃瘡澶╃殑涓存椂涓棿缁撴灉鍏ㄦ贩鍦ㄤ竴璧枫€?
 
-示例占位：
+绀轰緥鍗犱綅锛?
+- `<WARDEN_ROOT>`锛氫緥濡?`E:\Warden`
+- `<WARDEN_DATA_ROOT>`锛氫緥濡?`E:\WardenData`
+- `<RUN_DATE>`锛氫緥濡?`2026-03-24`
+- `<BATCH_NAME>`锛氫緥濡?`daily300`
 
-- `<WARDEN_ROOT>`：例如 `E:\Warden`
-- `<RUN_DATE>`：例如 `2026-03-24`
-- `<BATCH_NAME>`：例如 `daily300`
+褰撳墠鏈湴榛樿鍚堝悓锛?
+- 鎵€鏈夎繍琛屾湡鏁版嵁鐩綍榛樿浣嶄簬 `E:\WardenData`
+- repo 内 `E:\Warden\data\README.md` 仅保留说明文档，不再作为大体量运行期数据根
+- 如果你在旧 handoff 或旧命令里看到 `<WARDEN_ROOT>\data\...`，当前执行时应替换为 `<WARDEN_DATA_ROOT>\...`
 
-建议目录：
+寤鸿鐩綍锛?
 
-- benign 输入：`<WARDEN_ROOT>\data\processed\<RUN_DATE>_benign\`
-- malicious feed 中间产物：`<WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\`
-- malicious cluster 中间产物：`<WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_clusters\`
-- malicious pool 中间产物：`<WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_pool\`
-- malicious review / exclusion：`<WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_review\`、`<WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_exclusions\`
-- benign 输出根：`<WARDEN_ROOT>\data\raw\benign\<RUN_DATE>_<BATCH_NAME>\`
-- malicious 输出根：`<WARDEN_ROOT>\data\raw\phish\<RUN_DATE>_<BATCH_NAME>\`
+- benign 杈撳叆锛歚<WARDEN_DATA_ROOT>\processed\<RUN_DATE>_benign\`
+- malicious feed 涓棿浜х墿锛歚<WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed\`
+- malicious cluster 涓棿浜х墿锛歚<WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_clusters\`
+- malicious pool 涓棿浜х墿锛歚<WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_pool\`
+- malicious review / exclusion锛歚<WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_review\`銆乣<WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_exclusions\`
+- benign 杈撳嚭鏍癸細`<WARDEN_DATA_ROOT>\raw\benign\<RUN_DATE>_<BATCH_NAME>\`
+- malicious 杈撳嚭鏍癸細`<WARDEN_DATA_ROOT>\raw\phish\<RUN_DATE>_<BATCH_NAME>\`
 
-## 5. 常用场景 A：小规模 benign 抓取
+## 5. 甯哥敤鍦烘櫙 A锛氬皬瑙勬ā benign 鎶撳彇
 
-### 5.1 准备 URL 文本
+### 5.1 鍑嗗 URL 鏂囨湰
 
-准备一个 UTF-8 文本文件，例如：
+鍑嗗涓€涓?UTF-8 鏂囨湰鏂囦欢锛屼緥濡傦細
 
-`<WARDEN_ROOT>\data\processed\<RUN_DATE>_benign\benign_urls.txt`
+`<WARDEN_DATA_ROOT>\processed\<RUN_DATE>_benign\benign_urls.txt`
 
-每行一个 URL。
+姣忚涓€涓?URL銆?
 
 ### 5.2 ????
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\benign\run_benign_capture.py `
-  --input_path <WARDEN_ROOT>\data\processed\<RUN_DATE>_benign\benign_urls.txt `
-  --output_root <WARDEN_ROOT>\data\raw\benign\<RUN_DATE>_<BATCH_NAME> `
+  --input_path <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_benign\benign_urls.txt `
+  --output_root <WARDEN_DATA_ROOT>\raw\benign\<RUN_DATE>_<BATCH_NAME> `
   --source manual_benign `
   --rank_bucket manual_batch `
   --page_type homepage `
@@ -106,35 +109,35 @@ python <WARDEN_ROOT>\scripts\data\benign\run_benign_capture.py `
 - ???? benign ??????????? Tranco ??
 - ?????????????????? recovery ????????
 
-### 5.5 benign 单 URL 卡住时的 supervised 模式
+### 5.5 benign 鍗?URL 鍗′綇鏃剁殑 supervised 妯″紡
 
-默认 benign runner 还是“一次拉起一个 capture 子进程跑完整批次”。
-只有在你显式加了下面这两个参数之一时，runner 才会切到 supervised 模式：
+榛樿 benign runner 杩樻槸鈥滀竴娆℃媺璧蜂竴涓?capture 瀛愯繘绋嬭窇瀹屾暣鎵规鈥濄€?
+鍙湁鍦ㄤ綘鏄惧紡鍔犱簡涓嬮潰杩欎袱涓弬鏁颁箣涓€鏃讹紝runner 鎵嶄細鍒囧埌 supervised 妯″紡锛?
 
 - `--interactive_skip`
-- `--url_hard_timeout_ms <毫秒>`
+- `--url_hard_timeout_ms <姣>`
 
-supervised 模式下，runner 会按 URL 逐条拉起 capture 子进程。
-这样当前 URL 如果卡住，你可以在终端输入：
+supervised 妯″紡涓嬶紝runner 浼氭寜 URL 閫愭潯鎷夎捣 capture 瀛愯繘绋嬨€?
+杩欐牱褰撳墠 URL 濡傛灉鍗′綇锛屼綘鍙互鍦ㄧ粓绔緭鍏ワ細
 
 ```text
 skip
 ```
 
-然后只终止当前 URL，继续后面的站点。
+鐒跺悗鍙粓姝㈠綋鍓?URL锛岀户缁悗闈㈢殑绔欑偣銆?
 
-如果你还想给每条 URL 一个硬上限，可以再加：
+濡傛灉浣犺繕鎯崇粰姣忔潯 URL 涓€涓‖涓婇檺锛屽彲浠ュ啀鍔狅細
 
 ```powershell
 --url_hard_timeout_ms 120000
 ```
 
-示例：
+绀轰緥锛?
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\benign\run_benign_capture.py `
-  --input_path <WARDEN_ROOT>\data\processed\<RUN_DATE>_benign\benign_urls.txt `
-  --output_root <WARDEN_ROOT>\data\raw\benign\<RUN_DATE>_<BATCH_NAME> `
+  --input_path <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_benign\benign_urls.txt `
+  --output_root <WARDEN_DATA_ROOT>\raw\benign\<RUN_DATE>_<BATCH_NAME> `
   --source manual_benign `
   --rank_bucket manual_batch `
   --page_type homepage `
@@ -144,7 +147,7 @@ python <WARDEN_ROOT>\scripts\data\benign\run_benign_capture.py `
   --url_hard_timeout_ms 120000
 ```
 
-批次结束后，`benign_capture_run.json` 会额外记录：
+鎵规缁撴潫鍚庯紝`benign_capture_run.json` 浼氶澶栬褰曪細
 
 - `supervised_mode`
 - `interactive_skip`
@@ -154,28 +157,28 @@ python <WARDEN_ROOT>\scripts\data\benign\run_benign_capture.py `
 - `timed_out_urls`
 - `results`
 
-## 6. 常用场景 B：每天抓大约 300 条 malicious
+## 6. 甯哥敤鍦烘櫙 B锛氭瘡澶╂姄澶х害 300 鏉?malicious
 
-这是最常用的操作流程。
+杩欐槸鏈€甯哥敤鐨勬搷浣滄祦绋嬨€?
 
-### 6.1 先拉公共 feed
+### 6.1 鍏堟媺鍏叡 feed
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\malicious\ingest_public_malicious_feeds.py `
-  --output_dir <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed
+  --output_dir <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed
 ```
 
-生成的关键文件：
+鐢熸垚鐨勫叧閿枃浠讹細
 
 - `malicious_feed_candidates.jsonl`
 - `malicious_feed_candidates.txt`
 - `malicious_feed_summary.json`
 
-### 6.2 从候选里切一个 daily 300 manifest
+### 6.2 浠庡€欓€夐噷鍒囦竴涓?daily 300 manifest
 
-不要用 `Get-Content | Set-Content` 直接切 JSONL，Windows 下容易把 BOM 带进第一行。
+涓嶈鐢?`Get-Content | Set-Content` 鐩存帴鍒?JSONL锛學indows 涓嬪鏄撴妸 BOM 甯﹁繘绗竴琛屻€?
 
-用下面这个 Python 片段最稳：
+鐢ㄤ笅闈㈣繖涓?Python 鐗囨鏈€绋筹細
 
 ```powershell
 @'
@@ -183,8 +186,8 @@ import json
 import random
 from pathlib import Path
 
-src = Path(r"<WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\malicious_feed_candidates.jsonl")
-dst = Path(r"<WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\malicious_feed_candidates_<BATCH_NAME>.jsonl")
+src = Path(r"<WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed\malicious_feed_candidates.jsonl")
+dst = Path(r"<WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed\malicious_feed_candidates_<BATCH_NAME>.jsonl")
 
 rows = []
 with src.open("r", encoding="utf-8-sig", errors="ignore") as f:
@@ -207,150 +210,141 @@ print("output =", dst)
 '@ | python -
 ```
 
-如果你不想随机抽样，也可以把 `random.sample(rows, 300)` 改成 `rows[:300]`。
+濡傛灉浣犱笉鎯抽殢鏈烘娊鏍凤紝涔熷彲浠ユ妸 `random.sample(rows, 300)` 鏀规垚 `rows[:300]`銆?
 
-### 6.3 跑 malicious 抓取
+### 6.3 璺?malicious 鎶撳彇
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\malicious\run_malicious_capture.py `
-  --feed_manifest <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\malicious_feed_candidates_<BATCH_NAME>.jsonl `
-  --output_root <WARDEN_ROOT>\data\raw\phish\<RUN_DATE>_<BATCH_NAME>
+  --feed_manifest <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed\malicious_feed_candidates_<BATCH_NAME>.jsonl `
+  --output_root <WARDEN_DATA_ROOT>\raw\phish\<RUN_DATE>_<BATCH_NAME>
 ```
 
-### 6.4 成功后先检查什么
+### 6.4 鎴愬姛鍚庡厛妫€鏌ヤ粈涔?
 
-先看：
+鍏堢湅锛?
 
-- `<WARDEN_ROOT>\data\raw\phish\<RUN_DATE>_<BATCH_NAME>\malicious_capture_run.json`
+- `<WARDEN_DATA_ROOT>\raw\phish\<RUN_DATE>_<BATCH_NAME>\malicious_capture_run.json`
 
-重点字段：
+閲嶇偣瀛楁锛?
 
 - `all_success`
 - `returncodes`
 
-如果 `all_success` 为 `true`，说明这批 capture 进程级别是成功的。
+濡傛灉 `all_success` 涓?`true`锛岃鏄庤繖鎵?capture 杩涚▼绾у埆鏄垚鍔熺殑銆?
 
-### 6.5 对这批 malicious 样本做 cluster
+### 6.5 瀵硅繖鎵?malicious 鏍锋湰鍋?cluster
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\malicious\build_malicious_clusters.py `
-  --input_roots <WARDEN_ROOT>\data\raw\phish\<RUN_DATE>_<BATCH_NAME> `
-  --output_dir <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_clusters
+  --input_roots <WARDEN_DATA_ROOT>\raw\phish\<RUN_DATE>_<BATCH_NAME> `
+  --output_dir <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_clusters
 ```
 
-生成：
+鐢熸垚锛?
 
 - `malicious_cluster_records.jsonl`
 - `malicious_cluster_summary.json`
 
-### 6.6 构建 train / reserve pool
+### 6.6 鏋勫缓 train / reserve pool
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\malicious\build_malicious_train_pool.py `
-  --clusters_path <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_clusters\malicious_cluster_records.jsonl `
-  --output_dir <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_pool `
+  --clusters_path <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_clusters\malicious_cluster_records.jsonl `
+  --output_dir <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_pool `
   --family_share_cap 0.10
 ```
 
-生成：
+鐢熸垚锛?
 
 - `pool_decisions.jsonl`
 - `train_pool_manifest.jsonl`
 - `reserve_pool_manifest.jsonl`
 - `pool_summary.json`
 
-### 6.7 生成 review / exclusion 产物
+### 6.7 鐢熸垚 review / exclusion 浜х墿
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\maintenance\build_dedup_review_manifest.py `
-  --clusters_path <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_clusters\malicious_cluster_records.jsonl `
-  --pool_decisions_path <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_pool\pool_decisions.jsonl `
-  --output_dir <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_review
+  --clusters_path <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_clusters\malicious_cluster_records.jsonl `
+  --pool_decisions_path <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_pool\pool_decisions.jsonl `
+  --output_dir <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_review
 ```
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\maintenance\build_training_exclusion_lists.py `
-  --pool_decisions_path <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_pool\pool_decisions.jsonl `
-  --output_dir <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_exclusions
+  --pool_decisions_path <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_pool\pool_decisions.jsonl `
+  --output_dir <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_exclusions
 ```
 
-## 7. 常用场景 C：只想手工抓一小批 malicious URL
+## 7. 甯哥敤鍦烘櫙 C锛氬彧鎯虫墜宸ユ姄涓€灏忔壒 malicious URL
 
-如果你已经有一个恶意 URL 文本文件，不想先走 feed ingest，也可以直接跑：
+濡傛灉浣犲凡缁忔湁涓€涓伓鎰?URL 鏂囨湰鏂囦欢锛屼笉鎯冲厛璧?feed ingest锛屼篃鍙互鐩存帴璺戯細
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\malicious\run_malicious_capture.py `
-  --input_path <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\manual_urls.txt `
+  --input_path <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed\manual_urls.txt `
   --source manual_malicious `
-  --output_root <WARDEN_ROOT>\data\raw\phish\<RUN_DATE>_<BATCH_NAME>
+  --output_root <WARDEN_DATA_ROOT>\raw\phish\<RUN_DATE>_<BATCH_NAME>
 ```
 
-### 7.1 PT `verified_online.csv` 按确认时间导出 URL-only CSV
+### 7.1 PT `verified_online.csv` 鎸夌‘璁ゆ椂闂村鍑?URL-only CSV
 
-如果你的输入不是 feed，而是本地的 PT `verified_online.csv`，并且你只想先按 `verification_time` 截出某一天及之后的 URL，再单独抓取，可以用：
-
+濡傛灉浣犵殑杈撳叆涓嶆槸 feed锛岃€屾槸鏈湴鐨?PT `verified_online.csv`锛屽苟涓斾綘鍙兂鍏堟寜 `verification_time` 鎴嚭鏌愪竴澶╁強涔嬪悗鐨?URL锛屽啀鍗曠嫭鎶撳彇锛屽彲浠ョ敤锛?
 ```powershell
 python <WARDEN_ROOT>\scripts\data\malicious\export_phishtank_verified_urls.py `
   --source_csv C:\Users\20516\Downloads\verified_online.csv
 ```
 
-脚本启动后会先提示你输入：
-
+鑴氭湰鍚姩鍚庝細鍏堟彁绀轰綘杈撳叆锛?
 ```text
 2026/3/27
 ```
 
-规则：
+瑙勫垯锛?
+- 鎸?`verification_time` 鐨?UTC 鏃ユ湡鍋氳繃婊?- 閫変腑鑼冨洿鏄€滆緭鍏ユ棩鏈熷綋澶╁強涔嬪悗鈥?- 涓€娆¤繍琛屽悓鏃惰緭鍑猴細
+  - 涓€浠?URL-only CSV锛屽彧鏈?`url` 鍒?  - 涓€浠戒竴琛屼竴涓?URL 鐨?TXT
+- 榛樿杈撳嚭鍒?`<WARDEN_DATA_ROOT>\processed\pt_csv_exports\`
 
-- 按 `verification_time` 的 UTC 日期做过滤
-- 选中范围是“输入日期当天及之后”
-- 一次运行同时输出：
-  - 一份 URL-only CSV，只有 `url` 列
-  - 一份一行一个 URL 的 TXT
-- 默认输出到 `<WARDEN_ROOT>\data\processed\pt_csv_exports\`
-
-如果你想指定输出路径：
-
+濡傛灉浣犳兂鎸囧畾杈撳嚭璺緞锛?
 ```powershell
 python <WARDEN_ROOT>\scripts\data\malicious\export_phishtank_verified_urls.py `
   --source_csv C:\Users\20516\Downloads\verified_online.csv `
-  --output_csv <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\pt_verified_since_2026-03-27_urls.csv `
-  --output_txt <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\pt_verified_since_2026-03-27_urls.txt
+  --output_csv <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed\pt_verified_since_2026-03-27_urls.csv `
+  --output_txt <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed\pt_verified_since_2026-03-27_urls.txt
 ```
 
-如果你不显式给 `--output_txt`，默认会在 CSV 同目录生成同名 `.txt` 文件。
-
-拿到 TXT 后直接抓：
-
+濡傛灉浣犱笉鏄惧紡缁?`--output_txt`锛岄粯璁や細鍦?CSV 鍚岀洰褰曠敓鎴愬悓鍚?`.txt` 鏂囦欢銆?
+鎷垮埌 TXT 鍚庣洿鎺ユ姄锛?
 ```powershell
 python <WARDEN_ROOT>\scripts\data\malicious\run_malicious_capture.py `
-  --input_path <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\pt_verified_since_2026-03-27_urls.txt `
+  --input_path <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed\pt_verified_since_2026-03-27_urls.txt `
   --source phishtank `
-  --output_root <WARDEN_ROOT>\data\raw\phish\<RUN_DATE>_<BATCH_NAME>
+  --output_root <WARDEN_DATA_ROOT>\raw\phish\<RUN_DATE>_<BATCH_NAME>
 ```
 
-也就是完整 PT 本地流程是：
+涔熷氨鏄畬鏁?PT 鏈湴娴佺▼鏄細
 
 1. `export_phishtank_verified_urls.py`
 2. `run_malicious_capture.py --input_path ...`
 
-如果你手头已经有旧的 URL-only CSV，没有对应 TXT，再用备用脚本补转：
+濡傛灉浣犳墜澶村凡缁忔湁鏃х殑 URL-only CSV锛屾病鏈夊搴?TXT锛屽啀鐢ㄥ鐢ㄨ剼鏈ˉ杞細
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\malicious\convert_url_csv_to_txt.py `
-  --input_csv <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\pt_verified_since_2026-03-27_urls.csv `
-  --output_txt <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\pt_verified_since_2026-03-27_urls.txt
+  --input_csv <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed\pt_verified_since_2026-03-27_urls.csv `
+  --output_txt <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed\pt_verified_since_2026-03-27_urls.txt
 ```
 
-## 8. 每次运行后建议人工检查的文件
+## 8. 姣忔杩愯鍚庡缓璁汉宸ユ鏌ョ殑鏂囦欢
 
-- benign：`benign_capture_run.json`
-- malicious：`malicious_capture_run.json`
-- cluster：`malicious_cluster_summary.json`
-- pool：`pool_summary.json`
-- 任取一个样本目录里的 `meta.json`
+- benign锛歚benign_capture_run.json`
+- malicious锛歚malicious_capture_run.json`
+- cluster锛歚malicious_cluster_summary.json`
+- pool锛歚pool_summary.json`
+- 浠诲彇涓€涓牱鏈洰褰曢噷鐨?`meta.json`
 
-重点看：
+閲嶇偣鐪嬶細
 
 - `returncode` / `all_success`
 - `ingest_metadata`
@@ -358,13 +352,13 @@ python <WARDEN_ROOT>\scripts\data\malicious\convert_url_csv_to_txt.py `
 - `train_count` / `reserve_count`
 - `family_share_cap`
 
-## 9. 常见问题
+## 9. 甯歌闂
 
-### 9.1 `playwright` 或 `playwright-stealth` 导入失败
+### 9.1 `playwright` 鎴?`playwright-stealth` 瀵煎叆澶辫触
 
-说明运行环境没准备好，不是上层脚本参数错了。先修环境，再重跑。
+璇存槑杩愯鐜娌″噯澶囧ソ锛屼笉鏄笂灞傝剼鏈弬鏁伴敊浜嗐€傚厛淇幆澧冿紝鍐嶉噸璺戙€?
 
-常见修法：
+甯歌淇硶锛?
 
 ```powershell
 python -m pip install playwright
@@ -372,59 +366,59 @@ python -m pip install playwright-stealth
 playwright install
 ```
 
-### 9.2 JSONL 首行 BOM 导致 “line 1 is not valid JSON”
+### 9.2 JSONL 棣栬 BOM 瀵艰嚧 鈥渓ine 1 is not valid JSON鈥?
 
-这通常是手工切文件时用了：
+杩欓€氬父鏄墜宸ュ垏鏂囦欢鏃剁敤浜嗭細
 
 ```powershell
 Get-Content ... | Set-Content ...
 ```
 
-处理方式：
+澶勭悊鏂瑰紡锛?
 
-- 优先用上面的 Python 片段切 JSONL
-- 不要用 shell 文本管道硬切 JSONL
+- 浼樺厛鐢ㄤ笂闈㈢殑 Python 鐗囨鍒?JSONL
+- 涓嶈鐢?shell 鏂囨湰绠￠亾纭垏 JSONL
 
-### 9.3 输出目录写错
+### 9.3 杈撳嚭鐩綍鍐欓敊
 
-最常见问题不是脚本坏了，而是 `--output_root` 指到了旧目录，结果你在错误的地方找产物。
+鏈€甯歌闂涓嶆槸鑴氭湰鍧忎簡锛岃€屾槸 `--output_root` 鎸囧埌浜嗘棫鐩綍锛岀粨鏋滀綘鍦ㄩ敊璇殑鍦版柟鎵句骇鐗┿€?
 
-## 10. 最小日常命令清单
+## 10. 鏈€灏忔棩甯稿懡浠ゆ竻鍗?
 
-### 每天抓 300 malicious
+### 姣忓ぉ鎶?300 malicious
 
 1. `ingest_public_malicious_feeds.py`
-2. Python 片段切 300 条 manifest
+2. Python 鐗囨鍒?300 鏉?manifest
 3. `run_malicious_capture.py`
 4. `build_malicious_clusters.py`
 5. `build_malicious_train_pool.py`
 6. `build_dedup_review_manifest.py`
 7. `build_training_exclusion_lists.py`
 
-### 偶尔补一批 benign
+### 鍋跺皵琛ヤ竴鎵?benign
 
-1. 准备 `benign_urls.txt`
+1. 鍑嗗 `benign_urls.txt`
 2. `run_benign_capture.py`
-3. 检查 `benign_capture_run.json`
+3. 妫€鏌?`benign_capture_run.json`
 
-### 9.4 `Timeout 25000ms exceeded` 但浏览器里看起来又能打开
+### 9.4 `Timeout 25000ms exceeded` 浣嗘祻瑙堝櫒閲岀湅璧锋潵鍙堣兘鎵撳紑
 
-这通常不代表页面真的完全打不开，更常见的是：
+杩欓€氬父涓嶄唬琛ㄩ〉闈㈢湡鐨勫畬鍏ㄦ墦涓嶅紑锛屾洿甯歌鐨勬槸锛?
 
-- 旧版 `page.goto(..., wait_until="load")` 太苛刻，而页面主体其实已经出来了
-- 当前抓取环境的 IP / 区域 / 网络路径比你手工打开网页时更慢
-- 抓取浏览器和手工浏览器并不在同一条网络路径上
-- Google / consent.google 这类站点还可能先卡在 consent 或 bot 检测前置页
+- 鏃х増 `page.goto(..., wait_until="load")` 澶嫑鍒伙紝鑰岄〉闈富浣撳叾瀹炲凡缁忓嚭鏉ヤ簡
+- 褰撳墠鎶撳彇鐜鐨?IP / 鍖哄煙 / 缃戠粶璺緞姣斾綘鎵嬪伐鎵撳紑缃戦〉鏃舵洿鎱?
+- 鎶撳彇娴忚鍣ㄥ拰鎵嬪伐娴忚鍣ㄥ苟涓嶅湪鍚屼竴鏉＄綉缁滆矾寰勪笂
+- Google / consent.google 杩欑被绔欑偣杩樺彲鑳藉厛鍗″湪 consent 鎴?bot 妫€娴嬪墠缃〉
 
-当前默认 hardening 已内建：
+褰撳墠榛樿 hardening 宸插唴寤猴細
 
-- 默认导航超时已放宽到 `60000ms`
-- 默认 `goto_wait_until` 已改为 `commit`
-- 导航后会再等一次 `domcontentloaded` 和短暂 hydration
-- Google 域名会自动尝试 consent 处理
-- 浏览器页创建后默认启用 stealth
+- 榛樿瀵艰埅瓒呮椂宸叉斁瀹藉埌 `60000ms`
+- 榛樿 `goto_wait_until` 宸叉敼涓?`commit`
+- 瀵艰埅鍚庝細鍐嶇瓑涓€娆?`domcontentloaded` 鍜岀煭鏆?hydration
+- Google 鍩熷悕浼氳嚜鍔ㄥ皾璇?consent 澶勭悊
+- 娴忚鍣ㄩ〉鍒涘缓鍚庨粯璁ゅ惎鐢?stealth
 
-当前 runner 和 capture 脚本仍支持以下可选参数：
+褰撳墠 runner 鍜?capture 鑴氭湰浠嶆敮鎸佷互涓嬪彲閫夊弬鏁帮細
 
 - `--nav_timeout_ms`
 - `--proxy_server`
@@ -433,51 +427,51 @@ Get-Content ... | Set-Content ...
 - `--disable_route_intercept`
 - `--goto_wait_until`
 
-建议顺序：
+寤鸿椤哄簭锛?
 
-1. 先直接用新的默认配置重试，不要先改一堆参数
-2. 如果报的是 `net::ERR_ABORTED` 且卡在 `wait_until="commit"`，先做一个极小批次对照并加 `--disable_route_intercept`
-3. 如果同类站点还是持续 timeout，再显式指定 `--goto_wait_until domcontentloaded` 或 `--goto_wait_until networkidle` 做小批对照
-4. 再考虑只放宽超时
-5. 代理保持可选开关，不要直接改成默认强制开启
+1. 鍏堢洿鎺ョ敤鏂扮殑榛樿閰嶇疆閲嶈瘯锛屼笉瑕佸厛鏀逛竴鍫嗗弬鏁?
+2. 濡傛灉鎶ョ殑鏄?`net::ERR_ABORTED` 涓斿崱鍦?`wait_until="commit"`锛屽厛鍋氫竴涓瀬灏忔壒娆″鐓у苟鍔?`--disable_route_intercept`
+3. 濡傛灉鍚岀被绔欑偣杩樻槸鎸佺画 timeout锛屽啀鏄惧紡鎸囧畾 `--goto_wait_until domcontentloaded` 鎴?`--goto_wait_until networkidle` 鍋氬皬鎵瑰鐓?
+4. 鍐嶈€冭檻鍙斁瀹借秴鏃?
+5. 浠ｇ悊淇濇寔鍙€夊紑鍏筹紝涓嶈鐩存帴鏀规垚榛樿寮哄埗寮€鍚?
 
-示例：malicious
+绀轰緥锛歮alicious
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\malicious\run_malicious_capture.py `
-  --input_path <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\manual_urls.txt `
+  --input_path <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed\manual_urls.txt `
   --source manual_malicious `
-  --output_root <WARDEN_ROOT>\data\raw\phish\<RUN_DATE>_<BATCH_NAME> `
+  --output_root <WARDEN_DATA_ROOT>\raw\phish\<RUN_DATE>_<BATCH_NAME> `
   --nav_timeout_ms 60000
 ```
 
-如果你要直接改成显式的更宽松导航等待模式：
+濡傛灉浣犺鐩存帴鏀规垚鏄惧紡鐨勬洿瀹芥澗瀵艰埅绛夊緟妯″紡锛?
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\malicious\run_malicious_capture.py `
-  --input_path <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\manual_urls.txt `
+  --input_path <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed\manual_urls.txt `
   --source manual_malicious `
-  --output_root <WARDEN_ROOT>\data\raw\phish\<RUN_DATE>_<BATCH_NAME> `
+  --output_root <WARDEN_DATA_ROOT>\raw\phish\<RUN_DATE>_<BATCH_NAME> `
   --nav_timeout_ms 60000 `
   --goto_wait_until networkidle
 ```
 
-如果你看到的是 `net::ERR_ABORTED`，先优先做这个对照：
+濡傛灉浣犵湅鍒扮殑鏄?`net::ERR_ABORTED`锛屽厛浼樺厛鍋氳繖涓鐓э細
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\malicious\run_malicious_capture.py `
-  --input_path <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\manual_urls.txt `
+  --input_path <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed\manual_urls.txt `
   --source manual_malicious `
-  --output_root <WARDEN_ROOT>\data\raw\phish\<RUN_DATE>_<BATCH_NAME> `
+  --output_root <WARDEN_DATA_ROOT>\raw\phish\<RUN_DATE>_<BATCH_NAME> `
   --disable_route_intercept
 ```
 
-示例：benign
+绀轰緥锛歜enign
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\benign\run_benign_capture.py `
-  --input_path <WARDEN_ROOT>\data\processed\<RUN_DATE>_benign\benign_urls.txt `
-  --output_root <WARDEN_ROOT>\data\raw\benign\<RUN_DATE>_<BATCH_NAME> `
+  --input_path <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_benign\benign_urls.txt `
+  --output_root <WARDEN_DATA_ROOT>\raw\benign\<RUN_DATE>_<BATCH_NAME> `
   --source manual_benign `
   --rank_bucket manual_batch `
   --page_type homepage `
@@ -533,18 +527,25 @@ Use a separate batch directory for each operational run instead of mixing all te
 Suggested placeholders:
 
 - `<WARDEN_ROOT>`: for example `E:\Warden`
+- `<WARDEN_DATA_ROOT>`: for example `E:\WardenData`
 - `<RUN_DATE>`: for example `2026-03-24`
 - `<BATCH_NAME>`: for example `daily300`
 
+Current local default contract:
+
+- the runtime data root is `E:\WardenData`
+- `E:\Warden\data\README.md` remains repo-local documentation only
+- if an older handoff or older command still shows `<WARDEN_ROOT>\data\...`, replace that path with `<WARDEN_DATA_ROOT>\...` when you actually run it
+
 Suggested directories:
 
-- benign input: `<WARDEN_ROOT>\data\processed\<RUN_DATE>_benign\`
-- malicious feed intermediates: `<WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\`
-- malicious clustering outputs: `<WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_clusters\`
-- malicious pool outputs: `<WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_pool\`
-- malicious review / exclusion outputs: `<WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_review\` and `<WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_exclusions\`
-- benign output root: `<WARDEN_ROOT>\data\raw\benign\<RUN_DATE>_<BATCH_NAME>\`
-- malicious output root: `<WARDEN_ROOT>\data\raw\phish\<RUN_DATE>_<BATCH_NAME>\`
+- benign input: `<WARDEN_DATA_ROOT>\processed\<RUN_DATE>_benign\`
+- malicious feed intermediates: `<WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed\`
+- malicious clustering outputs: `<WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_clusters\`
+- malicious pool outputs: `<WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_pool\`
+- malicious review / exclusion outputs: `<WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_review\` and `<WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_exclusions\`
+- benign output root: `<WARDEN_DATA_ROOT>\raw\benign\<RUN_DATE>_<BATCH_NAME>\`
+- malicious output root: `<WARDEN_DATA_ROOT>\raw\phish\<RUN_DATE>_<BATCH_NAME>\`
 
 ## 5. Common Scenario A: Small Benign Capture
 
@@ -552,7 +553,7 @@ Suggested directories:
 
 Example path:
 
-`<WARDEN_ROOT>\data\processed\<RUN_DATE>_benign\benign_urls.txt`
+`<WARDEN_DATA_ROOT>\processed\<RUN_DATE>_benign\benign_urls.txt`
 
 One URL per line.
 
@@ -560,8 +561,8 @@ One URL per line.
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\benign\run_benign_capture.py `
-  --input_path <WARDEN_ROOT>\data\processed\<RUN_DATE>_benign\benign_urls.txt `
-  --output_root <WARDEN_ROOT>\data\raw\benign\<RUN_DATE>_<BATCH_NAME> `
+  --input_path <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_benign\benign_urls.txt `
+  --output_root <WARDEN_DATA_ROOT>\raw\benign\<RUN_DATE>_<BATCH_NAME> `
   --source manual_benign `
   --rank_bucket manual_batch `
   --page_type homepage `
@@ -627,8 +628,8 @@ Example:
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\benign\run_benign_capture.py `
-  --input_path <WARDEN_ROOT>\data\processed\<RUN_DATE>_benign\benign_urls.txt `
-  --output_root <WARDEN_ROOT>\data\raw\benign\<RUN_DATE>_<BATCH_NAME> `
+  --input_path <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_benign\benign_urls.txt `
+  --output_root <WARDEN_DATA_ROOT>\raw\benign\<RUN_DATE>_<BATCH_NAME> `
   --source manual_benign `
   --rank_bucket manual_batch `
   --page_type homepage `
@@ -656,7 +657,7 @@ This is the main operational workflow.
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\malicious\ingest_public_malicious_feeds.py `
-  --output_dir <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed
+  --output_dir <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed
 ```
 
 Key outputs:
@@ -678,8 +679,8 @@ import json
 import random
 from pathlib import Path
 
-src = Path(r"<WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\malicious_feed_candidates.jsonl")
-dst = Path(r"<WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\malicious_feed_candidates_<BATCH_NAME>.jsonl")
+src = Path(r"<WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed\malicious_feed_candidates.jsonl")
+dst = Path(r"<WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed\malicious_feed_candidates_<BATCH_NAME>.jsonl")
 
 rows = []
 with src.open("r", encoding="utf-8-sig", errors="ignore") as f:
@@ -708,15 +709,15 @@ If you want a deterministic head-300 instead of random sampling, replace `random
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\malicious\run_malicious_capture.py `
-  --feed_manifest <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\malicious_feed_candidates_<BATCH_NAME>.jsonl `
-  --output_root <WARDEN_ROOT>\data\raw\phish\<RUN_DATE>_<BATCH_NAME>
+  --feed_manifest <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed\malicious_feed_candidates_<BATCH_NAME>.jsonl `
+  --output_root <WARDEN_DATA_ROOT>\raw\phish\<RUN_DATE>_<BATCH_NAME>
 ```
 
 ### 6.4 First artifact to inspect
 
 Inspect:
 
-`<WARDEN_ROOT>\data\raw\phish\<RUN_DATE>_<BATCH_NAME>\malicious_capture_run.json`
+`<WARDEN_DATA_ROOT>\raw\phish\<RUN_DATE>_<BATCH_NAME>\malicious_capture_run.json`
 
 Key fields:
 
@@ -755,9 +756,9 @@ Example:
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\malicious\run_malicious_capture.py `
-  --input_path <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\manual_urls.txt `
+  --input_path <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed\manual_urls.txt `
   --source manual_malicious `
-  --output_root <WARDEN_ROOT>\data\raw\phish\<RUN_DATE>_<BATCH_NAME> `
+  --output_root <WARDEN_DATA_ROOT>\raw\phish\<RUN_DATE>_<BATCH_NAME> `
   --disable_route_intercept `
   --interactive_skip `
   --url_hard_timeout_ms 120000 `
@@ -784,8 +785,8 @@ Important note:
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\malicious\build_malicious_clusters.py `
-  --input_roots <WARDEN_ROOT>\data\raw\phish\<RUN_DATE>_<BATCH_NAME> `
-  --output_dir <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_clusters
+  --input_roots <WARDEN_DATA_ROOT>\raw\phish\<RUN_DATE>_<BATCH_NAME> `
+  --output_dir <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_clusters
 ```
 
 Outputs:
@@ -797,8 +798,8 @@ Outputs:
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\malicious\build_malicious_train_pool.py `
-  --clusters_path <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_clusters\malicious_cluster_records.jsonl `
-  --output_dir <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_pool `
+  --clusters_path <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_clusters\malicious_cluster_records.jsonl `
+  --output_dir <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_pool `
   --family_share_cap 0.10
 ```
 
@@ -813,15 +814,15 @@ Outputs:
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\maintenance\build_dedup_review_manifest.py `
-  --clusters_path <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_clusters\malicious_cluster_records.jsonl `
-  --pool_decisions_path <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_pool\pool_decisions.jsonl `
-  --output_dir <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_review
+  --clusters_path <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_clusters\malicious_cluster_records.jsonl `
+  --pool_decisions_path <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_pool\pool_decisions.jsonl `
+  --output_dir <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_review
 ```
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\maintenance\build_training_exclusion_lists.py `
-  --pool_decisions_path <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_pool\pool_decisions.jsonl `
-  --output_dir <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_exclusions
+  --pool_decisions_path <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_pool\pool_decisions.jsonl `
+  --output_dir <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_exclusions
 ```
 
 ## 7. Common Scenario C: Manual Small Malicious URL Set
@@ -830,9 +831,9 @@ If you already have a text file of malicious URLs and do not want to ingest publ
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\malicious\run_malicious_capture.py `
-  --input_path <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\manual_urls.txt `
+  --input_path <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed\manual_urls.txt `
   --source manual_malicious `
-  --output_root <WARDEN_ROOT>\data\raw\phish\<RUN_DATE>_<BATCH_NAME>
+  --output_root <WARDEN_DATA_ROOT>\raw\phish\<RUN_DATE>_<BATCH_NAME>
 ```
 
 ### 7.1 PT `verified_online.csv` to URL-only CSV by verification date
@@ -857,15 +858,15 @@ Rules:
 - one run writes both:
   - a URL-only CSV with one column: `url`
   - a one-URL-per-line TXT file for direct capture
-- the default output directory is `<WARDEN_ROOT>\data\processed\pt_csv_exports\`
+- the default output directory is `<WARDEN_DATA_ROOT>\processed\pt_csv_exports\`
 
 If you want an explicit output path:
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\malicious\export_phishtank_verified_urls.py `
   --source_csv C:\Users\20516\Downloads\verified_online.csv `
-  --output_csv <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\pt_verified_since_2026-03-27_urls.csv `
-  --output_txt <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\pt_verified_since_2026-03-27_urls.txt
+  --output_csv <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed\pt_verified_since_2026-03-27_urls.csv `
+  --output_txt <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed\pt_verified_since_2026-03-27_urls.txt
 ```
 
 If you do not pass `--output_txt`, the script will create a sibling `.txt` path next to the CSV automatically.
@@ -874,9 +875,9 @@ Then run capture directly:
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\malicious\run_malicious_capture.py `
-  --input_path <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\pt_verified_since_2026-03-27_urls.txt `
+  --input_path <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed\pt_verified_since_2026-03-27_urls.txt `
   --source phishtank `
-  --output_root <WARDEN_ROOT>\data\raw\phish\<RUN_DATE>_<BATCH_NAME>
+  --output_root <WARDEN_DATA_ROOT>\raw\phish\<RUN_DATE>_<BATCH_NAME>
 ```
 
 That means the full local PT workflow is:
@@ -888,8 +889,8 @@ If you already have an older URL-only CSV without a matching TXT, the fallback h
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\malicious\convert_url_csv_to_txt.py `
-  --input_csv <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\pt_verified_since_2026-03-27_urls.csv `
-  --output_txt <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\pt_verified_since_2026-03-27_urls.txt
+  --input_csv <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed\pt_verified_since_2026-03-27_urls.csv `
+  --output_txt <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed\pt_verified_since_2026-03-27_urls.txt
 ```
 
 ### 7.2 Convert legacy sample HTML files to JSON wrappers
@@ -898,14 +899,14 @@ If you have older sample directories that still contain legacy `.html` capture a
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\maintenance\convert_legacy_html_to_json.py `
-  --input_roots <WARDEN_ROOT>\data\raw\phish <WARDEN_ROOT>\data\raw\benign
+  --input_roots <WARDEN_DATA_ROOT>\raw\phish <WARDEN_DATA_ROOT>\raw\benign
 ```
 
 If you want a report only without writing files:
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\maintenance\convert_legacy_html_to_json.py `
-  --input_roots <WARDEN_ROOT>\data\raw\phish <WARDEN_ROOT>\data\raw\benign `
+  --input_roots <WARDEN_DATA_ROOT>\raw\phish <WARDEN_DATA_ROOT>\raw\benign `
   --dry_run
 ```
 
@@ -916,7 +917,7 @@ If you want to remove the legacy `.html` files after successful conversion:
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\maintenance\convert_legacy_html_to_json.py `
-  --input_roots <WARDEN_ROOT>\data\raw\phish <WARDEN_ROOT>\data\raw\benign `
+  --input_roots <WARDEN_DATA_ROOT>\raw\phish <WARDEN_DATA_ROOT>\raw\benign `
   --delete_original_html
 ```
 
@@ -1009,9 +1010,9 @@ Example: malicious
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\malicious\run_malicious_capture.py `
-  --input_path <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\manual_urls.txt `
+  --input_path <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed\manual_urls.txt `
   --source manual_malicious `
-  --output_root <WARDEN_ROOT>\data\raw\phish\<RUN_DATE>_<BATCH_NAME> `
+  --output_root <WARDEN_DATA_ROOT>\raw\phish\<RUN_DATE>_<BATCH_NAME> `
   --nav_timeout_ms 60000
 ```
 
@@ -1019,9 +1020,9 @@ If you want to force an even looser navigation mode directly:
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\malicious\run_malicious_capture.py `
-  --input_path <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\manual_urls.txt `
+  --input_path <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed\manual_urls.txt `
   --source manual_malicious `
-  --output_root <WARDEN_ROOT>\data\raw\phish\<RUN_DATE>_<BATCH_NAME> `
+  --output_root <WARDEN_DATA_ROOT>\raw\phish\<RUN_DATE>_<BATCH_NAME> `
   --nav_timeout_ms 60000 `
   --goto_wait_until networkidle
 ```
@@ -1030,9 +1031,9 @@ If the specific failure is `net::ERR_ABORTED`, try this before changing more kno
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\malicious\run_malicious_capture.py `
-  --input_path <WARDEN_ROOT>\data\processed\<RUN_DATE>_malicious_feed\manual_urls.txt `
+  --input_path <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_malicious_feed\manual_urls.txt `
   --source manual_malicious `
-  --output_root <WARDEN_ROOT>\data\raw\phish\<RUN_DATE>_<BATCH_NAME> `
+  --output_root <WARDEN_DATA_ROOT>\raw\phish\<RUN_DATE>_<BATCH_NAME> `
   --disable_route_intercept
 ```
 
@@ -1040,8 +1041,8 @@ Example: benign
 
 ```powershell
 python <WARDEN_ROOT>\scripts\data\benign\run_benign_capture.py `
-  --input_path <WARDEN_ROOT>\data\processed\<RUN_DATE>_benign\benign_urls.txt `
-  --output_root <WARDEN_ROOT>\data\raw\benign\<RUN_DATE>_<BATCH_NAME> `
+  --input_path <WARDEN_DATA_ROOT>\processed\<RUN_DATE>_benign\benign_urls.txt `
+  --output_root <WARDEN_DATA_ROOT>\raw\benign\<RUN_DATE>_<BATCH_NAME> `
   --source manual_benign `
   --rank_bucket manual_batch `
   --page_type homepage `
@@ -1067,3 +1068,4 @@ python <WARDEN_ROOT>\scripts\data\benign\run_benign_capture.py `
 1. prepare `benign_urls.txt`
 2. `run_benign_capture.py`
 3. inspect `benign_capture_run.json`
+

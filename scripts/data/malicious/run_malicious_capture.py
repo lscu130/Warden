@@ -22,6 +22,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from scripts.data.common.io_utils import ensure_dir, log, now_utc_iso, read_jsonl, write_json
+from scripts.data.common.runtime_data_root import data_path
 
 CAPTURE_SCRIPT = REPO_ROOT / "scripts" / "capture" / "capture_url_v6_optimized_v6_2_plus_labels_brandlex.py"
 
@@ -349,7 +350,7 @@ def main() -> None:
     parser.add_argument("--feed_manifest", type=str, default="")
     parser.add_argument("--input_path", type=str, default="")
     parser.add_argument("--source", type=str, default="manual_malicious")
-    parser.add_argument("--output_root", type=str, default=str(REPO_ROOT / "data" / "raw" / "phish"))
+    parser.add_argument("--output_root", type=str, default=str(data_path("raw", "phish")))
     parser.add_argument("--brand_lexicon", type=str, default="")
     parser.add_argument("--dry_run", action="store_true")
     parser.add_argument("--proxy_server", type=str, default="")
