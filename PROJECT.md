@@ -475,6 +475,13 @@ Default system view:
 - **L1**: stronger semantic / structural judgment;
 - **L2**: highest-cost escalation for hard, high-risk, or ambiguous cases.
 
+Current L0 contract:
+
+- L0 is a screening and routing layer, not a final adjudication layer.
+- The default L0 hot path is intentionally narrow: it consumes cheap URL, visible-text/title, form-summary, network-summary, raw visible-text observability, and existing cheap diff/evasion hints when present.
+- L0 currently specializes in fast `gambling / adult / gate` surface detection and routing hints.
+- L0 must not silently make full HTML, default brand extraction, screenshots/OCR, heavy model inference, or interaction recovery part of its default path.
+
 ### 4.2 Data Mainline
 
 The data mainline is built on top of the frozen capture-output contract.

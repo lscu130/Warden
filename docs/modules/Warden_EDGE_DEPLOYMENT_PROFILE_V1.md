@@ -141,17 +141,18 @@ However, detector must remain lightweight and class design must stay atomic.
 
 Recommended default runtime order:
 
-1. prepare text-side evidence from `visible_text.txt` and side features
-2. run text encoder and lightweight text fusion
-3. load `screenshot_viewport.png`
-4. run image-text similarity encoder
-5. run lightweight detector
-6. decide whether OCR is needed
-7. run OCR only if trigger conditions are met
-8. package evidence and pass to staged fusion and routing
+1. run the L0 cheap screening hot path from URL, visible-text/title, form-summary, network-summary, raw visible-text observability, and existing compact diff/evasion hints
+2. prepare text-side evidence from `visible_text.txt` and side features for L1 when needed
+3. run text encoder and lightweight text fusion when L1 is entered
+4. load `screenshot_viewport.png` only when the active path requests visual evidence
+5. run image-text similarity encoder when visual follow-up is enabled
+6. run lightweight detector when the active deployment profile enables it
+7. decide whether OCR is needed
+8. run OCR only if trigger conditions are met
+9. package evidence and pass to staged fusion and routing
 
 This execution order reflects a bounded-cost bias.
-It avoids making OCR the default bottleneck while still preserving the detector in the V1 path.
+It keeps L0 before screenshot/OCR/model-heavy work, avoids making OCR the default bottleneck, and preserves detector usage for the later visual path rather than for the default L0 hot path.
 
 ---
 

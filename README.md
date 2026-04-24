@@ -90,12 +90,12 @@ Warden currently uses a staged architecture.
 
 L0 is not the final judge. Its job is low-cost screening:
 
-- quickly extract URL, DOM, form, text, and basic visual signals;
-- detect obvious high-risk anchors;
-- let low-risk samples pass cheaply when appropriate;
+- quickly inspect cheap URL, visible-text/title, form-summary, network-summary, and existing cheap diff/evasion observability signals;
+- detect obvious `gambling / adult / gate` specialized surfaces and high-risk routing anchors;
+- let low-risk samples stop cheaply only when the policy allows it and cheap evidence is sufficiently observed;
 - forward suspicious samples to a stronger layer.
 
-L0 should stay fast, small, and edge-friendly. It should favor conservative suspicion rather than pretending to be an all-purpose one-layer solution.
+The current L0 default hot path does not eagerly read full HTML, run default brand extraction, consume screenshots/OCR, or perform heavy interaction recovery. Those heavier or more semantic signals belong to L1, L2, or explicitly gated follow-up paths. L0 should stay fast, small, and edge-friendly. It should favor conservative routing over pretending to be an all-purpose one-layer solution.
 
 ### L1: Multimodal Risk-Judgment Layer
 
@@ -382,9 +382,9 @@ Warden 当前已经明确不再满足于传统的二分类思路：
 
 L0 的目标不是做最终裁决，而是做**低成本初筛**：
 
-- 快速提取 URL / DOM / 表单 / 文本 / 基础视觉信号；
-- 判断是否存在明显高风险特征；
-- 把低风险样本尽量快速放行；
+- 快速检查 URL、可见文本/标题、表单摘要、网络摘要，以及已存在的低成本 diff/evasion 可观测信号；
+- 识别明显的 `gambling / adult / gate` 专项表面和高风险路由锚点；
+- 仅在策略允许且低成本证据足够可观测时，让低风险样本低成本停止；
 - 把可疑样本送往更强层级复核。
 
 这一层强调：
@@ -392,7 +392,8 @@ L0 的目标不是做最终裁决，而是做**低成本初筛**：
 - 快；
 - 小；
 - 能在边缘侧或资源受限环境中跑起来；
-- 宁可保守提疑，也不追求单层“全能”。
+- 默认不吃完整 HTML、不做默认品牌提取、不吃截图/OCR、不做重交互恢复；
+- 宁可保守路由，也不追求单层“全能”。
 
 ### L1：多模态风险判断层
 

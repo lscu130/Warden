@@ -149,16 +149,20 @@ It may be implemented as an embedded `L0-fast` runtime sub-path inside the broad
 
 Default responsibilities:
 
-- obvious risk recall
+- obvious `gambling / adult / gate` specialized-surface recall
 - obvious benign filtering only if policy explicitly allows
 - simple structured/rule signals
-- cheap text/URL/image-lite evidence
+- cheap URL, visible-text/title, form-summary, network-summary, and existing cheap diff/evasion-observability evidence
 - initial escalation candidate generation
 - observability-aware routing when cheap evidence is missing, including raw visible-text missing cases
 - early low-risk exit only as an explicit routing outcome under sufficient low-risk evidence
 
 Strict rules:
 
+- do not make full `HTML` feature extraction part of the default L0 hot path
+- do not make default `brand` extraction part of the default L0 hot path
+- do not make screenshot/OCR or image-lite evidence a default L0 prerequisite
+- do not perform gate solving, click-through recovery, or interaction recovery inside L0
 - do not silently add heavy model inference to L0
 - do not bury most of the system cost in L0
 - do not make L0 routing opaque

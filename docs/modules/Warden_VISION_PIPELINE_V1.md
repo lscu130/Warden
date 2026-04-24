@@ -123,7 +123,9 @@ The vision path must not silently convert all behavior into one opaque scalar if
 
 ### 4.2 Stage discipline
 
-The visual path supports L1 judgment and may provide cheap image-lite evidence to L0 only where explicitly allowed by inference policy.
+The visual path primarily supports L1 judgment and L2 review.
+The current default L0 hot path does not consume screenshot, OCR, or image-lite evidence as prerequisites.
+Any future policy that provides cheap image-lite evidence to L0 must be explicitly approved, benchmarked, and documented rather than silently changing the L0 contract.
 It must not silently move L2-class heavy logic into early stages.
 
 ### 4.3 Stable primitives before broad semantics

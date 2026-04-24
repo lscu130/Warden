@@ -577,6 +577,8 @@ Important implications:
 - `auto` should not depend on future manual work as a default precondition;
 - `auto` should prefer the current successful-sample frozen artifacts as its upstream inputs;
 - if enhancement artifacts are missing, `auto` should degrade gracefully rather than fabricate observations.
+- the current standalone L0 hot path consumes only a narrowed cheap subset of this broader evidence layer: URL, visible-text/title, form summary, network summary, raw visible-text observability, existing compact diff/evasion hints, and specialized `gambling / adult / gate` signals.
+- full HTML-derived fields and brand fields may remain part of the broader `auto_labels.json` compatibility contract, but they are not default standalone L0 hot-path computations.
 
 ## 5. Output Families
 

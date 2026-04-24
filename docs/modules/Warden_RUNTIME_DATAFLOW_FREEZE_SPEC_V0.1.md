@@ -202,6 +202,7 @@ Minimum responsibilities:
 - prepare or consume cheap observation-oriented evidence;
 - produce routing-oriented weak outputs and reason codes;
 - decide whether the sample can stop early under current policy or must continue.
+- keep the default hot path focused on cheap URL, visible-text/title, form-summary, network-summary, raw visible-text observability, and existing compact diff/evasion hints.
 
 Minimum outputs:
 
@@ -214,6 +215,8 @@ Minimum outputs:
 Strict boundary:
 
 - `L0` runtime output may support routing, but it does not freeze final threat logic in this spec.
+- `L0` must not eagerly request heavy HTML payloads, screenshots/OCR, default brand extraction, heavy models, or interaction recovery as default runtime prerequisites.
+- Compatibility fields such as `html_features` and `brand_signals` may remain present with default-safe values or explicitly precomputed summaries.
 
 ### 5.2 `L1`
 

@@ -52,6 +52,7 @@ Important rule:
 | Day 14 | 2026-04-17 | results_received | `none` | `tranco_top_10001_100000_batch_0004`; `tranco_top_10001_100000_batch_0005`; `tranco_top_10001_100000_batch_0006` | `docs/tasks/2026-04-17_plan_a_batch_capture_day14_execution_task.md` | `docs/handoff/2026-04-17_plan_a_batch_capture_day14_vm_prep.md` |
 | Day 15 | 2026-04-21 | results_received | `none` | `tranco_top_10001_100000_batch_0007`; `tranco_top_10001_100000_batch_0008`; `tranco_top_10001_100000_batch_0009` | `docs/tasks/2026-04-21_plan_a_batch_capture_day15_execution_task.md` | `docs/handoff/2026-04-21_plan_a_batch_capture_day15_vm_prep.md` |
 | Day 16 | 2026-04-22 | selected | `none` | `tranco_top_100001_500000_batch_0012`; `tranco_top_100001_500000_batch_0013`; `tranco_top_100001_500000_batch_0014` | `docs/tasks/2026-04-22_plan_a_batch_capture_day16_final_execution_task.md` | `docs/handoff/2026-04-22_plan_a_batch_capture_day16_final_vm_prep.md` |
+| Day 17 | 2026-04-24 | selected | `none` | `tranco_top_100001_500000_batch_0015`; `tranco_top_100001_500000_batch_0016` | `docs/tasks/2026-04-24_plan_a_batch_capture_day17_supplement_execution_task.md` | `docs/handoff/2026-04-24_plan_a_batch_capture_day17_supplement_vm_prep.md` |
 
 ---
 
@@ -88,8 +89,10 @@ Important rule:
 - Day 15 uses `tranco_top_10001_100000_batch_0007`, `batch_0008`, and `batch_0009` because Day 14 already froze `batch_0004` through `batch_0006`, making `batch_0007` through `batch_0009` the next highest-priority remaining unassigned Tranco benign batches.
 - Day 15 is marked `results_received` based on the three returned `benign_capture_run.json` files under `E:\WardenData\raw\benign\tranco`; `batch_0007` is explicitly partial with `565` result rows, while `batch_0008` and `batch_0009` each have `1000` result rows.
 - Any strict actual-row calculation for the benign `20k` target must account for the Day 15 `batch_0007` partial state.
-- Day 16 is the final benign target-closure day for the current plan, using `tranco_top_100001_500000_batch_0012`, `batch_0013`, and `batch_0014` because the user clarified that one more `3`-batch day is sufficient to bring the benign total to `20k`.
-- Under that target-based stopping rule, `tranco_top_100001_500000_batch_0015` and `batch_0016` remain intentionally unqueued after Day 16.
+- Day 16 is the final `3`-batch benign target-closure day for the current plan, using `tranco_top_100001_500000_batch_0012`, `batch_0013`, and `batch_0014` because the user clarified that one more `3`-batch day was sufficient to approach the benign `20k` target before later deduplication.
+- Day 17 is a later supplement added after the user reported that duplicate removal still left the benign total slightly short.
+- Day 17 uses `tranco_top_100001_500000_batch_0015` and `batch_0016`, consuming the final remaining repo-local Tranco benign split inventory.
+- The Plan A Tranco benign selection rationale is recorded in `docs/modules/Warden_PLAN_A_TRANCO_BENIGN_SELECTION_STRATEGY.md`.
 - This tracker records selected queue membership and receipt state only. Final benign / malicious effectiveness analysis may still require separate reconciliation.
 
 ---
