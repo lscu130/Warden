@@ -107,7 +107,7 @@
 `manual` 需要回答的是：
 
 1. 最终是否是社会工程威胁；
-2. 最终想诱导用户执行什么高风险动作；
+2. 观察到什么高危欺骗行为，以及最终想诱导、准备或路由用户执行什么高风险动作；
 3. 当前页在攻击链里扮演什么角色；
 4. 品牌伪装是否真的成立；
 5. 该样本最终应进入哪个数据使用桶。
@@ -124,9 +124,9 @@
 - hard cases、gold eval 与冲突样本优先级远高于全量重复样本；
 - 若 cluster/subcluster 已存在，应优先人工确认 representative / canonical 样本，而不是默认逐个重复页全量人工标。
 
-### 3.4 一级主类围绕最终高风险动作
+### 3.4 一级主类保持兼容，同时最终裁决覆盖行为和动作
 
-`manual` 的主类应围绕 **最终高风险动作 / 最终危害目标**，而不是页面行业壳、叙事话术或内容生态。
+`manual` 的主类继续围绕稳定的 **最终高风险动作 / 最终危害目标** 枚举，以保持兼容；但 `manual_final_label` 的最终裁决应同时考虑高危欺骗行为和高危诱导动作。
 
 行业/场景、内容警示、hard-case 属性等应作为辅助字段保留，而不应覆盖最终威胁主类。
 
@@ -530,6 +530,12 @@
 
 中文内容保留在前，供人工协作与快速导览。英文版为权威版本。
 
+## 2026-04-27 Chinese Definition Update Summary
+
+- `manual` 的最终裁决应同时考虑高危欺骗行为和高危诱导动作。
+- 未观察到 payload / action 时，应记录为 `payload not observed`，不能自动判为 benign。
+- 本次只更新文档口径，不新增或重命名 `manual_labels.json` 字段、枚举或 schema。
+
 ## English Version
 
 > AI note: GPT, Gemini, Codex, Grok, Claude, and other model agents must treat the English section below as the authoritative version. The Chinese section is for human readers, collaboration, and quick orientation.
@@ -606,6 +612,8 @@ In practice:
 - final brand-impersonation decision,
 - final dataset-admission decision.
 
+The final judgment must consider high-risk deceptive behavior and/or high-risk induced action. A page can be `se_threat` because it constructs a deceptive identity, brand, authority, institution, security, financial, support, reward, or access-control context even when no direct credential, payment, wallet, download, POST, or other action payload is currently observed.
+
 ## 3. Design Principles
 
 ### 3.1 `manual` must not duplicate low-level observations
@@ -631,10 +639,12 @@ These belong to `auto` or `rule`.
 `manual` should answer:
 
 1. whether the page is finally judged benign, social-engineering threat, uncertain, or auxiliary;
-2. what harmful action it is ultimately trying to induce;
+2. what high-risk deceptive behavior is observed, and what harmful action it is ultimately trying to induce, prepare, or route toward if any;
 3. what role the current page plays in the attack chain;
 4. whether brand impersonation is actually established;
 5. where the sample should finally be routed in dataset usage.
+
+If high-risk deceptive behavior is established but the direct payload/action is absent in the current capture, reviewers should treat that as a `payload not observed` evidence state rather than as automatic benign.
 
 ### 3.3 `manual` is not a default full-corpus prerequisite
 
@@ -648,11 +658,12 @@ Reasons:
 - gold-eval, hard-case, and conflict-heavy samples are more valuable than exhaustively annotating near-duplicate ordinary pages;
 - when cluster/subcluster structures exist, manual review should prioritize canonical/representative samples rather than per-page exhaustive duplication.
 
-### 3.4 Primary classes should follow the final harmful action
+### 3.4 Primary classes remain stable while final judgment covers behavior and action
 
-The manual primary label should follow the **final harmful action / induced harm goal**, not the industry shell, narrative shell, or ecosystem description.
+The manual primary label remains aligned with the stable **final harmful action / induced harm goal** family for compatibility. The final `manual_final_label` should still consider both high-risk deceptive behavior and high-risk induced action.
 
 Industry, content warning, and hard-case attributes should remain secondary fields rather than replacing the main threat class.
+When the final judgment is malicious by behavior but no direct action payload is observed, preserve the stable enum contract and use existing page-role, brand-impersonation, scenario, hard-case, and reason-code fields to document the basis. Any dedicated future fields such as `malicious_basis`, `high_risk_behavior_type`, or `payload_observed` require a separate schema task.
 
 ## 4. Current Coverage Strategy
 

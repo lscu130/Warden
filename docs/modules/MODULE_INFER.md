@@ -16,6 +16,7 @@
 
 Inference 模块负责运行期判断流程，包括阶段路由、阈值应用、运行时输出、导出与性能相关路径。
 它的关注点是线上或准线上推理行为，而不是训练阶段的数据重标或 schema 改写。
+本模块采用项目级定义：社会工程威胁 = 高危欺骗行为和/或高危诱导动作。未观察到 payload / action 应表达为 `payload not observed`，不应在推理文档中自动等同于 benign。
 
 ## 2. 责任边界
 
@@ -39,6 +40,8 @@ using staged logic, bounded cost, explicit routing, and auditable outputs.
 
 This module is responsible for online or offline inference-time decision flow.
 It must preserve the staged L0 / L1 / L2 philosophy and must not silently absorb training-time assumptions as runtime truth.
+
+At the project-definition level, a social-engineering threat means high-risk deceptive behavior and/or high-risk induced action. Inference documentation and outputs should therefore avoid treating "no payload observed" as automatic benign. When high-risk deceptive identity, authority, institution, security, financial, support, reward, brand, or access-control context is present but no credential/payment/wallet/download/POST/action payload is observed, the state should be represented as `payload not observed` and routed according to policy confidence and stage rules.
 
 ---
 
@@ -97,6 +100,16 @@ A sample should be able to answer:
 ### 3.4 Auditable outputs
 
 Inference outputs must remain inspectable and not collapse into opaque single-value mystery decisions.
+
+### 3.4.1 Behavior/action distinction
+
+Inference reasoning should preserve the distinction between:
+
+- high-risk deceptive behavior: deceptive identity, trust, authority, institution, security, financial, support, reward, brand, or access-control context construction;
+- high-risk induced action: credential, OTP, payment, wallet, PII/KYC, download, fake-support diversion, or attack-chain redirect behavior;
+- payload not observed: no current evidence of a form, POST, wallet flow, payment flow, download flow, or other direct action component.
+
+This distinction is conceptual in this task. It does not introduce new output fields or change existing runtime schemas.
 
 ### 3.5 Current runtime-flow interpretation
 

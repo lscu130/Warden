@@ -12,7 +12,8 @@
 ## 1. 项目概览
 
 Warden 当前不是狭义的品牌钓鱼检测器，而是一个网页社工风险判断系统。
-它关注页面是否通过布局、文案、交互和视觉伪装诱导用户执行高风险操作，例如账号窃取、品牌冒充、支付欺诈、钱包滥用等。
+它关注页面是否呈现高危欺骗行为，和/或是否诱导、准备、路由用户执行高危动作，例如账号窃取、品牌冒充、支付欺诈、钱包滥用、恶意下载、假客服引流等。
+页面即使当前没有观察到登录框、支付框、钱包流程、下载、POST 提交或其他 payload，也可能因高危欺骗行为构成 malicious；这类证据状态应记录为 `payload not observed`，不能自动视为 benign。
 
 ## 2. 当前主线
 
@@ -42,13 +43,20 @@ This README describes Warden as a web social-engineering threat judgment system 
 
 ## 1. What The Project Is Doing Now
 
-Warden is building a system that judges whether a webpage presents meaningful social-engineering risk, including credential theft, brand impersonation, misleading redirects, payment fraud, wallet abuse, and other high-risk induced actions.
+Warden is building a system that judges whether a webpage presents meaningful social-engineering risk through high-risk deceptive behavior and/or high-risk induced action, including credential theft, brand impersonation, misleading redirects, payment fraud, wallet abuse, malicious downloads, fake-support diversion, and attack-chain redirects.
 
-The project is therefore no longer limited to the narrow question "is this a phishing page for some brand." It asks whether a page is trying to push a user into dangerous behavior through layout, wording, interaction flow, and visual disguise.
+The project is therefore no longer limited to the narrow question "is this a phishing page for some brand." It asks whether a page constructs a deceptive identity or trust context, and/or tries to push a user into dangerous behavior through layout, wording, interaction flow, redirects, or visual disguise.
+
+Canonical short form:
+
+**Social-engineering threat = high-risk deceptive behavior and/or high-risk induced action.**
+
+High-risk deceptive behavior includes false or misleading identity, brand, authority, institution, security, financial, support, reward, or access-control context construction. Such behavior may be malicious even when no credential form, payment form, wallet flow, download, POST submission, or other high-risk action is currently observed. In that case, Warden should treat the evidence state as `payload not observed`, not as automatic benign.
 
 In practice, Warden cares about questions such as:
 
-- whether the page is performing social-engineering induction;
+- whether the page is constructing deceptive identity, trust, brand, authority, security, financial, support, reward, or access-control context;
+- whether the page is inducing, preparing, or routing the user toward a high-risk action;
 - whether it is asking for passwords, OTP codes, payment details, wallet approvals, seed phrases, or other sensitive information;
 - whether it is pretending to be a known brand, platform, institution, or service;
 - whether the page is risky enough to require escalation to a stronger review stage;
@@ -80,7 +88,7 @@ It does not focus only on:
 - reference-list lookup;
 - static benchmark-style page recognition.
 
-Instead, it asks whether the page is structurally and semantically trying to induce a dangerous user action. That makes the project closer to web social-engineering analysis than to narrow brand-impersonation detection.
+Instead, it asks whether the page is structurally and semantically exhibiting high-risk deceptive behavior and/or inducing a dangerous user action. That makes the project closer to web social-engineering analysis than to narrow brand-impersonation detection.
 
 ## 3. Current System Shape: L0 / L1 / L2
 
@@ -272,7 +280,7 @@ It is explicitly moving toward web social-engineering threat judgment.
 That matters because:
 
 1. The research object becomes broader than classic fake-login pages.
-2. The threat semantics become richer, covering credentials, payments, wallets, verification, and induced actions.
+2. The threat semantics become richer, covering deceptive behavior, credentials, payments, wallets, verification, payload-not-observed cases, and induced actions.
 3. The method framing becomes more correct: brand evidence helps, but it is not the whole threat.
 4. The problem becomes more realistic for real-world webpages.
 5. The paper story becomes easier to extend toward open-world, adversarial, generalization, and explainability directions.
@@ -327,11 +335,12 @@ The original Chinese source text is kept below for human readers and traceabilit
 
 Warden 当前在做的事情，可以概括为一句话：
 
-**把网页是否存在社会工程诱导、凭证索取、品牌冒充、误导跳转、支付/钱包诱导等风险，做成一个可数据化、可训练、可分层部署、可解释的判断系统。**
+**把网页是否存在高危欺骗行为和/或高危诱导动作，例如社会工程诱导、凭证索取、品牌冒充、误导跳转、支付/钱包诱导等风险，做成一个可数据化、可训练、可分层部署、可解释的判断系统。**
 
 这意味着，Warden 不再只盯着“这个网页是不是某品牌钓鱼页”这一件事，而是把研究对象扩大成：
 
-- 网页是否在实施社会工程诱导；
+- 网页是否在构造虚假或误导性的身份、品牌、权威、机构、安全、金融、客服、奖励或访问控制上下文；
+- 网页是否在诱导、准备或路由用户执行高危动作；
 - 网页是否存在明显的账号、密码、验证码、助记词、钱包授权、支付信息等索取意图；
 - 网页是否在伪装成知名品牌、平台、机构或服务；
 - 网页风险是否足够高，需要进入更高层级模型复核；
@@ -368,7 +377,9 @@ Warden 当前已经明确不再满足于传统的二分类思路：
 
 它更关心的是：
 
-**网页是否正在通过页面结构、文案、交互和视觉伪装，诱导用户做出高风险行为。**
+**网页是否正在通过页面结构、文案、交互和视觉伪装，呈现高危欺骗行为和/或诱导用户做出高风险行为。**
+
+即使当前 capture 没有观察到登录框、支付框、钱包流程、下载、POST 提交或其他 payload，强烈的欺骗性身份或信任上下文也可能已经构成 malicious；此时应记录为 `payload not observed`，不能自动判为 benign。
 
 这使得 Warden 更接近“网页社会工程分析”，而不是单纯的“品牌冒充识别”。
 

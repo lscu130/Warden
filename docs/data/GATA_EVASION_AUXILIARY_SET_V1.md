@@ -10,6 +10,12 @@
 - 若涉及精确字段名、命令、模板或历史事实，以英文版为准。
 - 对历史 task、handoff、report 文档，本次改造只调整呈现，不应改变原始结论、状态或验证记录。
 
+## 2026-04-27 Chinese Definition Update Summary
+
+- gate / verification / CAPTCHA 页面如果只是阻挡观察，仍可按 auxiliary 处理。
+- 如果这类页面已经构造高危欺骗身份、权威、安全、金融、客服、奖励、访问控制或攻击链上下文，即使当前 payload 未观察到，也可能成为社会工程威胁候选。
+- 未观察到 payload / action 应表达为 `payload not observed`，不能自动判为 benign。
+
 ## English Version
 
 > AI note: GPT, Gemini, Codex, Grok, and Claude must treat the English section below as the authoritative version. The Chinese section is for human readers, collaboration, and quick orientation.
@@ -31,6 +37,8 @@ This file explains:
 ## 2. Applicable Background
 
 Warden's mainline problem is web social-engineering threat judgment, not a dedicated interaction-recovery or anti-bot-bypass system.
+
+Project definition note: a gate, verification, CAPTCHA, blank, or evasion-like page can remain auxiliary when it only blocks observation. It can also become a social-engineering threat candidate when it constructs high-risk deceptive identity, authority, security, financial, support, reward, access-control, or attack-chain context, even if the direct credential/payment/wallet/download payload is not currently observed.
 
 Therefore, in Warden V1, gate / evasion behavior is treated as a real deployment-side auxiliary problem rather than the primary training objective itself.
 
@@ -120,6 +128,8 @@ If a page outwardly presents gate / verification / CAPTCHA semantics but already
 - grant dangerous approvals or perform risky actions;
 
 then its threat nature is no longer equivalent to an ordinary gate page. Such samples may later be upgraded into true social-engineering threat pages during review.
+
+If the page strongly constructs deceptive trust or authority context but the direct payload is absent in the current capture, the appropriate evidence state is `payload not observed`, not automatic benign.
 
 ## 6. Core Handling Principles
 

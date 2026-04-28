@@ -1,5 +1,11 @@
 # PROJECT.md
 
+## 2026-04-27 Chinese Definition Update Summary
+
+- Warden 的社会工程威胁定义已对齐为：**高危欺骗行为和/或高危诱导动作**。
+- 页面即使当前没有观察到凭证表单、支付表单、钱包流程、下载、POST 提交或其他高危动作，也可能因高危欺骗行为构成 malicious。
+- `payload not observed` 不能自动等同于 benign。
+
 ## 中文版
 
 > 面向 AI 的说明：GPT、Gemini、Codex、Grok、Claude 仅将下方英文版视为权威版本。中文仅供人类阅读、协作与快速导览。
@@ -434,11 +440,18 @@ Warden is a **webpage social-engineering threat judgment system**.
 
 It is not a narrow brand-phishing detector and not a pure logo recognizer. Warden is concerned with questions such as:
 
-- whether a webpage is performing social-engineering induction;
+- whether a webpage exhibits high-risk deceptive behavior, such as false or misleading identity, brand, authority, institution, security, financial, support, reward, or access-control context construction;
+- whether a webpage induces, prepares, or routes the user toward high-risk actions;
 - whether it is requesting passwords, OTP codes, payment details, wallet approvals, seed phrases, or other sensitive information;
 - whether it is pushing the user toward a dangerous action through wording, layout, interaction flow, redirects, or visual disguise;
 - whether the sample is risky enough to require escalation to a stronger review stage;
 - whether the system remains deployable, auditable, and reproducible under lightweight and edge-constrained conditions.
+
+Canonical short form:
+
+**Social-engineering threat = high-risk deceptive behavior and/or high-risk induced action.**
+
+High-risk deceptive behavior may be malicious even when no credential form, payment form, wallet flow, download, POST submission, or other high-risk action is currently observed. In that situation, the evidence state should be described as `payload not observed`, not as automatic benign.
 
 ## 3. Current Project Stage
 
@@ -741,6 +754,8 @@ Brand logic is supportive evidence inside Warden, not the whole decision basis.
 
 The main question remains:
 **is the webpage presenting meaningful social-engineering risk?**
+
+Brand evidence is one form of high-risk deceptive-behavior evidence when it helps establish a false identity or trust context. It must still be interpreted with URL, page content, flow, authority context, and observed or missing payload evidence rather than used as a universal one-factor rule.
 
 ## 12. Execution Discipline
 

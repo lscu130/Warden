@@ -420,6 +420,12 @@ TrainSet V1 的默认 label layer 是 `auto_labels.json`。
 
 中文内容保留在前，供人工协作与快速导览。英文版为权威版本。
 
+## 2026-04-27 Chinese Definition Update Summary
+
+- `auto` 仍然是 evidence-first weak layer。
+- 如果没有观察到表单、POST、钱包、支付、下载或其他 payload，应表达为 `payload not observed`，不能由 `auto` 自动提升为 benign final truth。
+- 高危欺骗行为线索可以作为弱观察或候选信号进入后续 `rule` / `manual` 判断，但本次不新增字段或 schema。
+
 ## English Version
 
 > AI note: GPT, Gemini, Codex, Grok, Claude, and other model agents must treat the English section below as the authoritative version. The Chinese section is for human readers, collaboration, and quick orientation.
@@ -464,6 +470,8 @@ It is not:
 - a final page-role layer;
 - the primary home of `threat_taxonomy_v1`.
 
+Under the project-level threat definition, `auto` may observe evidence relevant to high-risk deceptive behavior and high-risk induced action, but it must not decide final maliciousness by itself. If no direct action payload is observed, that state should remain an observation such as `payload not observed`, not a final benign conclusion.
+
 ### 2.2 Difference from `rule_labels.json`
 
 Default interpretation:
@@ -502,6 +510,7 @@ Therefore the center of `auto` should remain focused on:
 - form structure;
 - HTML / JS / CAPTCHA / download evidence;
 - weak brand-related evidence;
+- weak deceptive identity, authority, institution, security, financial, support, reward, or access-control context evidence where observable;
 - current-page-state intent and evasion candidates;
 - lightweight network summary;
 - weak risk outputs.
@@ -650,6 +659,7 @@ Examples include:
 - whether CAPTCHA or download evidence exists;
 - third-party domains, POST targets, and network anomalies;
 - brand-token hits from text and URL.
+- whether no direct payload/action component is observed in the current capture.
 
 ### 6.2 Current-page-state weak intent candidates
 

@@ -10,6 +10,12 @@
 - 若涉及精确字段名、命令、模板或历史事实，以英文版为准。
 - 对历史 task、handoff、report 文档，本次改造只调整呈现，不应改变原始结论、状态或验证记录。
 
+## 2026-04-27 Chinese Definition Update Summary
+
+- 本文继续保留现有主标签枚举和训练兼容边界。
+- 项目级威胁定义已对齐为：高危欺骗行为和/或高危诱导动作。
+- 当前未观察到 payload / action 时，应表达为 `payload not observed`；如果页面已经构造高危欺骗身份或信任上下文，不能自动判为 benign。
+
 ## English Version
 
 > AI note: GPT, Gemini, Codex, Grok, and Claude must treat the English section below as the authoritative version. The Chinese section is for human readers, collaboration, and quick orientation.
@@ -18,13 +24,16 @@
 
 This document proposes the Warden V1 label taxonomy for malicious or risky social-engineering webpages.
 
+Project definition note: Warden's social-engineering threat definition is broader than action-only labeling. A page may be malicious because it exhibits high-risk deceptive behavior and/or because it induces, prepares, or routes the user toward high-risk actions. The current V1 primary labels remain centered on stable harmful-action outcomes for training compatibility, but `payload not observed` must not be treated as automatic benign when high-risk deceptive behavior is present.
+
 ## 1. Purpose
 
 The purpose of this taxonomy is to define a label structure that matches Warden's actual problem framing.
 
-The document is not trying to produce a loose mixture of industry names, narrative shells, and threat types. It is trying to answer one cleaner question:
+The document is not trying to produce a loose mixture of industry names, narrative shells, and threat types. It is trying to answer two related questions without changing the current enum set:
 
-What harmful action is the page trying to induce?
+1. What high-risk deceptive behavior is the page exhibiting?
+2. What harmful action is the page trying to induce, prepare, or route toward, if any?
 
 ## 2. Design Principles
 
@@ -32,9 +41,11 @@ What harmful action is the page trying to induce?
 
 The taxonomy should not place unrelated axes side by side as if they were the same kind of label. For example, "crypto", "black market", "social engineering", and "phishing" do not all live at the same semantic level.
 
-### 2.2 Primary Labels Should Follow The Induced Harmful Action
+### 2.2 Primary Labels Should Stay Stable While Preserving Behavior Evidence
 
-The primary label should reflect the final dangerous action the user is being pushed toward, not simply the outer shell or page story.
+The current primary label family should remain stable and action-outcome-oriented for compatibility. However, absence of an observed credential form, payment form, wallet flow, download, POST submission, or other direct payload must not automatically make a page benign when high-risk deceptive behavior is observed.
+
+For behavior-only or payload-not-observed cases, the recommended current handling is to preserve the stable primary label contract, use page-role, narrative, evidence, evasion, scenario, and review/escalation fields where available, and document any need for a future explicit behavior/action split as follow-up work.
 
 ### 2.3 Industry, Narrative, And Evasion Should Be Secondary
 
@@ -96,7 +107,7 @@ These describe the social-engineering story layer, for example urgency, account 
 
 ### 5.2 Evidence Tags
 
-These capture explicit page evidence such as credential forms, payment requests, wallet-connect prompts, QR-code use, brand mismatch, or other visible structural cues.
+These capture explicit page evidence such as credential forms, payment requests, wallet-connect prompts, QR-code use, deceptive identity or authority construction, brand mismatch, payload-not-observed state, or other visible structural cues.
 
 ### 5.3 Evasion / Dynamic-Behavior Tags
 
@@ -130,9 +141,9 @@ Therefore they should usually remain in narrative or scenario tags rather than r
 
 The current recommended V1 design can be summarized as:
 
-1. Primary classes are divided by final harmful action.
+1. Primary classes remain stable and centered on final harmful action / induced harm outcome for compatibility.
 2. Scenario labels are divided by industry or outer shell.
-3. Narrative and evasion behavior are preserved as auxiliary attributes.
+3. High-risk deceptive behavior, narrative, evidence, payload-observation state, and evasion behavior are preserved as auxiliary attributes where the current schema supports them.
 4. Gate / evasion is not itself a primary malicious class.
 5. "Crypto" is not itself a primary malicious class.
 6. "Black market" is not itself a primary malicious class.
@@ -178,9 +189,9 @@ Warden should not use a mixed-dimension label system where classes like "social-
 
 The more coherent structure is:
 
-- primary labels for harmful goals;
+- primary labels for stable harmful goals / action outcomes;
 - scenario labels for industry shells;
-- auxiliary tags for narratives, evidence, and evasion behavior.
+- auxiliary tags for high-risk deceptive behavior, narratives, evidence, payload-observation state, and evasion behavior.
 
 That design is better aligned with:
 
@@ -251,10 +262,11 @@ The original Chinese source text is kept below for human readers and traceabilit
 - 论文问题定义发散
 - 后续统计分析很难解释
 
-### 2.2 一级主标签应围绕“用户将被诱导做什么”
+### 2.2 一级主标签保持兼容，同时保留高危欺骗行为证据
 
-Warden 的核心不是判断网页“长得像不像某品牌”，而是判断网页是否在诱导用户执行高风险动作。  
-因此一级主标签应按 **恶意目标 / 最终危害动作** 划分。
+Warden 当前定义应同时覆盖高危欺骗行为和高危诱导动作。为保持训练兼容性，现有一级主标签仍按稳定的恶意目标 / 最终危害动作组织。
+
+未观察到 payload / action 时，应表达为 `payload not observed`，不能自动判为 benign；高危欺骗行为可通过辅助标签、页面角色、证据标签和后续人工复核保留。
 
 ### 2.3 行业、叙事、规避方式应下沉为副标签
 

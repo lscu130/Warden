@@ -23,6 +23,7 @@
 - 冻结字段名、文件名、CLI、输出结构和标签语义时，不允许静默改动。
 - 给用户的 Markdown 文档必须中英双语，中文摘要在前，英文全文在后。
 - 若需求与文档约束冲突，应明确指出冲突，而不是自行猜测。
+- Warden 的社会工程威胁定义包括高危欺骗行为和/或高危诱导动作；未观察到 payload / action 不能自动等同于 benign。
 
 ## 3. 阅读重点
 
@@ -49,6 +50,10 @@ It is not limited to classic phishing-site detection.
 Its goal is to judge whether a webpage presents meaningful social-engineering risk,
 using signals such as screenshot, HTML, URL, DOM/text cues, intent cues, credential request cues,
 brand-related evidence, and risk escalation logic.
+Warden defines a webpage social-engineering threat as high-risk deceptive behavior and/or high-risk induced action.
+High-risk deceptive behavior includes false or misleading identity, brand, authority, institution, security, financial, support, reward, or access-control context construction.
+Such behavior may be malicious even when no credential form, payment form, wallet flow, download, POST submission, or other high-risk action is currently observed.
+Absence of observed payload should be treated as `payload not observed`, not as automatic benign.
 
 Default system view:
 
@@ -295,6 +300,7 @@ Rules:
 - Do not make brand logic the only decision basis unless task scope says so.
 - Alias matching should be transparent and auditable.
 - If brand inference is heuristic, expose confidence or rule path when practical.
+- Strong deceptive brand, authority, institution, security, financial, support, reward, or access-control context can be high-risk behavior, but brand mismatch alone must not become a universal one-factor malicious rule without supporting context.
 
 ### 8.4 L0 / L1 / L2 discipline
 

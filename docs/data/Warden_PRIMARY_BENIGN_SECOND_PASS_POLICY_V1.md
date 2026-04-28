@@ -1,5 +1,9 @@
 <!-- operator: Codex; task: primary-benign-second-pass-policy; date: 2026-04-24 -->
 
+# 中文定义对齐摘要
+
+本文档按 `Warden_Threat_Definition_V1` 对齐：Warden 的威胁判断覆盖高危欺骗行为和/或高危诱导动作。未在当前采集中观察到 payload 或直接动作入口，只能记为 `payload not observed` 一类证据状态，不能自动推出 benign 结论。
+
 # 中文摘要
 
 ## 1. 文档目的
@@ -10,7 +14,7 @@
 
 - 第一轮已先行分出 `adult`、`gambling`、`gate`、`evasion`；
 - 剩余样本仍表现为 benign-like，但其中可能混入：
-  - 真正的高危行为 threat 页；
+  - 真正的高危欺骗行为和/或高危诱导动作 threat 页；
   - 尚未切干净的 `adult` / `gambling` 残留；
   - gate / evasion 残留；
   - 文本稀疏、截图依赖、模板混淆、内容残缺等高混淆 hard cases。
@@ -30,7 +34,7 @@
 本文件采用以下冻结边界：
 
 - `adult` / `gambling` 按高风险内容样本处理；
-- 真正的 `malicious` 指高危行为样本；
+- 真正的 `malicious` 指高危欺骗行为和/或高危诱导动作样本；
 - `gate` / `evasion` 按辅助数据处理，不进入 `TrainSet V1 primary`；
 - weak labels 不是 manual gold labels；
 - second-pass 输出是 routing / review 建议，不是 final truth。
@@ -54,7 +58,7 @@
 
 ### 4.1 Benign Purity 轴
 
-问的是：该样本是否仍像正常网页，且没有足够强的高危行为证据把它踢出 primary benign 主池。
+问的是：该样本是否仍像正常网页，且没有足够强的高危欺骗行为或高危诱导动作证据把它踢出 primary benign 主池。
 
 ### 4.2 Content Warning 轴
 
@@ -62,10 +66,11 @@
 
 这条轴与最终 threat judgment 分离，不得把它提升成第三个主 threat class。
 
-### 4.3 Threat-Behavior 轴
+### 4.3 Threat Behavior / Action 轴
 
-问的是：该样本是否更像高危行为页，例如：
+问的是：该样本是否更像高危欺骗行为和/或高危诱导动作页，例如：
 
+- deceptive identity / authority / institution / security / financial / support / reward / access-control construction with payload not observed
 - credential collection
 - payment collection
 - wallet / approval / seed phrase induced action
@@ -146,7 +151,7 @@ second-pass 可并行给出：
 
 样本可继续保留在 primary benign 主池候选，仅当以下条件同时成立：
 
-1. 未出现明确高危行为诱导证据；
+1. 未出现明确高危欺骗行为或高危诱导动作证据；
 2. 未出现足够强的 gate / evasion shell 证据；
 3. 未命中需要单独处理的 `adult` / `gambling` 内容警示；
 4. 页面质量、内容完整性和基本可解释性达标；
@@ -158,7 +163,7 @@ second-pass 可并行给出：
 - 正常内容页
 - 正常品牌页
 - benign OAuth / third-party auth delegate pattern
-- 明确 demo / clone 但无 threat-behavior 诱导的 benign-like 页面
+- 明确 demo / clone 但无 threat-behavior 或 induced-action 证据的 benign-like 页面
 
 ## 8. 必须踢出 primary benign 主池候选的情形
 
@@ -184,12 +189,13 @@ second-pass 可并行给出：
 
 ### 8.3 Route to exclude
 
-若样本已出现足够强的 threat-behavior 证据，或已明显不应被当作 benign 使用，则默认建议：
+若样本已出现足够强的 threat-behavior 或 induced-action 证据，或已明显不应被当作 benign 使用，则默认建议：
 
 - `exclude`
 
 例如：
 
+- strong deceptive identity / authority / institution / security / financial / support / reward / access-control construction, even when direct payload is not observed in the current capture
 - password / OTP / credential collection
 - payment collection / fee demand
 - wallet connect / approve / seed phrase request
@@ -302,7 +308,7 @@ It does not rewrite:
 This policy adopts the following frozen boundary:
 
 - `adult` / `gambling` are handled as high-risk content samples;
-- true `malicious` means high-risk behavior samples;
+- true `malicious` can mean high-risk deceptive-behavior samples and/or high-risk induced-action samples;
 - `gate` / `evasion` are handled as auxiliary data and do not enter `TrainSet V1 primary`;
 - weak labels are not manual gold labels;
 - second-pass outputs are routing and review suggestions, not final truth.
@@ -326,7 +332,7 @@ This set is not:
 
 ### 4.1 Benign Purity Axis
 
-This asks whether the sample still looks like a normal webpage and whether there is insufficient high-risk behavior evidence to remove it from the primary benign pool.
+This asks whether the sample still looks like a normal webpage and whether there is insufficient high-risk deceptive-behavior or induced-action evidence to remove it from the primary benign pool.
 
 ### 4.2 Content Warning Axis
 
@@ -334,10 +340,11 @@ This asks whether the sample belongs to a high-risk content shell such as `adult
 
 This axis must stay separate from final threat judgment. It must not become a third main threat class.
 
-### 4.3 Threat-Behavior Axis
+### 4.3 Threat Behavior / Action Axis
 
-This asks whether the sample is better explained as a high-risk behavior page, for example:
+This asks whether the sample is better explained as a high-risk deceptive-behavior page and/or high-risk induced-action page, for example:
 
+- deceptive identity / authority / institution / security / financial / support / reward / access-control construction with payload not observed
 - credential collection
 - payment collection
 - wallet / approval / seed-phrase induced action
@@ -418,7 +425,7 @@ This suggestion serves the content-warning and scenario axis only. It does not r
 
 A sample may remain in the primary-benign candidate pool only if all of the following hold:
 
-1. it does not show clear high-risk behavior evidence;
+1. it does not show clear high-risk deceptive-behavior or induced-action evidence;
 2. it does not show sufficiently strong gate/evasion-shell evidence;
 3. it does not hit a content-warning condition that must be separated out as `adult` / `gambling`;
 4. page quality, content completeness, and minimum interpretability remain acceptable;
@@ -430,7 +437,7 @@ Typical keep cases include:
 - normal content pages
 - normal brand pages
 - benign OAuth or third-party auth delegate patterns
-- clearly demo or clone pages without threat-behavior induction
+- clearly demo or clone pages without threat-behavior or induced-action evidence
 
 ## 8. Conditions That Remove A Sample From The Main Primary-Benign Candidate Pool
 
@@ -456,12 +463,13 @@ then the default suggestion is:
 
 ### 8.3 Route to exclude
 
-If a sample already shows sufficiently strong threat-behavior evidence, or clearly should not be used as benign, then the default suggestion is:
+If a sample already shows sufficiently strong threat-behavior or induced-action evidence, or clearly should not be used as benign, then the default suggestion is:
 
 - `exclude`
 
 Examples include:
 
+- strong deceptive identity / authority / institution / security / financial / support / reward / access-control construction, even when direct payload is not observed in the current capture
 - password, OTP, or credential collection
 - payment collection or fee-demand behavior
 - wallet connect, approve, or seed-phrase requests

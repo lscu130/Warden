@@ -471,6 +471,12 @@
 
 中文内容保留在前，供人工协作与快速导览。英文版为权威版本。
 
+## 2026-04-27 Chinese Definition Update Summary
+
+- `rule` 应支持“高危欺骗行为已观察到，但 payload / action 未观察到”的处理语义。
+- `guardrail_sensitive_collection_absent_on_page_candidate` 不能被理解为自动 benign；它只表示当前页缺少直接敏感收集证据。
+- 本次不新增或重命名 `rule_labels.json` 字段、枚举或 schema。
+
 ## English Version
 
 > AI note: GPT, Gemini, Codex, Grok, Claude, and other model agents must treat the English section below as the authoritative version. The Chinese section is for human readers, collaboration, and quick orientation.
@@ -513,6 +519,8 @@ It is not:
 - a human gold-label layer;
 - a final truth layer;
 - a replacement for `manual_labels.json`.
+
+Under the project-level definition, `rule` should be able to represent cases where high-risk deceptive behavior is present while direct action payload is not observed. Such cases may require escalation or manual review instead of being treated as automatic benign.
 
 ### 2.2 Difference from `auto_labels.json`
 
@@ -669,7 +677,7 @@ Meaning: the core interaction resembles delegated third-party authentication / S
 Meaning: surface-level brand presence is insufficient to establish brand impersonation.
 
 #### `guardrail_sensitive_collection_absent_on_page_candidate`
-Meaning: direct sensitive collection evidence is absent on the current page and the page should not be escalated solely by brand or workflow surface appearance.
+Meaning: direct sensitive collection evidence is absent on the current page. This is a `payload not observed` state, not a benign verdict. The page should not be escalated solely by weak brand or workflow surface appearance, but strong deceptive identity, authority, institution, security, financial, support, reward, access-control, hosted-lure, or attack-chain context may still justify escalation or review.
 
 ### 6.2 Hosted / Intermediary / Lure Flags
 
@@ -695,6 +703,8 @@ Meaning: brand-related evidence is strong, but brand spoofing is not actually es
 
 #### `conflict_sensitive_intent_low_but_lure_signal_high`
 Meaning: direct on-page sensitive-collection evidence is weak, but lure / redirection / hosted-page signals are strong.
+
+This conflict is the main v1-core place to preserve behavior-only or payload-not-observed risk without changing the schema.
 
 #### `conflict_visual_risk_high_text_risk_low`
 Meaning: visual risk appears elevated while text/form evidence remains weak, so stronger review is needed.

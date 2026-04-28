@@ -51,8 +51,9 @@ Important rule:
 | Day 13 | 2026-04-16 | results_received | `none` | `tranco_top_1_10000_batch_0005`; `tranco_top_1_10000_batch_0006`; `tranco_top_10001_100000_batch_0003` | `docs/tasks/2026-04-16_plan_a_batch_capture_day13_execution_task.md` | `docs/handoff/2026-04-16_plan_a_batch_capture_day13_vm_prep.md` |
 | Day 14 | 2026-04-17 | results_received | `none` | `tranco_top_10001_100000_batch_0004`; `tranco_top_10001_100000_batch_0005`; `tranco_top_10001_100000_batch_0006` | `docs/tasks/2026-04-17_plan_a_batch_capture_day14_execution_task.md` | `docs/handoff/2026-04-17_plan_a_batch_capture_day14_vm_prep.md` |
 | Day 15 | 2026-04-21 | results_received | `none` | `tranco_top_10001_100000_batch_0007`; `tranco_top_10001_100000_batch_0008`; `tranco_top_10001_100000_batch_0009` | `docs/tasks/2026-04-21_plan_a_batch_capture_day15_execution_task.md` | `docs/handoff/2026-04-21_plan_a_batch_capture_day15_vm_prep.md` |
-| Day 16 | 2026-04-22 | selected | `none` | `tranco_top_100001_500000_batch_0012`; `tranco_top_100001_500000_batch_0013`; `tranco_top_100001_500000_batch_0014` | `docs/tasks/2026-04-22_plan_a_batch_capture_day16_final_execution_task.md` | `docs/handoff/2026-04-22_plan_a_batch_capture_day16_final_vm_prep.md` |
-| Day 17 | 2026-04-24 | selected | `none` | `tranco_top_100001_500000_batch_0015`; `tranco_top_100001_500000_batch_0016` | `docs/tasks/2026-04-24_plan_a_batch_capture_day17_supplement_execution_task.md` | `docs/handoff/2026-04-24_plan_a_batch_capture_day17_supplement_vm_prep.md` |
+| Day 16 | 2026-04-22 | results_received | `none` | `tranco_top_100001_500000_batch_0012`; `tranco_top_100001_500000_batch_0013`; `tranco_top_100001_500000_batch_0014` | `docs/tasks/2026-04-22_plan_a_batch_capture_day16_final_execution_task.md` | `docs/handoff/2026-04-22_plan_a_batch_capture_day16_final_vm_prep.md` |
+| Day 17 | 2026-04-24 | results_received | `none` | `tranco_top_100001_500000_batch_0015`; `tranco_top_100001_500000_batch_0016` | `docs/tasks/2026-04-24_plan_a_batch_capture_day17_supplement_execution_task.md` | `docs/handoff/2026-04-24_plan_a_batch_capture_day17_supplement_vm_prep.md` |
+| Day 18 | 2026-04-28 | selected | `none` | `tranco_top_100001_500000_batch_0017`; `tranco_top_100001_500000_batch_0018`; `tranco_top_100001_500000_batch_0019` | `docs/tasks/2026-04-28_plan_a_batch_capture_day18_single_batch_execution_task.md` | `docs/handoff/2026-04-28_plan_a_batch_capture_day18_single_batch_vm_prep.md` |
 
 ---
 
@@ -92,7 +93,12 @@ Important rule:
 - Day 16 is the final `3`-batch benign target-closure day for the current plan, using `tranco_top_100001_500000_batch_0012`, `batch_0013`, and `batch_0014` because the user clarified that one more `3`-batch day was sufficient to approach the benign `20k` target before later deduplication.
 - Day 17 is a later supplement added after the user reported that duplicate removal still left the benign total slightly short.
 - Day 17 uses `tranco_top_100001_500000_batch_0015` and `batch_0016`, consuming the final remaining repo-local Tranco benign split inventory.
+- Day 16 is marked `results_received` based on three returned `benign_capture_run.json` files under `E:\WardenData\raw\benign\tranco`; all three Day 16 batches have `1000` result rows.
+- Day 17 is marked `results_received` based on two returned `benign_capture_run.json` files under `E:\WardenData\raw\benign\tranco`; `batch_0015` has `1000` result rows, while `batch_0016` is partial with `371` result rows.
+- Any strict actual-row calculation for the benign total must account for the Day 17 `batch_0016` partial state.
 - The Plan A Tranco benign selection rationale is recorded in `docs/modules/Warden_PLAN_A_TRANCO_BENIGN_SELECTION_STRATEGY.md`.
+- On 2026-04-27, a supplemental Tranco split added `tranco_top_100001_500000_batch_0017` through `batch_0022`.
+- Day 18 was updated from a single-batch queue to a three-batch benign-only queue using `tranco_top_100001_500000_batch_0017`, `batch_0018`, and `batch_0019`; `batch_0020` through `batch_0022` remain unassigned after this turn.
 - This tracker records selected queue membership and receipt state only. Final benign / malicious effectiveness analysis may still require separate reconciliation.
 
 ---
