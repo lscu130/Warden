@@ -174,7 +174,8 @@ Hard rules:
    - Chinese section first.
    - English section after Chinese.
 9. Keep the change minimal and directly tied to the task.
-10. At the end, report:
+10. Respond in Chinese by default for execution summaries and Feishu-facing reports, unless the task explicitly requires English.
+11. At the end, report in Chinese:
    - files changed
    - summary of changes
    - whether further review is needed

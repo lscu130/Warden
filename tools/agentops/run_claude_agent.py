@@ -50,6 +50,7 @@ Rules:
    - Findings
    - Suggested next action
    - Whether code/file changes are needed
+6. Respond in Chinese by default, unless the task explicitly requires English.
 """
 
 
