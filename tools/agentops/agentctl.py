@@ -602,6 +602,157 @@ def cmd_merge(args: argparse.Namespace) -> None:
         f"Push: not performed"
     )
 
+def is_branch_merged_into_base(base_branch: str, task_branch: str) -> bool:
+    """
+    判断 task_branch 是否已经完全合入 base_branch。
+    """
+    process = run_cmd(
+        ["git", "merge-base", "--is-ancestor", task_branch, base_branch],
+        check=False,
+    )
+    return process.returncode == 0
+
+
+def cmd_publish(args: argparse.Namespace) -> None:
+    """
+    将 main 推送到远程。
+
+    行为：
+    - 读取任务报告，确认任务存在
+    - 检查当前分支必须是 main
+    - 检查工作区干净
+    - 检查 main 没有落后 upstream
+    - 检查任务分支已经合入 main
+    - 执行 git push origin main
+    - 不删除任何分支
+    """
+    report = load_report(args.task_id)
+
+    task_branch = report.get("branch_name")
+    main_branch = args.main_branch
+    remote_name = args.remote
+
+    if not task_branch:
+        raise RuntimeError("任务报告中没有 branch_name，拒绝 publish。")
+
+    current_branch = get_current_branch()
+
+    if current_branch != main_branch:
+        raise RuntimeError(
+            f"当前分支不是 {main_branch}，拒绝 publish。\n"
+            f"Current branch: {current_branch}\n"
+            f"请先执行：git switch {main_branch}"
+        )
+
+    ensure_worktree_clean()
+    ensure_main_not_behind(main_branch)
+
+    if not branch_exists(task_branch):
+        raise RuntimeError(f"找不到任务分支：{task_branch}")
+
+    if not is_branch_merged_into_base(main_branch, task_branch):
+        raise RuntimeError(
+            f"任务分支尚未合入 {main_branch}，拒绝 publish。\n"
+            f"Task branch: {task_branch}\n"
+            f"请先执行：python tools\\agentops\\agentctl.py merge {args.task_id}"
+        )
+
+    if args.dry_run:
+        print(f"Dry run only. Would run: git push {remote_name} {main_branch}")
+        return
+
+    process = run_cmd(
+        ["git", "push", remote_name, main_branch],
+        check=False,
+    )
+
+    if process.returncode != 0:
+        notify_feishu_safely(
+            f"[AgentOps Publish Failed]\n"
+            f"Task ID: {args.task_id}\n"
+            f"Branch: {main_branch}\n"
+            f"Remote: {remote_name}\n\n"
+            f"stderr:\n{process.stderr[:2000]}"
+        )
+
+        raise RuntimeError(
+            "git push 失败。\n\n"
+            f"stdout:\n{process.stdout}\n"
+            f"stderr:\n{process.stderr}"
+        )
+
+    print(f"Published {main_branch} to {remote_name}.")
+    print(f"Task ID: {args.task_id}")
+    print(f"Task branch: {task_branch}")
+
+    notify_feishu_safely(
+        f"[AgentOps Published]\n"
+        f"Task ID: {args.task_id}\n"
+        f"Branch: {main_branch}\n"
+        f"Remote: {remote_name}\n"
+        f"Task branch: {task_branch}"
+    )
+
+
+def cmd_cleanup(args: argparse.Namespace) -> None:
+    """
+    清理已经合入 main 的本地任务分支。
+
+    行为：
+    - 读取任务报告
+    - 检查任务分支存在
+    - 检查任务分支已经合入 main
+    - 当前不能停留在任务分支
+    - 删除本地任务分支
+    - 不删除远程分支
+    """
+    report = load_report(args.task_id)
+
+    task_branch = report.get("branch_name")
+    main_branch = args.main_branch
+
+    if not task_branch:
+        raise RuntimeError("任务报告中没有 branch_name，拒绝 cleanup。")
+
+    ensure_worktree_clean()
+
+    if not branch_exists(main_branch):
+        raise RuntimeError(f"找不到 main 分支：{main_branch}")
+
+    if not branch_exists(task_branch):
+        print(f"任务分支不存在，可能已经清理过：{task_branch}")
+        return
+
+    current_branch = get_current_branch()
+
+    if current_branch == task_branch:
+        raise RuntimeError(
+            f"当前正在任务分支上，拒绝删除当前分支。\n"
+            f"Current branch: {current_branch}\n"
+            f"请先执行：git switch {main_branch}"
+        )
+
+    if not is_branch_merged_into_base(main_branch, task_branch):
+        raise RuntimeError(
+            f"任务分支尚未合入 {main_branch}，拒绝 cleanup。\n"
+            f"Task branch: {task_branch}"
+        )
+
+    if args.dry_run:
+        print(f"Dry run only. Would delete local branch: {task_branch}")
+        return
+
+    run_cmd(["git", "branch", "-d", task_branch], check=True)
+
+    print(f"Deleted local task branch: {task_branch}")
+
+    notify_feishu_safely(
+        f"[AgentOps Cleanup]\n"
+        f"Task ID: {args.task_id}\n"
+        f"Deleted local branch: {task_branch}\n"
+        f"Remote branch: not deleted"
+    )    
+
 def build_parser() -> argparse.ArgumentParser:
     """
     构造命令行 parser。
@@ -641,6 +792,19 @@ def build_parser() -> argparse.ArgumentParser:
     merge_parser.add_argument("--dry-run", action="store_true", help="Show pending commits without merging")
     merge_parser.add_argument("-m", "--message", help="Git merge commit message")
     merge_parser.set_defaults(func=cmd_merge)
+
+    publish_parser = subparsers.add_parser("publish", help="Push main after an approved task has been merged")
+    publish_parser.add_argument("task_id")
+    publish_parser.add_argument("--main-branch", default="main", help="Main branch name, default: main")
+    publish_parser.add_argument("--remote", default="origin", help="Remote name, default: origin")
+    publish_parser.add_argument("--dry-run", action="store_true", help="Show push command without executing")
+    publish_parser.set_defaults(func=cmd_publish)
+
+    cleanup_parser = subparsers.add_parser("cleanup", help="Delete local task branch after it has been merged")
+    cleanup_parser.add_argument("task_id")
+    cleanup_parser.add_argument("--main-branch", default="main", help="Main branch name, default: main")
+    cleanup_parser.add_argument("--dry-run", action="store_true", help="Show branch deletion without executing")
+    cleanup_parser.set_defaults(func=cmd_cleanup)
 
     return parser
 
