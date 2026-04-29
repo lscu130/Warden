@@ -1,5 +1,5 @@
 ﻿<p align="center">
-  <img src="assets/warden_logo_full.png" alt="Warden Logo" width="520">
+  <img src="assets/Warden_logo_full.png" alt="Warden Logo" width="520">
 </p>
 
 # Warden
