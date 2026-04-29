@@ -420,10 +420,10 @@ def cmd_reject(args: argparse.Namespace) -> None:
         f"Discarded files:\n" + "\n".join(safe_files)
     )
 
-    def branch_exists(branch_name: str) -> bool:
-        """
-        判断本地分支是否存在。
-        """
+def branch_exists(branch_name: str) -> bool:
+    """
+    判断本地分支是否存在。
+    """
     process = run_cmd(
         ["git", "rev-parse", "--verify", branch_name],
         check=False,
