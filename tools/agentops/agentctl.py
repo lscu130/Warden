@@ -420,6 +420,187 @@ def cmd_reject(args: argparse.Namespace) -> None:
         f"Discarded files:\n" + "\n".join(safe_files)
     )
 
+    def branch_exists(branch_name: str) -> bool:
+        """
+        判断本地分支是否存在。
+        """
+    process = run_cmd(
+        ["git", "rev-parse", "--verify", branch_name],
+        check=False,
+    )
+    return process.returncode == 0
+
+
+def get_upstream_branch(branch_name: str) -> str | None:
+    """
+    获取分支的 upstream，例如 origin/main。
+
+    如果没有 upstream，返回 None。
+    """
+    process = run_cmd(
+        ["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", f"{branch_name}@{{u}}"],
+        check=False,
+    )
+
+    if process.returncode != 0:
+        return None
+
+    upstream = process.stdout.strip()
+    return upstream or None
+
+
+def ensure_worktree_clean() -> None:
+    """
+    确保当前工作区干净。
+    """
+    status = get_status_porcelain()
+
+    if status:
+        raise RuntimeError(
+            "当前工作区不干净，拒绝执行 merge。\n\n"
+            f"git status --porcelain:\n{status}"
+        )
+
+
+def ensure_main_not_behind(main_branch: str) -> None:
+    """
+    检查 main 是否落后于 upstream。
+
+    如果 main 没有 upstream，则跳过该检查。
+    """
+    upstream = get_upstream_branch(main_branch)
+
+    if not upstream:
+        print(f"[warn] {main_branch} 没有 upstream，跳过远程同步检查。")
+        return
+
+    run_cmd(["git", "fetch", "origin"], check=True)
+
+    local_head = run_cmd(["git", "rev-parse", main_branch], check=True).stdout.strip()
+    upstream_head = run_cmd(["git", "rev-parse", upstream], check=True).stdout.strip()
+    merge_base = run_cmd(["git", "merge-base", main_branch, upstream], check=True).stdout.strip()
+
+    if local_head == upstream_head:
+        return
+
+    if local_head == merge_base:
+        raise RuntimeError(
+            f"{main_branch} 落后于 {upstream}，拒绝 merge。\n"
+            f"请先执行：git pull --ff-only"
+        )
+
+    if upstream_head == merge_base:
+        print(f"[warn] {main_branch} 领先于 {upstream}，可以继续本地 merge。")
+        return
+
+    raise RuntimeError(
+        f"{main_branch} 和 {upstream} 已分叉，拒绝自动 merge。\n"
+        f"请先手动处理远程同步问题。"
+    )
+
+
+def get_branch_commits_not_in_base(base_branch: str, task_branch: str) -> str:
+    """
+    获取任务分支相对 base 分支新增的 commit。
+    """
+    return run_cmd(
+        ["git", "log", "--oneline", f"{base_branch}..{task_branch}"],
+        check=True,
+    ).stdout.strip()
+
+
+def cmd_merge(args: argparse.Namespace) -> None:
+    """
+    将已 approve 的任务分支合入 main。
+
+    行为：
+    - 读取任务报告，找到任务分支
+    - 检查工作区干净
+    - 检查 main 分支存在
+    - 检查任务分支存在
+    - 切回 main
+    - 检查 main 没有落后于 upstream
+    - 检查任务分支确实有待合并 commit
+    - 使用 --no-ff 合并任务分支
+    - 不 push
+    - 不删除任务分支
+    """
+    report = load_report(args.task_id)
+
+    task_branch = report.get("branch_name")
+    main_branch = args.main_branch
+
+    if not task_branch:
+        raise RuntimeError("任务报告中没有 branch_name，拒绝 merge。")
+
+    ensure_worktree_clean()
+
+    if not branch_exists(main_branch):
+        raise RuntimeError(f"找不到 main 分支：{main_branch}")
+
+    if not branch_exists(task_branch):
+        raise RuntimeError(f"找不到任务分支：{task_branch}")
+
+    current_branch = get_current_branch()
+
+    if current_branch != main_branch:
+        print(f"Switching branch: {current_branch} -> {main_branch}")
+        run_cmd(["git", "switch", main_branch], check=True)
+
+    ensure_worktree_clean()
+    ensure_main_not_behind(main_branch)
+
+    pending_commits = get_branch_commits_not_in_base(main_branch, task_branch)
+
+    if not pending_commits:
+        print(f"No pending commits to merge from {task_branch} into {main_branch}.")
+        return
+
+    print("Pending commits:")
+    print(pending_commits)
+
+    if args.dry_run:
+        print("\nDry run only. No merge performed.")
+        return
+
+    merge_message = args.message or f"Merge AgentOps task {args.task_id}"
+
+    process = run_cmd(
+        ["git", "merge", "--no-ff", task_branch, "-m", merge_message],
+        check=False,
+    )
+
+    if process.returncode != 0:
+        notify_feishu_safely(
+            f"[AgentOps Merge Failed]\n"
+            f"Task ID: {args.task_id}\n"
+            f"Main branch: {main_branch}\n"
+            f"Task branch: {task_branch}\n"
+            f"Action: 请本地检查冲突。必要时执行 git merge --abort。\n\n"
+            f"stderr:\n{process.stderr[:2000]}"
+        )
+
+        raise RuntimeError(
+            "git merge 失败，可能存在冲突。\n\n"
+            f"stdout:\n{process.stdout}\n"
+            f"stderr:\n{process.stderr}\n\n"
+            f"如需放弃本次 merge，请执行：git merge --abort"
+        )
+
+    print(f"Merged task branch into {main_branch}.")
+    print(f"Task ID: {args.task_id}")
+    print(f"Task branch: {task_branch}")
+    print(f"Merge message: {merge_message}")
+    print("\nNo push was performed. Review locally, then push manually if needed.")
+
+    notify_feishu_safely(
+        f"[AgentOps Merged]\n"
+        f"Task ID: {args.task_id}\n"
+        f"Main branch: {main_branch}\n"
+        f"Task branch: {task_branch}\n"
+        f"Merge message: {merge_message}\n"
+        f"Push: not performed"
+    )
 
 def build_parser() -> argparse.ArgumentParser:
     """
@@ -453,6 +634,13 @@ def build_parser() -> argparse.ArgumentParser:
     reject_parser.add_argument("task_id")
     reject_parser.add_argument("--force", action="store_true", help="Actually discard docs/ changes")
     reject_parser.set_defaults(func=cmd_reject)
+
+    merge_parser = subparsers.add_parser("merge", help="Merge approved task branch into main")
+    merge_parser.add_argument("task_id")
+    merge_parser.add_argument("--main-branch", default="main", help="Main branch name, default: main")
+    merge_parser.add_argument("--dry-run", action="store_true", help="Show pending commits without merging")
+    merge_parser.add_argument("-m", "--message", help="Git merge commit message")
+    merge_parser.set_defaults(func=cmd_merge)
 
     return parser
 
