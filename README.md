@@ -1,4 +1,8 @@
-﻿# Warden
+﻿<p align="center">
+  <img src="assets/warden_logo_full.png" alt="Warden Logo" width="520">
+</p>
+
+# Warden
 
 ## 中文版
 

@@ -137,6 +137,9 @@ GATE_SURFACE_KEYWORDS = [
     "please wait while your request is being verified", "your request is being verified",
     "verify your request", "verify if you're human", "verify if you are human", "verify you're not a bot",
     "verify you are not a bot", "checkbox to verify", "checking if the site connection is secure",
+    "humancheck", "tap the box to verify", "select the box to continue", "complete the security check",
+    "press & hold", "please prove that you are human", "prove that you are human",
+    "idp verification", "solve the equation", "enter the code below", "code refreshes", "protected by idp",
     "用户验证", "用戶驗證", "验证中", "驗證中", "安全检查", "安全檢查", "正在检查", "正在檢查", "人机验证", "人機驗證",
     "点击允许", "點擊允許", "允许通知", "允許通知", "安装扩展", "安裝擴展",
     "请稍候", "請稍候", "正在验证您的请求", "正在驗證您的請求",
@@ -147,7 +150,25 @@ GATE_STRONG_KEYWORDS = [
     "please wait while your request is being verified", "your request is being verified",
     "verify your request", "verify if you're human", "verify if you are human",
     "verify you're not a bot", "verify you are not a bot",
+    "request unsuccessful", "incapsula", "humancheck", "tap the box to verify",
+    "select the box to continue", "complete the security check", "press & hold",
+    "please prove that you are human", "prove that you are human",
+    "idp verification", "solve the equation", "enter the code below", "protected by idp",
     "请稍候", "請稍候", "正在验证您的请求", "正在驗證您的請求",
+]
+GATE_URL_KEYWORDS = [
+    "loading", "verify", "verification", "captcha", "auth", "secure", "humancheck", "challenge",
+    "turnstile", "cloudflare", "security-check",
+]
+GATE_SHORT_FLOW_KEYWORDS = [
+    "verificando", "loading", "loading...", "click here to continue", "click to continue",
+    "please confirm to continue", "secure portal", "one moment please", "one moment, please",
+    "por favor aguarde", "please wait", "点击继续", "點擊繼續",
+]
+GATE_IDENTITY_FLOW_KEYWORDS = [
+    "verify to sign", "verify your identity", "verification code", "copy code",
+    "idp verification", "solve the equation", "enter the code below", "code refreshes",
+    "protected by idp",
 ]
 SUSPICIOUS_URL_KEYWORDS = [
     "login", "signin", "verify", "update", "secure", "account", "wallet", "payment",

@@ -80,6 +80,15 @@ GATE_STRONG_KEYWORDS = _auto.GATE_STRONG_KEYWORDS
 GATE_URL_KEYWORDS = getattr(_auto, "GATE_URL_KEYWORDS", ["loading", "verify", "verification", "captcha", "auth", "secure", "humancheck"])
 GATE_SHORT_FLOW_KEYWORDS = getattr(_auto, "GATE_SHORT_FLOW_KEYWORDS", ["verificando", "loading", "loading...", "click here to continue", "click to continue", "please confirm to continue", "secure portal", "点击继续", "點擊繼續"])
 GATE_IDENTITY_FLOW_KEYWORDS = getattr(_auto, "GATE_IDENTITY_FLOW_KEYWORDS", ["verify to sign", "verify your identity", "verification code", "copy code"])
+GATE_SCORE_STRONG_TEXT = getattr(_auto, "GATE_SCORE_STRONG_TEXT", 6)
+GATE_SCORE_CAPTCHA_OR_ANTIBOT = getattr(_auto, "GATE_SCORE_CAPTCHA_OR_ANTIBOT", 5)
+GATE_SCORE_SHORT_FLOW = getattr(_auto, "GATE_SCORE_SHORT_FLOW", 3)
+GATE_SCORE_IDENTITY_FLOW = getattr(_auto, "GATE_SCORE_IDENTITY_FLOW", 4)
+GATE_SCORE_URL_HINT = getattr(_auto, "GATE_SCORE_URL_HINT", 2)
+GATE_SCORE_TEXT_GE2 = getattr(_auto, "GATE_SCORE_TEXT_GE2", 2)
+GATE_SCORE_NEEDS_INTERACTION = getattr(_auto, "GATE_SCORE_NEEDS_INTERACTION", 2)
+GATE_SCORE_CHALLENGE_THRESHOLD = getattr(_auto, "GATE_SCORE_CHALLENGE_THRESHOLD", 6)
+GATE_SCORE_EVASION_THRESHOLD = getattr(_auto, "GATE_SCORE_EVASION_THRESHOLD", 6)
 SUSPICIOUS_URL_KEYWORDS = _auto.SUSPICIOUS_URL_KEYWORDS
 KNOWN_JS_LIBS = _auto.KNOWN_JS_LIBS
 
@@ -502,13 +511,59 @@ def derive_specialized_surface_signals(
     gate_strong_hits = [kw for kw in gate_text_hits if kw in GATE_STRONG_KEYWORD_SET]
     gate_short_flow_hit = contains_any(text_compact, GATE_SHORT_FLOW_KEYWORDS)
     gate_identity_flow_hit = contains_any(text_compact, GATE_IDENTITY_FLOW_KEYWORDS)
+    gate_captcha_or_antibot = bool(
+        evasion_signals.get("captcha_present_candidate")
+        or evasion_signals.get("anti_bot_or_cloaking_candidate")
+    )
+    gate_needs_interaction = bool(evasion_signals.get("needs_interaction_candidate"))
+    gate_weighted_score = 0
+    gate_weighted_score_reasons: List[str] = []
+
+    def add_gate(points: int, reason: str, cond: bool) -> None:
+        nonlocal gate_weighted_score
+        if cond:
+            gate_weighted_score += points
+            gate_weighted_score_reasons.append(reason)
+
+    add_gate(GATE_SCORE_STRONG_TEXT, "strong_challenge_text", bool(gate_strong_hits))
+    add_gate(GATE_SCORE_CAPTCHA_OR_ANTIBOT, "captcha_or_antibot_signal", gate_captcha_or_antibot)
+    add_gate(GATE_SCORE_SHORT_FLOW, "short_loading_flow", gate_short_flow_hit)
+    add_gate(GATE_SCORE_IDENTITY_FLOW, "identity_or_verification_flow", gate_identity_flow_hit)
+    add_gate(GATE_SCORE_URL_HINT, "url_gate_hint", bool(gate_url_hits))
+    add_gate(GATE_SCORE_TEXT_GE2, "multiple_gate_text_hits", len(gate_text_hits) >= 2)
+    add_gate(GATE_SCORE_NEEDS_INTERACTION, "needs_interaction_support", gate_needs_interaction)
+    gate_score_evidence = {
+        "strong_challenge_text": gate_strong_hits,
+        "url_gate_hint": gate_url_hits,
+        "short_flow": gate_short_flow_hit,
+        "identity_flow": gate_identity_flow_hit,
+        "captcha_or_antibot": gate_captcha_or_antibot,
+        "needs_interaction": gate_needs_interaction,
+    }
     possible_challenge_surface = bool(
         gate_strong_hits
         or (evasion_signals.get("captcha_present_candidate") and (gate_text_hits or gate_url_hits))
         or (gate_short_flow_hit and (gate_url_hits or evasion_signals.get("anti_bot_or_cloaking_candidate")))
+        or (
+            gate_weighted_score >= GATE_SCORE_CHALLENGE_THRESHOLD
+            and (
+                bool(gate_strong_hits)
+                or gate_identity_flow_hit
+                or (gate_captcha_or_antibot and (bool(gate_text_hits) or bool(gate_url_hits) or gate_short_flow_hit))
+            )
+        )
     )
     possible_gate_or_evasion = bool(
         possible_challenge_surface
+        or (
+            gate_weighted_score >= GATE_SCORE_EVASION_THRESHOLD
+            and (
+                bool(gate_text_hits)
+                or bool(gate_url_hits)
+                or gate_short_flow_hit
+                or gate_identity_flow_hit
+            )
+        )
         or (
             (len(gate_text_hits) >= 2 or bool(gate_url_hits))
             and (
@@ -536,6 +591,9 @@ def derive_specialized_surface_signals(
         "specialized_fast_resolution_candidate": specialized_fast_resolution_candidate,
         "gambling_weighted_score": gambling_weighted_score,
         "gambling_weighted_score_reasons": unique_keep_order(gambling_weighted_score_reasons),
+        "gate_weighted_score": gate_weighted_score,
+        "gate_weighted_score_reasons": unique_keep_order(gate_weighted_score_reasons),
+        "gate_score_evidence": gate_score_evidence,
         "matched_keywords": {
             "gambling_text": gambling_text_hits,
             "gambling_url": gambling_url_hits,
