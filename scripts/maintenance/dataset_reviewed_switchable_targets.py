@@ -18,10 +18,11 @@ except ImportError:
 # 模块 1：全局配置
 # 作用：
 # - 统一管理脚本中的固定参数
-# - 便于后续调整文件名、状态文件名、日志文件名、缩放参数
+# - 便于后续调整截图文件名、状态文件名、日志文件名、缩放参数
 # ============================================================
 
-IMAGE_NAME = "screenshot_full.png"
+VIEW_IMAGE_NAME = "screenshot_viewport.png"
+FALLBACK_IMAGE_NAME = "screenshot_full.png"
 REMOVED_DIR_NAME = "removed"
 STATE_FILE_NAME = ".review_state.json"
 LOG_FILE_NAME = "review_actions.log"
@@ -60,6 +61,7 @@ class SampleRecord:
     original_dir: Path
     current_dir: Path
     image_path: Path
+    image_name: str
     status: str = "pending"           # pending / kept / removed / conflict_skipped / load_failed / missing_image
     last_error: str = ""
 
@@ -151,56 +153,28 @@ class DatasetReviewerApp:
         )
         self.pending_only_check.pack(side="right")
 
-        # 分离目标目录控制：允许在审阅过程中实时切换不同文件夹
-        target_frame = ttk.Frame(self.root, padding=(10, 0, 10, 0))
-        target_frame.pack(fill="x")
+        # 主区域改为左右分栏：左侧只负责截图视图，右侧放目标目录与固定操作按钮。
+        self.main_paned = ttk.Panedwindow(self.root, orient="horizontal")
+        self.main_paned.pack(fill="both", expand=True, padx=10, pady=(0, 10))
 
-        ttk.Label(target_frame, text="当前分离目标：").pack(side="left")
+        self.left_frame = ttk.Frame(self.main_paned)
+        self.right_frame = ttk.Frame(self.main_paned, width=420)
+        self.main_paned.add(self.left_frame, weight=4)
+        self.main_paned.add(self.right_frame, weight=1)
 
-        self.target_choice_var = tk.StringVar(value="")
-        self.target_combo = ttk.Combobox(
-            target_frame,
-            textvariable=self.target_choice_var,
-            state="normal",
-            width=55
-        )
-        self.target_combo.pack(side="left", padx=(0, 6))
-        self.target_combo.bind("<<ComboboxSelected>>", lambda event: self.apply_target_from_input())
-        self.target_combo.bind("<Return>", lambda event: self.apply_target_from_input())
+        self._build_image_panel(self.left_frame)
+        self._build_control_panel(self.right_frame)
 
-        self.apply_target_btn = ttk.Button(
-            target_frame,
-            text="应用目标",
-            command=self.apply_target_from_input,
-            state="disabled"
-        )
-        self.apply_target_btn.pack(side="left", padx=4)
-
-        self.pick_target_btn = ttk.Button(
-            target_frame,
-            text="选择/新建目标目录",
-            command=self.choose_target_folder,
-            state="disabled"
-        )
-        self.pick_target_btn.pack(side="left", padx=4)
-
-        self.target_path_var = tk.StringVar(value="目标目录：尚未选择")
-        ttk.Label(target_frame, textvariable=self.target_path_var).pack(side="left", padx=10)
-
-        info_frame = ttk.Frame(self.root, padding=(10, 0, 10, 0))
+    def _build_image_panel(self, parent: ttk.Frame):
+        info_frame = ttk.Frame(parent, padding=(0, 0, 0, 8))
         info_frame.pack(fill="x")
 
         self.name_var = tk.StringVar(value="样本文件夹：-")
-        self.progress_var = tk.StringVar(value="进度：0 / 0")
-        self.status_var = tk.StringVar(value="状态：请先选择数据库根目录")
-        self.summary_var = tk.StringVar(value="")
-
+        self.image_source_var = tk.StringVar(value="截图来源：-")
         ttk.Label(info_frame, textvariable=self.name_var, font=("Arial", 12, "bold")).pack(anchor="w")
-        ttk.Label(info_frame, textvariable=self.progress_var).pack(anchor="w", pady=(4, 0))
-        ttk.Label(info_frame, textvariable=self.status_var).pack(anchor="w", pady=(4, 0))
-        ttk.Label(info_frame, textvariable=self.summary_var).pack(anchor="w", pady=(4, 8))
+        ttk.Label(info_frame, textvariable=self.image_source_var).pack(anchor="w", pady=(4, 0))
 
-        image_outer = ttk.Frame(self.root, padding=10)
+        image_outer = ttk.Frame(parent)
         image_outer.pack(fill="both", expand=True)
 
         # 画布与滚动条：用于显示图片和缩放后滚动浏览
@@ -209,7 +183,6 @@ class DatasetReviewerApp:
         self.h_scroll = ttk.Scrollbar(image_outer, orient="horizontal", command=self.canvas.xview)
 
         self.canvas.configure(yscrollcommand=self.v_scroll.set, xscrollcommand=self.h_scroll.set)
-
         self.canvas.grid(row=0, column=0, sticky="nsew")
         self.v_scroll.grid(row=0, column=1, sticky="ns")
         self.h_scroll.grid(row=1, column=0, sticky="ew")
@@ -230,33 +203,82 @@ class DatasetReviewerApp:
         self.canvas.bind("<Control-Button-4>", self._on_ctrl_mousewheel_linux_up)
         self.canvas.bind("<Control-Button-5>", self._on_ctrl_mousewheel_linux_down)
 
-        bottom_frame = ttk.Frame(self.root, padding=10)
-        bottom_frame.pack(fill="x")
+    def _build_control_panel(self, parent: ttk.Frame):
+        # 分离目标目录控制：放在右侧固定操作按钮上方。
+        target_group = ttk.LabelFrame(parent, text="移除目标文件夹", padding=10)
+        target_group.pack(fill="x", padx=(10, 0), pady=(0, 10))
 
-        self.remove_btn = ttk.Button(bottom_frame, text="移除", command=self.remove_current, state="disabled")
-        self.remove_btn.pack(side="left", padx=4)
+        self.target_choice_var = tk.StringVar(value="")
+        self.target_combo = ttk.Combobox(
+            target_group,
+            textvariable=self.target_choice_var,
+            state="normal",
+            width=44
+        )
+        self.target_combo.pack(fill="x")
+        self.target_combo.bind("<<ComboboxSelected>>", lambda event: self.apply_target_from_input())
+        self.target_combo.bind("<Return>", lambda event: self.apply_target_from_input())
 
-        self.keep_btn = ttk.Button(bottom_frame, text="保留", command=self.keep_current, state="disabled")
-        self.keep_btn.pack(side="left", padx=4)
+        target_buttons = ttk.Frame(target_group)
+        target_buttons.pack(fill="x", pady=(8, 0))
+
+        self.apply_target_btn = ttk.Button(
+            target_buttons,
+            text="应用目标",
+            command=self.apply_target_from_input,
+            state="disabled"
+        )
+        self.apply_target_btn.pack(side="left", padx=(0, 4))
+
+        self.pick_target_btn = ttk.Button(
+            target_buttons,
+            text="选择/新建目标目录",
+            command=self.choose_target_folder,
+            state="disabled"
+        )
+        self.pick_target_btn.pack(side="left", padx=4)
+
+        self.target_path_var = tk.StringVar(value="目标目录：尚未选择")
+        ttk.Label(target_group, textvariable=self.target_path_var, wraplength=380).pack(anchor="w", pady=(8, 0))
+
+        action_group = ttk.LabelFrame(parent, text="固定操作按钮", padding=10)
+        action_group.pack(fill="x", padx=(10, 0), pady=(0, 10))
+
+        self.remove_btn = ttk.Button(action_group, text="移除", command=self.remove_current, state="disabled")
+        self.remove_btn.pack(fill="x", pady=(0, 6))
+
+        self.keep_btn = ttk.Button(action_group, text="保留", command=self.keep_current, state="disabled")
+        self.keep_btn.pack(fill="x", pady=6)
 
         self.undo_btn = ttk.Button(
-            bottom_frame,
+            action_group,
             text="上一张 / 撤销上一步",
             command=self.undo_last,
             state="disabled"
         )
-        self.undo_btn.pack(side="left", padx=4)
+        self.undo_btn.pack(fill="x", pady=6)
 
-        ttk.Separator(bottom_frame, orient="vertical").pack(side="left", fill="y", padx=8)
+        ttk.Separator(action_group, orient="horizontal").pack(fill="x", pady=10)
 
-        self.zoom_in_btn = ttk.Button(bottom_frame, text="放大", command=self.zoom_in, state="disabled")
-        self.zoom_in_btn.pack(side="left", padx=4)
+        self.zoom_in_btn = ttk.Button(action_group, text="放大", command=self.zoom_in, state="disabled")
+        self.zoom_in_btn.pack(fill="x", pady=(0, 6))
 
-        self.zoom_out_btn = ttk.Button(bottom_frame, text="缩小", command=self.zoom_out, state="disabled")
-        self.zoom_out_btn.pack(side="left", padx=4)
+        self.zoom_out_btn = ttk.Button(action_group, text="缩小", command=self.zoom_out, state="disabled")
+        self.zoom_out_btn.pack(fill="x", pady=6)
 
-        self.zoom_reset_btn = ttk.Button(bottom_frame, text="重置缩放", command=self.reset_zoom, state="disabled")
-        self.zoom_reset_btn.pack(side="left", padx=4)
+        self.zoom_reset_btn = ttk.Button(action_group, text="重置缩放", command=self.reset_zoom, state="disabled")
+        self.zoom_reset_btn.pack(fill="x", pady=6)
+
+        progress_group = ttk.LabelFrame(parent, text="审阅进度", padding=10)
+        progress_group.pack(fill="x", padx=(10, 0))
+
+        self.progress_var = tk.StringVar(value="进度：0 / 0")
+        self.status_var = tk.StringVar(value="状态：请先选择数据库根目录")
+        self.summary_var = tk.StringVar(value="")
+
+        ttk.Label(progress_group, textvariable=self.progress_var).pack(anchor="w")
+        ttk.Label(progress_group, textvariable=self.status_var, wraplength=380).pack(anchor="w", pady=(4, 0))
+        ttk.Label(progress_group, textvariable=self.summary_var, wraplength=380).pack(anchor="w", pady=(4, 8))
 
     # ========================================================
     # 模块 6：目录选择、状态文件、日志初始化
@@ -573,24 +595,28 @@ class DatasetReviewerApp:
     # ========================================================
     # 模块 7：样本扫描
     # 作用：
-    # - 递归查找 screenshot_full.png
+    # - 递归查找 screenshot_viewport.png 与 screenshot_full.png
     # - 每个找到的图片，其父目录视为一个样本目录
+    # - 同一目录优先使用 screenshot_viewport.png，缺失才回退到 screenshot_full.png
     # - 自动跳过 removed 目录和所有已登记的分离目标目录
     # - 载入上次保存的状态
     # ========================================================
 
     def scan_samples(self, root_dir: Path) -> List[SampleRecord]:
+        sample_dirs = set()
+
+        # 同一目录如果同时存在 viewport/full，样本只登记一次；后续按 viewport -> full 选择截图。
+        for image_name in (VIEW_IMAGE_NAME, FALLBACK_IMAGE_NAME):
+            for image_path in root_dir.rglob(image_name):
+                if self._is_inside_any_managed_target_root(image_path):
+                    continue
+                sample_dirs.add(image_path.parent)
+
         samples: List[SampleRecord] = []
-        seen_dirs = set()
-
-        for image_path in root_dir.rglob(IMAGE_NAME):
-            if self._is_inside_any_managed_target_root(image_path):
+        for sample_dir in sorted(sample_dirs, key=lambda p: str(p).lower()):
+            image_path = self._select_image_path(sample_dir)
+            if not image_path.exists():
                 continue
-
-            sample_dir = image_path.parent
-            if sample_dir in seen_dirs:
-                continue
-            seen_dirs.add(sample_dir)
 
             key = str(sample_dir.relative_to(root_dir)).replace("\\", "/")
             saved = self.state_cache.get(key, {})
@@ -603,6 +629,7 @@ class DatasetReviewerApp:
                     original_dir=sample_dir,
                     current_dir=sample_dir,
                     image_path=image_path,
+                    image_name=image_path.name,
                     status=status,
                     last_error=last_error,
                 )
@@ -687,6 +714,7 @@ class DatasetReviewerApp:
             self.status_var.set("状态：当前视图已到末尾")
             self.progress_var.set(f"进度：{len(visible)} / {len(visible)}")
             self.name_var.set("样本文件夹：-")
+            self.image_source_var.set("截图来源：-")
             return
 
         while True:
@@ -701,6 +729,7 @@ class DatasetReviewerApp:
                 self.status_var.set("状态：当前视图已到末尾")
                 self.progress_var.set(f"进度：{len(visible)} / {len(visible)}")
                 self.name_var.set("样本文件夹：-")
+                self.image_source_var.set("截图来源：-")
                 return
 
             sample_index = visible[self.current_visible_pos]
@@ -710,6 +739,7 @@ class DatasetReviewerApp:
             if problem is None:
                 self.current_sample_index = sample_index
                 self.name_var.set(f"样本文件夹：{sample.current_dir.name}")
+                self.image_source_var.set(f"截图来源：{sample.image_name}")
                 self.progress_var.set(f"进度：{self.current_visible_pos + 1} / {len(visible)}")
                 self.status_var.set(f"状态：当前样本状态 = {sample.status}")
                 self.redraw_current_image()
@@ -1007,7 +1037,8 @@ class DatasetReviewerApp:
             sample.status = "removed"
             sample.last_error = ""
             sample.current_dir = dst_dir
-            sample.image_path = dst_dir / IMAGE_NAME
+            sample.image_path = self._select_image_path(dst_dir)
+            sample.image_name = sample.image_path.name
             self._save_state_file()
 
             self.history.append(
@@ -1063,7 +1094,8 @@ class DatasetReviewerApp:
                 sample.status = action.previous_status
                 sample.last_error = action.previous_error
                 sample.current_dir = action.src
-                sample.image_path = action.src / IMAGE_NAME
+                sample.image_path = self._select_image_path(action.src)
+                sample.image_name = sample.image_path.name
 
                 if self.logger:
                     self.logger.info("UNDO_REMOVE | key=%s | restore_to=%s", sample.key, action.src)
@@ -1108,6 +1140,13 @@ class DatasetReviewerApp:
             return None
         return self.current_sample_index
 
+    def _select_image_path(self, sample_dir: Path) -> Path:
+        view_path = sample_dir / VIEW_IMAGE_NAME
+        fallback_path = sample_dir / FALLBACK_IMAGE_NAME
+        if view_path.exists():
+            return view_path
+        return fallback_path
+
     # ========================================================
     # 模块 12：空视图提示
     # 作用：
@@ -1121,6 +1160,7 @@ class DatasetReviewerApp:
         self.current_render_key = None
 
         self.name_var.set("样本文件夹：-")
+        self.image_source_var.set("截图来源：-")
         self.progress_var.set("进度：0 / 0")
         self.update_summary()
 

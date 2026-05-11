@@ -22,6 +22,10 @@
 - Codex：负责高难度或高风险执行；对 Claude Code 完成的低难度任务做审查，对中等难度任务做强制审查并在必要时接管。
 - 人类负责人：负责冻结边界、做最终接受和跨窗口延续。
 - 若交付的是 Markdown 文档，默认按“中文摘要在前、英文全文在后、英文权威”执行。
+- GPT-5.5 / Codex 提示词默认采用 outcome-first：目标、成功标准、证据规则、约束、输出、验证和停止规则优先；不要用冗长步骤堆栈替代验收标准。
+- 对架构、标签、数据集、模型、评估、workflow 和论文定位等高影响任务，GPT web 必须先执行反审，再生成任务单或进入执行路由。
+- 工具密集流程必须说明 preamble、验证、retrieval budget 和何时停止。
+- 新增 Karpathy-style 执行护栏：任务进入执行前必须处理关键假设，执行时保持最小方案和外科手术式改动，交付时用明确检查闭环证明目标已达成或说明未验证原因。
 
 ## 3. 阅读重点
 
@@ -33,6 +37,9 @@
 - `Step Three: Classify The Task And Route Execution`
 - `Task Difficulty Classification And Routing`
 - `When To Use GPT Web, Claude Code, And Codex By Difficulty`
+- `GPT-5.5 Prompting Baseline For Warden Agents`
+- `Karpathy-Derived Execution Guardrails`
+- `Counter-Review Mode`
 
 ## English Version
 
@@ -51,12 +58,137 @@ The goal is not to let models improvise freely. The goal is:
 
 This is the default collaboration method, not an optional suggestion.
 
+## 0. GPT-5.5 Prompting Baseline For Warden Agents
+
+This workflow uses an outcome-first prompting style for GPT-5.5-class agents.
+
+### 0.0 Karpathy-Derived Execution Guardrails
+
+Warden incorporates the Karpathy-inspired agent rules as a lightweight execution layer on top of the existing workflow.
+These rules are intended to reduce four common coding-agent failures: silent assumptions, over-engineering, orthogonal edits, and unverified completion.
+They do not override `AGENTS.md`, the active task document, frozen schemas, label semantics, or human final acceptance.
+
+1. Think before acting.
+   - Before routing or editing, state assumptions that materially affect scope, compatibility, schema, labels, evidence, validation, or user-facing behavior.
+   - If the request has multiple plausible interpretations, list them and choose the safest compatible interpretation only when the task boundary is still clear.
+   - If the ambiguity can change the task class, scope, acceptance criteria, or downstream compatibility, stop and clarify or mark the task exploratory.
+
+2. Simplicity first.
+   - Prefer the smallest patch or document change that satisfies the success criteria.
+   - Do not add speculative abstractions, optional configurability, dependency changes, generalized frameworks, or future-proofing unless they are explicitly inside `scope_in`.
+   - If a proposed plan is larger than the observable outcome requires, reduce the plan before execution.
+
+3. Surgical changes.
+   - Every touched file must be listed before or during execution for non-trivial work.
+   - Every changed line must trace to the task goal, `scope_in`, success criteria, required evidence, or validation.
+   - Do not perform drive-by cleanup, broad formatting, unrelated refactors, or comment rewriting.
+   - Cleanup is allowed only for artifacts made obsolete by the current change.
+
+4. Goal-driven verification.
+   - Convert the task into observable checks before or during execution.
+   - Prefer focused checks that can falsify the change: targeted tests, text search, schema checks, smoke tests, diff inspection, artifact inspection, or compatibility spot-checks.
+   - Stop when the defined checks pass, when validation cannot run and is honestly reported, or when a blocker requires escalation.
+
+Task documents and handoffs should explicitly record these guardrails when the work is non-trivial, high-impact, or likely to be reused as a future project contract.
+
+
+The default prompt contract should define:
+
+- expected outcome;
+- success criteria;
+- scope in;
+- scope out;
+- hard constraints;
+- evidence and retrieval rules;
+- validation requirements;
+- stop rules;
+- final output or handoff format.
+
+For high-impact tasks, the prompt contract must also define counter-review requirements: current framing, hidden assumptions, failure modes, counterexamples, evidence gaps, alternatives, decision rule, and escalation rule.
+
+Avoid long process-heavy prompt stacks when the process is not part of the contract. Prefer short prompts that say what must be true at the end, what must not be touched, what evidence is required, and how the agent should know it is done.
+
+Use detailed step-by-step process only when one of the following is true:
+
+- the exact sequence is required for reproducibility;
+- the exact sequence protects frozen schema, labels, data, or public interfaces;
+- the task is security-sensitive or destructive;
+- validation or tool side effects require a fixed order;
+- the human owner explicitly freezes the sequence.
+
+Runtime guidance:
+
+- Start GPT-5.5 tasks at `reasoning.effort=medium` unless the task class justifies a different value.
+- Use `low` for mechanical local edits, short reviews, and latency-sensitive work that still needs light planning.
+- Use `high` or `xhigh` only for hard debugging, architecture, cross-module reasoning, difficult review, or eval-bound tasks.
+- Use `text.verbosity=low` for routine status and concise review; use `medium` for normal handoff; use `high` only for specs, audits, deep research, or complex tradeoffs.
+- For repeated agent prompts, keep stable project rules and governing docs before dynamic task-specific content.
+- Prefer structured output or external schema validation when available instead of embedding large schemas into prompt text.
+
+Tool-heavy workflow guidance:
+
+- Give a short preamble before multi-step tool work.
+- In Responses-API-style workflows, preserve `phase`, preambles, and assistant-item replay semantics when the application exposes them.
+- State tool side effects explicitly: read-only, write, delete, network, repository edit, test execution, or artifact generation.
+- Do not continue tool use once the task stop rule is satisfied.
+
+Evidence guidance:
+
+- Define a retrieval budget before search-heavy tasks.
+- Continue retrieval only when a required fact, source, file, date, owner, command output, or citation is missing.
+- Stop retrieval when evidence is sufficient for the core claim and additional search is unlikely to change the answer or reduce a material risk.
+- If evidence remains insufficient, say so and mark the delivery partial or blocked.
+
+
+## 0.1 Counter-Review Mode
+
+Counter-review mode prevents Warden from optimizing only inside the user's current framing.
+It is not a license for unbounded speculation.
+It is a structured review step that challenges the framing, checks evidence, and then either accepts, revises, escalates, or blocks the task.
+
+Counter-review mode is required before task generation or execution when a request involves any of the following:
+
+- architecture or module-boundary decisions
+- threat-definition semantics
+- label taxonomy, frozen enums, or label interpretation
+- dataset admission, sampling, splitting, or evaluation-set design
+- model selection, fusion design, distillation design, or training / inference methodology
+- evaluation methodology, metric interpretation, benchmark claims, or paper novelty claims
+- workflow, agent routing, governance, or top-level project contracts
+- security-sensitive parsing, capture, browser automation, or evidence construction
+- any change whose wrong framing could silently corrupt data, labels, metrics, downstream interfaces, or research conclusions
+
+Minimum counter-review output:
+
+- `current_framing`: the proposal or assumption being reviewed
+- `hidden_assumptions`: assumptions that may be wrong or unverified
+- `failure_modes`: ways the proposal could fail in engineering, data, modeling, evaluation, or research terms
+- `counterexamples`: cases or evidence that would weaken or falsify the proposal
+- `evidence_gaps`: missing files, tests, papers, command outputs, datasets, metrics, or sources
+- `alternatives`: plausible routes that should be compared before execution
+- `decision`: accept original framing, revise framing, keep exploratory, escalate, or block
+- `confidence`: high / medium / low, with reason
+
+Evidence discipline:
+
+- Source-backed facts must be separated from inferences, assumptions, recommendations, and risks.
+- Absence of evidence must not be converted into a factual negative conclusion.
+- If evidence remains insufficient, the task should be marked partial, exploratory, or blocked rather than treated as ready for execution.
+
+Routing discipline:
+
+- GPT web performs counter-review for exploratory, architecture-sensitive, research-sensitive, and long-context tasks.
+- Claude Code may execute only after the task boundary is explicit; it must not make architecture, taxonomy, schema, label, or threat-definition decisions by itself.
+- Codex must review whether the counter-review requirements were satisfied when reviewing Claude Code output for medium-difficulty work or executing high-risk work directly.
+- Human acceptance remains required for any framing change that affects frozen contracts, research direction, threat semantics, labels, schema, evaluation correctness, or workflow governance.
+
 ## 1. Purpose
 
 This workflow exists to make Warden collaboration strict, auditable, and low-ambiguity.
 
 It is designed to prevent common failure modes such as:
 
+- GPT optimizing only inside the user's proposed framing without checking hidden assumptions or alternatives;
 - GPT claiming local execution facts it cannot verify;
 - Codex receiving vague work and expanding scope on its own;
 - frozen fields or labels changing without explicit approval;
@@ -72,6 +204,7 @@ GPT web is the default:
 - specification reviewer;
 - long-context summarizer;
 - task-definition drafter;
+- counter-reviewer for high-impact exploratory, architecture-sensitive, research-sensitive, or long-context decisions;
 - secondary reviewer;
 - handoff-summary organizer.
 
@@ -153,7 +286,8 @@ The following rules are mandatory:
 1. Do not send ambiguous implementation requests directly to Codex.
 2. Do not let GPT web pretend it already ran local commands.
 3. Do not let Codex silently refactor an entire module.
-4. Do not skip `AGENTS.md`.
+4. Do not let any executor turn a simple task into a speculative abstraction, broad cleanup, or framework rewrite.
+5. Do not skip `AGENTS.md`.
 5. Do not skip task-definition requirements from `TASK_TEMPLATE.md`.
 6. Do not skip handoff requirements from `HANDOFF_TEMPLATE.md`.
 7. Do not modify frozen fields, file names, or enumerations without explicit approval.
@@ -171,6 +305,8 @@ The following rules are mandatory:
 19. Medium-difficulty tasks may be implemented by Claude Code only when the task document explicitly defines `scope_in`, `scope_out`, frozen constraints, compatibility requirements, minimum validation, and expected outputs.
 20. Medium-difficulty Claude Code output must receive Codex review before GPT web secondary review or human acceptance.
 21. If a task touches threat-definition semantics, labels, frozen enums, schema, manifest conventions, dataset admission, training, inference, capture, evaluation correctness, dependencies, or cross-module interfaces, route it as high-difficulty by default.
+22. Do not skip counter-review for high-impact exploratory, architecture-sensitive, research-sensitive, or workflow-governance tasks.
+23. Do not treat a task as ready for execution when counter-review finds unresolved evidence gaps that could change the framing, scope, routing class, or acceptance criteria.
 
 ## 4. Standard Workflow Overview
 
@@ -185,7 +321,7 @@ The order should not be shuffled casually.
 
 ## 5. Step One: Requirement Clarification
 
-Requirement clarification should happen in GPT web before Codex execution when the task is broad, risky, or context-heavy.
+Requirement clarification should happen in GPT web before Codex execution when the task is broad, risky, or context-heavy. For high-impact tasks, this stage must include counter-review before task generation.
 
 ### 5.1 When GPT Web Must Be Used First
 
@@ -198,7 +334,8 @@ Use GPT web first when:
 - the request is ambiguous;
 - `PROJECT.md` or module docs may need alignment;
 - the work depends on multiple prior chat windows;
-- the task must first be converted into a low-ambiguity engineering scope.
+- the task must first be converted into a low-ambiguity engineering scope;
+- the task needs counter-review because the user's current framing may be incomplete, unsupported, or risky.
 
 ### 5.2 Inputs For GPT Web
 
@@ -216,17 +353,25 @@ If critical inputs are missing, that fact should be stated explicitly instead of
 
 ### 5.3 Required GPT Web Output
 
-GPT web should return a structured task conclusion rather than vague advice.
+GPT web should return a structured task conclusion rather than vague advice. When counter-review mode applies, the conclusion must explicitly state whether the original framing was accepted, revised, kept exploratory, escalated, or blocked.
 
 The recommended output fields are:
 
 - `goal`
+- `expected_outcome`
+- `success_criteria`
 - `scope_in`
 - `scope_out`
 - `constraints`
+- `evidence_rules`
+- `retrieval_budget`
 - `files_to_touch`
 - `acceptance`
+- `validation`
+- `stop_rules`
+- `model_runtime_guidance`
 - `risks`
+- `counter_review`
 - `doc_updates_needed`
 
 ### 5.4 What GPT Web Must Not Do At This Stage
@@ -259,7 +404,12 @@ The task document must explicitly define:
 - hard constraints;
 - interface or schema constraints;
 - acceptance conditions;
-- minimum validation requirements.
+- Karpathy-style guardrails: assumptions, simplicity boundary, surgical change boundary, and verification loop;
+- minimum validation requirements;
+- evidence / retrieval rules;
+- stop rules;
+- counter-review requirements when the task is high-impact;
+- model / agent runtime guidance when relevant.
 
 ### 6.3 What The Task Document Must Avoid
 
@@ -269,7 +419,9 @@ Avoid weak phrases such as:
 - "refactor if necessary";
 - "adjust structure if needed";
 - "try to stay compatible";
-- "change as appropriate".
+- "change as appropriate";
+- "clean up nearby code while you are there";
+- "make it flexible for future use" when no future use is part of the task.
 
 Replace them with hard statements such as:
 
@@ -277,7 +429,10 @@ Replace them with hard statements such as:
 - do not add third-party dependencies;
 - do not touch the training module;
 - only edit files under a specific path;
-- old CLI entry points must remain runnable.
+- old CLI entry points must remain runnable;
+- every touched file must map to `scope_in`;
+- no drive-by cleanup outside the active task;
+- use the smallest verification check that can catch the relevant breakage.
 
 ## 7. Step Three: Classify The Task And Route Execution
 
@@ -436,6 +591,7 @@ When Claude Code performs low- or medium-difficulty work, Codex review should ch
 - whether validation evidence matches the task;
 - whether compatibility impact is stated;
 - whether the handoff is complete enough for GPT web secondary review;
+- whether required counter-review was performed or explicitly marked not applicable;
 - whether the task should be escalated.
 
 Codex may ask Claude Code for a targeted fix. Codex should take over execution only when review finds a real defect, validation fails, Claude Code is blocked, the task expanded beyond its class, or the human owner explicitly escalates.
@@ -487,8 +643,12 @@ The suggested structured review format is:
 
 - `accept: yes / no / partial`
 - `requirement_coverage`
+- `success_criteria_coverage`
+- `evidence_coverage`
+- `counter_review_coverage`
 - `interface_break_risk`
 - `missing_validation`
+- `stop_rule_status`
 - `missing_doc_updates`
 - `notable_risks`
 - `recommended_next_task`
@@ -688,19 +848,19 @@ The executor should stop, report the reason, and wait for a new frozen task boun
 
 ### 13.1 Template For GPT Web
 
-The GPT web prompt should include the active contracts, the relevant context, the explicit goal, the boundaries, the requested task class if known, and the required structured task output.
+The GPT web prompt should include stable contracts first, then dynamic task context. It should state the explicit goal, expected outcome, success criteria, scope boundaries, evidence rules, validation expectations, stop rules, requested task class if known, and required structured task output. It should not include long process guidance unless the exact process is part of the contract.
 
 ### 13.2 Template For Claude Code
 
-The Claude Code prompt should include the repo path, governing docs, task class, task scope, forbidden scope, frozen constraints, compatibility expectations, validation expectations, and required delivery format. It should explicitly state whether the task is low-difficulty or medium-difficulty. For medium-difficulty tasks, it must state that Codex review is mandatory.
+The Claude Code prompt should include the repo path, governing docs, task class, expected outcome, success criteria, task scope, forbidden scope, frozen constraints, compatibility expectations, evidence rules, validation expectations, stop rules, and required delivery format. It should explicitly state whether the task is low-difficulty or medium-difficulty. For medium-difficulty tasks, it must state that Codex review is mandatory.
 
 ### 13.3 Template For Codex
 
-The Codex prompt should state whether Codex is executing directly or reviewing Claude Code output. In review-only mode, the prompt should include Claude Code's final delivery, key diffs, validation evidence, compatibility notes, and the original task boundary. For medium-difficulty tasks, Codex must explicitly decide whether the result is acceptable, needs targeted Claude Code repair, or requires Codex takeover.
+The Codex prompt should state whether Codex is executing directly or reviewing Claude Code output. In review-only mode, the prompt should include Claude Code's final delivery, key diffs, evidence coverage, validation evidence, compatibility notes, stop-rule status, and the original task boundary. For medium-difficulty tasks, Codex must explicitly decide whether the result is acceptable, needs targeted Claude Code repair, or requires Codex takeover.
 
 ### 13.4 Template For GPT Web Review
 
-The review prompt should include Claude Code's or Codex's final delivery, Codex's review notes if applicable, the relevant diffs, the validation evidence, the task class, and a request for a structured accept / reject / partial review.
+The review prompt should include Claude Code's or Codex's final delivery, Codex's review notes if applicable, the relevant diffs, evidence coverage, validation evidence, stop-rule status, the task class, and a request for a structured accept / reject / partial review.
 
 ## 14. Minimum Collaboration Loop
 
@@ -712,7 +872,8 @@ Every collaboration round should close the loop at least this far:
 4. route execution to GPT web, Claude Code, or Codex;
 5. execute only after the boundary is frozen;
 6. have Codex review Claude Code output when required, always for medium-difficulty work;
-7. review and summarize the result.
+7. verify evidence coverage, validation coverage, and stop-rule status;
+8. review and summarize the result.
 
 Skipping the loop increases drift and false confidence.
 
@@ -1597,4 +1758,3 @@ recommended_next_task
 
 不要混岗。
 一混岗，文档、代码、责任边界就会一起煮成一锅浑汤。
-

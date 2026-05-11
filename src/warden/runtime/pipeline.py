@@ -10,6 +10,7 @@ from typing import Any, Dict, Iterable, List
 from scripts.data.common.io_utils import discover_sample_dirs, ensure_dir, now_utc_iso, write_json
 
 from .core import ArtifactPackage, SampleContext, StageResult
+from .l1_draft_bridge import maybe_attach_l1_draft_trace
 
 MAX_TEXT_SCAN_CHARS = 120_000
 MAX_HTML_SCAN_CHARS = 600_000
@@ -436,7 +437,7 @@ def build_result_payload(context: SampleContext) -> Dict[str, Any]:
     final_stage = final_entry.stage if final_entry else "none"
     terminal_routing = final_entry.next_stage if final_entry else "STOP"
     final_routing_outcome = final_entry.routing_outcome if final_entry else {}
-    return {
+    payload = {
         "schema_version": "warden_runtime_result_v0_2",
         "generated_at_utc": now_utc_iso(),
         "sample_id": context.sample_id,
@@ -461,6 +462,9 @@ def build_result_payload(context: SampleContext) -> Dict[str, Any]:
         "runtime_notes": list(context.runtime_notes),
         "stage_trace": [item.to_dict() for item in context.stage_trace],
     }
+    if context.terminal_outputs:
+        payload["debug_sidecars"] = dict(context.terminal_outputs)
+    return payload
 
 
 def process_sample(sample_dir: Path, output_dir: Path) -> Dict[str, Any]:
@@ -473,6 +477,8 @@ def process_sample(sample_dir: Path, output_dir: Path) -> Dict[str, Any]:
 
     if context.stage_trace and context.stage_trace[-1].next_stage == "L2":
         run_l2_stage(context)
+
+    maybe_attach_l1_draft_trace(context)
 
     sample_output_dir = ensure_dir(output_dir / context.sample_id)
     result_payload = build_result_payload(context)
@@ -491,6 +497,8 @@ def process_sample(sample_dir: Path, output_dir: Path) -> Dict[str, Any]:
         "stage_trace": [item.to_dict() for item in context.stage_trace],
         "heavy_cache_keys_before_release": sorted(context.heavy_cache.keys()),
     }
+    if context.terminal_outputs:
+        trace_payload["debug_sidecars"] = dict(context.terminal_outputs)
 
     write_json(sample_output_dir / "runtime_result.json", result_payload)
     write_json(sample_output_dir / "runtime_trace.json", trace_payload)

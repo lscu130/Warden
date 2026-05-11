@@ -20,9 +20,9 @@
 - 目标：普通 PC / modest x86 edge 可运行
 - 默认 runtime stack:
   - text encoder: `multilingual-e5-small`
-  - image-text encoder: `MobileCLIP2-S2`
   - OCR: `PP-OCRv4 mobile`（trigger-based）
   - detector: `YOLO26n`
+  - CLIP / MobileCLIP: 默认在线路径不启用
 
 为什么先用 Python 3.10：
 
@@ -156,8 +156,8 @@ $env:TORCH_HOME="E:\Warden\model_cache\torch"
 ### 8.3 预下载建议对象
 
 - `intfloat/multilingual-e5-small`
-- `apple/MobileCLIP2-S2`
-- 紧预算可选：`apple/MobileCLIP2-S0`
+- `apple/MobileCLIP2-S2`（仅限离线截图聚类、模板发现、ablation baseline、research-only visual-prior experiments，或未来另行批准的 optional feature flag）
+- 紧预算可选：`apple/MobileCLIP2-S0`（同上，仅限离线 / 研究 / 单独批准的 optional feature flag）
 - 若要更强文本备选：`BAAI/bge-m3`
 
 建议由 Codex 写一个 `preload_models.py`，统一执行模型下载与本地路径登记。
@@ -221,9 +221,9 @@ Recommended baseline:
 - runtime posture: CPU-conscious baseline first
 - default runtime stack:
   - text encoder: `multilingual-e5-small`
-  - image-text encoder: `MobileCLIP2-S2`
   - OCR: `PP-OCRv4 mobile`, trigger-based
   - detector: `YOLO26n`
+  - CLIP / MobileCLIP: disabled in the default online path
 
 ## 2. Why Python 3.10
 
@@ -347,8 +347,8 @@ Pre-download models and reuse local paths.
 Recommended preload targets:
 
 - `intfloat/multilingual-e5-small`
-- `apple/MobileCLIP2-S2`
-- optional tight-budget fallback: `apple/MobileCLIP2-S0`
+- `apple/MobileCLIP2-S2` only for offline screenshot clustering, template discovery, ablation baselines, research-only visual-prior experiments, or a separately approved future optional feature flag
+- optional tight-budget fallback: `apple/MobileCLIP2-S0` under the same offline / research / approved optional feature-flag restriction
 - optional stronger text fallback: `BAAI/bge-m3`
 
 Recommended approach:

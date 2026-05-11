@@ -36,7 +36,7 @@ Its purpose is to produce bounded-cost, deployment-friendly, auditable visual ev
 The Vision Pipeline must preserve the current Warden project direction:
 
 - Warden targets **web social-engineering threat judgment**, not narrow phishing-logo matching.
-- Vision evidence must support staged L0 / L1 / L2 inference rather than collapsing the system into a monolithic black-box path.
+- Vision evidence must support the current staged L0 / L1 inference design rather than collapsing the system into a monolithic black-box path.
 - Runtime cost must remain bounded and explicit.
 - Outputs must remain inspectable and suitable for downstream audit and review.
 
@@ -49,7 +49,7 @@ The Vision Pipeline owns:
 - runtime screenshot preparation for the visual path
 - visual evidence extraction from the current sample contract
 - image-side OCR policy
-- page-level visual scenario similarity extraction
+- optional offline page-level visual scenario similarity extraction
 - local suspicious component detection
 - visual evidence packaging for downstream fusion
 - missing-input and degraded-mode handling for the visual path
@@ -62,7 +62,7 @@ The Vision Pipeline does not own:
 - weak-label ontology redesign
 - final L1 fusion thresholds
 - final risk decision policy
-- L2 heavy review logic
+- future heavier review or escalation logic
 - paper-level result narration
 
 ---
@@ -114,19 +114,18 @@ It is not responsible for reconstructing all non-visual semantics from screensho
 The vision path must output structured evidence such as:
 
 - OCR text summaries
-- image-text similarity scores
 - local detector presence flags and counts
 - image quality or uncertainty flags
-- escalation hints when visual evidence quality is weak or conflicting
+- review / recrawl / future-escalation hints when visual evidence quality is weak or conflicting
 
 The vision path must not silently convert all behavior into one opaque scalar if richer evidence is available.
 
 ### 4.2 Stage discipline
 
-The visual path primarily supports L1 judgment and L2 review.
+The visual path primarily supports L1 evidence recovery and localization.
 The current default L0 hot path does not consume screenshot, OCR, or image-lite evidence as prerequisites.
 Any future policy that provides cheap image-lite evidence to L0 must be explicitly approved, benchmarked, and documented rather than silently changing the L0 contract.
-It must not silently move L2-class heavy logic into early stages.
+It must not silently move future heavier review logic into early stages.
 
 ### 4.3 Stable primitives before broad semantics
 
@@ -185,10 +184,13 @@ Silent dependency expansion is not allowed.
 The V1 Vision Pipeline uses a decoupled three-component design:
 
 1. OCR component
-2. image-text similarity encoder
-3. lightweight local detector
+2. lightweight local detector
+3. optional offline / research-only image-text similarity encoder
 
 Outputs from these components are packed into a structured visual evidence bundle and passed to downstream fusion.
+Within L1, this visual path is evidence recovery and evidence localization.
+It is not an independent final visual threat-judgment path.
+The Warden V1 default online L1 path uses OCR and detector evidence as the default visual primitives. CLIP / MobileCLIP-style similarity encoders are not part of the default online L1 path.
 
 This design is preferred over a monolithic end-to-end generative visual-language runtime path because it provides:
 
@@ -256,54 +258,53 @@ Examples:
 
 ---
 
-## 8. Component B: Image-Text Similarity Encoder
+## 8. Component B: Optional Offline / Research-Only Image-Text Similarity Encoder
 
 ## 8.1 Purpose
 
-The image-text similarity encoder captures page-level visual scenario similarity.
-It is used as a non-generative dual-encoder-style module rather than a runtime instruction-following visual-language model.
+The image-text similarity encoder is not part of the Warden V1 default online L1 path.
+It may be used only for offline screenshot clustering, template discovery, ablation baselines, research-only visual-prior experiments, or a separately approved future optional feature flag.
 
-Its purpose is to map screenshots against a fixed prompt bank representing social-engineering-relevant visual scenarios and produce numeric similarity features for downstream fusion.
+When used offline or in an approved experiment, its purpose is to map screenshots against a fixed prompt bank representing social-engineering-relevant visual scenarios and produce numeric similarity features for analysis or ablation.
 
 ## 8.2 V1 selection policy
 
-Standard configuration:
+Default online configuration:
+
+- no CLIP / MobileCLIP encoder
+
+Allowed offline / research-only options:
 
 - `MobileCLIP2-S2`
-
-Tight-budget configuration:
-
 - `MobileCLIP2-S0`
-
-Research backup option:
-
-- another extremely small CLIP-family alternative only if later Warden-specific benchmarking shows a materially better accuracy / latency / deployment trade-off
+- another CLIP-family alternative only for offline benchmarking, ablation, or a separately approved optional feature flag
 
 ## 8.3 Selection rationale
 
-The default image-text encoder should optimize for:
+Any offline or research-only image-text encoder should optimize for:
 
 - mobile or edge-friendly deployment profile
 - low-latency image-text encoding
 - practical parameter size
 - easier expansion through prompt-bank updates
 
-V1 does not choose a larger general-purpose visual-language encoder as the default runtime path.
+V1 does not choose a CLIP / MobileCLIP-style visual similarity encoder as the default online runtime path.
 
 ## 8.4 Runtime usage mode
 
-The encoder should be used in non-generative similarity mode.
+The encoder must not run in the Warden V1 default online L1 path.
+If a separately approved optional feature flag enables it later, it should be used in non-generative similarity mode.
 
-Recommended runtime pattern:
+Allowed experimental pattern:
 
 - maintain a fixed prompt bank
 - precompute and cache prompt embeddings offline
-- compute image embeddings at runtime
-- emit similarity scores as numeric features
+- compute image embeddings in the approved offline or feature-flagged path
+- emit similarity scores as numeric research / ablation features
 
 ## 8.5 Prompt-bank discipline
 
-The prompt bank should describe visual social-engineering scenarios, not final legal, policy, or maliciousness conclusions.
+For offline or approved experimental use, the prompt bank should describe visual social-engineering scenarios, not final legal, policy, or maliciousness conclusions.
 
 Suitable prompt themes include:
 
@@ -317,7 +318,7 @@ Suitable prompt themes include:
 
 ## 8.6 Typical output fields
 
-Examples:
+Offline / experimental examples:
 
 - `sim_login_panel`
 - `sim_payment_page`
@@ -328,6 +329,8 @@ Examples:
 - `sim_brand_mimic_ui`
 
 These are scenario-similarity features, not final maliciousness labels.
+The CLIP-family encoder must not output the final `malicious / benign` judgment, must not replace OCR for screenshot text recovery, and must not replace the detector for local UI evidence localization.
+Page-level visual similarity is weak evidence unless grounded by text, URL, forms, network, OCR, detector output, or other context. It is not a default online routing or fusion input in Warden V1.
 
 ---
 
@@ -335,7 +338,7 @@ These are scenario-similarity features, not final maliciousness labels.
 
 ## 9.1 Purpose
 
-The local detector provides spatially grounded evidence that page-level similarity alone cannot express precisely.
+The local detector provides spatially grounded evidence that page-level screenshot priors cannot express precisely.
 Its job is to detect a small number of high-value visual primitives and suspicious interaction regions.
 
 ## 9.2 V1 selection policy
@@ -414,12 +417,11 @@ These teacher models are offline tooling and are not default Warden runtime depe
 A practical V1 execution order is:
 
 1. load `screenshot_viewport.png`
-2. run the image-text similarity encoder
-3. run the lightweight local detector
-4. decide whether OCR is necessary
-5. run OCR only if trigger conditions are met
-6. package visual evidence
-7. send the visual evidence bundle to downstream fusion together with:
+2. run the lightweight local detector when detector triggers are met
+3. decide whether OCR is necessary
+4. run OCR only if trigger conditions are met
+5. package visual evidence
+6. send the visual evidence bundle to downstream fusion together with:
    - `visible_text.txt`
    - `forms.json`
    - `url.json`
@@ -439,14 +441,8 @@ Field names are illustrative only; the exact runtime contract may be finalized i
 ```json
 {
   "vision_component_status": {
-    "clip_encoder_ran": true,
     "detector_ran": true,
     "ocr_ran": false
-  },
-  "vision_similarity": {
-    "sim_login_panel": 0.81,
-    "sim_wallet_connect_modal": 0.23,
-    "sim_verification_gate": 0.74
   },
   "vision_detection": {
     "has_qr_code": false,
@@ -522,7 +518,7 @@ V1 does not claim that this fully eliminates:
 - transfer attacks on vision encoders
 - detector evasion by crafted layouts
 
-Those concerns remain relevant and belong to later robustness evaluation, security testing, and L2-facing escalation work.
+Those concerns remain relevant and belong to later robustness evaluation, security testing, or a separately defined future heavier review path.
 
 ---
 
@@ -534,7 +530,7 @@ For any non-trivial Vision Pipeline change, validate at least:
 2. missing-fullpage path works if full-page handling is touched
 3. OCR trigger behavior works on at least a small representative set if OCR logic changed
 4. detector path works on a smoke sample if detector logic changed
-5. similarity-encoder path works on a smoke sample if encoder logic changed
+5. optional offline similarity-encoder path works on a smoke sample if an approved experiment touches encoder logic
 6. evidence packaging matches documented expectations if output fields changed
 7. degraded-mode behavior is explicit if optional inputs are missing
 8. benchmark command or benchmark script still runs if benchmark logic changed
@@ -550,7 +546,7 @@ The Vision Pipeline must explicitly report compatibility impact when changing:
 - visual input assumptions
 - OCR trigger policy
 - detector class definitions
-- similarity feature definitions
+- optional offline similarity feature definitions
 - output schema
 - deployment dependencies
 - benchmark semantics
@@ -579,16 +575,14 @@ This module must not:
 
 ## 18. Final V1 Selection Summary
 
-### 18.1 Standard configuration
+### 18.1 Standard online configuration
 
 - OCR: `PP-OCRv4 mobile`
-- image-text encoder: `MobileCLIP2-S2`
 - local detector: `YOLO26n`
 
 ### 18.2 Tight-budget configuration
 
 - OCR: `PP-OCRv4 mobile`, trigger-based only
-- image-text encoder: `MobileCLIP2-S0`
 - local detector: `PicoDet-S` or `PicoDet-XS`
 
 ### 18.3 Offline teacher tools
@@ -603,7 +597,8 @@ This module must not:
 This document freezes the following high-level decisions for V1:
 
 - the vision pipeline remains decoupled rather than monolithic
-- OCR, similarity encoding, and local detection remain separate components
+- OCR and local detection remain separate default online components
+- CLIP / MobileCLIP-style similarity encoding remains offline / research-only unless a separate task approves an optional feature flag
 - the vision path emits evidence rather than final judgment
 - `screenshot_viewport.png` remains the primary visual input
 - `screenshot_full.png` remains optional
@@ -644,5 +639,5 @@ A Vision Pipeline V1 task is done only if:
 
 ## 22. Practical One-Sentence Summary
 
-Warden Vision V1 is a viewport-first, evidence-oriented, decoupled visual pipeline: it uses lightweight OCR to fill screenshot text blind spots, a mobile-friendly image-text encoder to score page-level social-engineering visual scenarios, and a lightweight detector to locate atomic high-risk components, then passes those outputs into downstream multimodal fusion rather than making a standalone black-box final decision.
+Warden Vision V1 is a viewport-first, evidence-oriented, decoupled visual pipeline: the default online L1 path uses lightweight OCR to fill screenshot text blind spots and a lightweight detector to locate atomic high-risk components, then passes those outputs into downstream multimodal fusion rather than making a standalone black-box final decision. CLIP / MobileCLIP-style image-text similarity is offline / research-only unless a separate task approves an optional feature flag.
 

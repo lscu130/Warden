@@ -55,7 +55,7 @@ Warden 当前处于 **基础设施与主线规格冻结阶段**。
 - TrainSet V1 主训练集边界；
 - Gate / Evasion auxiliary set 的独立定位；
 - 标签字段、弱标签命名空间与回填路径；
-- L0 / L1 / L2 的分层职责；
+- L0 / L1 的分层职责；
 - 轻量文本 / 视觉 / 融合路线；
 - 任务单、交接单与审查流程。
 
@@ -74,11 +74,11 @@ Warden 当前处于 **基础设施与主线规格冻结阶段**。
 主问题定义为：
 **对真实网页进行轻量、多模态、分层式社会工程威胁判断。**
 
-默认系统视图：
+当前在线系统视图：
 
-- **L0**：低成本、快路径、高召回筛查；
-- **L1**：更强的语义 / 结构判断；
-- **L2**：高成本升级复核层，用于高风险、歧义或困难样本。
+- **L0**：最低成本规则热路径、低成本筛查与路由层；
+- **L1**：主判断层，由 evidence pack builder、text branch、vision branch、structured / joint-signal branch、fusion、evidence ledger 与 deterministic explanation renderer 组成；
+- Future heavier review or escalation may be defined later；当前在线架构不定义 L2。
 
 ### 4.2 数据主线
 
@@ -163,7 +163,7 @@ Gate / Evasion 样本在当前版本中属于 **Auxiliary Set**，而非 TrainSe
 - 主问题定义变化；
 - TrainSet 主契约变化；
 - 新的核心模块进入主线；
-- L0 / L1 / L2 职责变化；
+- L0 / L1 职责变化；
 - 公共输出、CLI、标签语义或目录规范变化。
 
 ## 7. 模块关系
@@ -223,7 +223,7 @@ Warden 默认包含以下模块层次：
 - 运行时输入准备；
 - stage routing；
 - 阈值应用；
-- L0 / L1 / L2 执行策略；
+- L0 / L1 执行策略；
 - 运行时证据打包；
 - benchmark 与 deployment entrypoints。
 
@@ -254,6 +254,7 @@ Warden 默认包含以下模块层次：
 - `docs/frozen/Warden_Dataset_Output_Frozen_Spec_v1.1.md`
 - `docs/data/TRAINSET_V1.md`
 - `docs/data/GATA_EVASION_AUXILIARY_SET_V1.md`
+- `docs/frozen/Warden_L1_FRAMEWORK_V0.1.md`
 - `docs/modules/MODULE_DATA.md`
 - `docs/modules/MODULE_INFER.md`
 - `AGENTS.md`
@@ -303,8 +304,11 @@ Warden 默认包含以下模块层次：
 - 融合层必须保留可审计性；
 - 运行时成本从设计起点就算进约束；
 - L0 不允许静默吸收重成本逻辑；
-- L1 是当前主判断层；
-- L2 保留给高风险、困难、开放世界和后续鲁棒性问题。
+- L1 是当前主判断层，但定义为分阶段主判断壳层，不是单体模型；
+- L1 采用 text / HTML / URL / form / network 主证据路径、结构化语义概念头、按需视觉证据恢复、structured / joint signals、fusion、evidence ledger 和确定性解释渲染；
+- CLIP / MobileCLIP 不属于 Warden V1 默认在线 L1 路径；仅允许用于离线截图聚类、模板发现、ablation baseline、research-only visual-prior experiments，或未来另行批准的 optional feature flag；
+- SNet / SpecularNet-like 路线不属于 Warden V1 默认在线 L1 路径；仅允许用于离线研究、ablation 或未来可选实验；
+- Future heavier review or escalation may be defined later；当前在线架构不定义 L2。
 
 ## 11. 当前数据与标签原则
 
@@ -463,7 +467,7 @@ The priority is not flashy end metrics. The priority is to stabilize the foundat
 - TrainSet V1 primary boundary;
 - separate positioning of the gate / evasion auxiliary set;
 - label fields, weak-label namespaces, and backfill paths;
-- L0 / L1 / L2 responsibility boundaries;
+- L0 / L1 responsibility boundaries;
 - lightweight text / vision / fusion route;
 - workflow, task, handoff, and review discipline.
 
@@ -482,11 +486,11 @@ The current Warden mainline consists of the following threads.
 The main problem is defined as:
 **lightweight, multimodal, staged social-engineering threat judgment for real webpages.**
 
-Default system view:
+Current online system view:
 
-- **L0**: low-cost, fast-path, high-recall screening;
-- **L1**: stronger semantic / structural judgment;
-- **L2**: highest-cost escalation for hard, high-risk, or ambiguous cases.
+- **L0**: cheapest rule hot path, cheap screening, and low-cost routing;
+- **L1**: main judgment layer, including the evidence pack builder, text branch, vision branch, structured / joint-signal branch, fusion, evidence ledger, and deterministic explanation renderer;
+- Future heavier review or escalation may be defined later; the current online architecture does not define L2.
 
 Current L0 contract:
 
@@ -578,7 +582,7 @@ Typical triggers for explicit updates include:
 - a change in the main problem framing;
 - a change in the TrainSet primary contract;
 - a new core module entering the mainline;
-- a change in L0 / L1 / L2 responsibility boundaries;
+- a change in L0 / L1 responsibility boundaries;
 - a change in shared outputs, CLI, label semantics, or directory conventions.
 
 ## 7. Module Relations
@@ -638,7 +642,7 @@ Owns:
 - runtime input preparation;
 - stage routing;
 - threshold application;
-- L0 / L1 / L2 execution policy;
+- L0 / L1 execution policy;
 - runtime evidence packaging;
 - benchmark and deployment entrypoints.
 
@@ -669,6 +673,7 @@ The active project-level mainline should stay aligned with at least the followin
 - `docs/frozen/Warden_Dataset_Output_Frozen_Spec_v1.1.md`
 - `docs/data/TRAINSET_V1.md`
 - `docs/data/GATA_EVASION_AUXILIARY_SET_V1.md`
+- `docs/frozen/Warden_L1_FRAMEWORK_V0.1.md`
 - `docs/modules/MODULE_DATA.md`
 - `docs/modules/MODULE_INFER.md`
 - `AGENTS.md`
@@ -718,8 +723,11 @@ Default project-level principles:
 - fusion must preserve auditability;
 - runtime cost is a first-class design constraint;
 - L0 must not silently absorb heavy logic;
-- L1 is the current main judgment layer;
-- L2 remains reserved for high-risk, hard, open-world, and later robustness-oriented problems.
+- L1 is the current main judgment layer, defined as a staged shell rather than a monolithic model;
+- L1 uses a text / HTML / URL / form / network main evidence path, structured semantic concept heads, conditional visual evidence recovery, structured / joint signals, fusion, evidence ledger, and deterministic explanation rendering;
+- CLIP / MobileCLIP are not part of the Warden V1 default online L1 path; they are allowed only for offline screenshot clustering, template discovery, ablation baselines, research-only visual-prior experiments, or a separately approved future optional feature flag;
+- SNet / SpecularNet-like routes are not part of the Warden V1 default online L1 path; they are allowed only for offline research, ablation, or future optional experiments;
+- Future heavier review or escalation may be defined later; the current online architecture does not define L2.
 
 ## 11. Current Data And Label Principles
 

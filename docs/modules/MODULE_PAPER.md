@@ -172,7 +172,8 @@ Do not describe an imagined grand unified model if the implementation is staged 
 
 ### 7.2 Staged-system honesty
 
-If Warden is evaluated as an L0 / L1 / L2 staged system, that staging must be explicitly described.
+If Warden is evaluated as an L0 / L1 staged system, that staging must be explicitly described.
+Do not describe a current L2 architecture unless a separate accepted architecture task defines it.
 
 Do not flatten the architecture in writing just because it looks cleaner.
 

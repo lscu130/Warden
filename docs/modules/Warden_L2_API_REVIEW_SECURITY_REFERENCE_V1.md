@@ -1,6 +1,16 @@
 # Warden L2 API Review Security Reference V1
 
+> Supersession status, 2026-05-11:
+> This document is retained only as a future heavier review / security reference.
+> It does not define a current online Warden L2 architecture, schema, routing contract, or implementation requirement.
+> Current online Warden V1 architecture is `L0 + L1` only.
+
 ## 中文摘要
+
+> 2026-05-11 状态说明：
+> 本文档仅保留为未来更重复核 / 安全参考。
+> 它不定义当前在线 Warden L2 架构、schema、路由合同或实现要求。
+> 当前在线 Warden V1 架构只定义 `L0 + L1`。
 
 ### 1. 文档目的
 

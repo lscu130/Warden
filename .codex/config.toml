@@ -1,0 +1,70 @@
+# Project-scoped Codex config for Warden
+# 放到：E:\Warden\.codex\config.toml
+# 说明：本文件故意不设置 model / model_provider / model_reasoning_effort /
+#      model_verbosity / review_model，避免锁死 UI 里的模型和智能档位。
+
+# 默认使用 Warden 安全配置；只控制权限策略，不控制模型/智能档位。
+profile = "warden-safe"
+
+# AGENTS.md 最大读取字节数。
+# Warden 的 AGENTS.md 不建议过大；复杂规范应拆到专项 md。
+project_doc_max_bytes = 32768
+project_root_markers = [".git"]
+
+# 默认用 VSCode 打开文件引用
+file_opener = "vscode"
+
+# Web 搜索默认走 cached，降低提示注入风险和不稳定性。
+web_search = "cached"
+
+# 不把 KEY/SECRET/TOKEN 类环境变量传给 spawned process。
+[shell_environment_policy]
+inherit = "core"
+ignore_default_excludes = false
+exclude = ["*KEY*", "*SECRET*", "*TOKEN*", "*PASSWORD*", "OPENAI_API_KEY", "GITHUB_TOKEN"]
+set = {}
+
+
+# -----------------------------
+# Profile 1: 日常安全开发
+# -----------------------------
+[profiles.warden-safe]
+# 允许读写当前 workspace，但越界、联网等动作要审批。
+sandbox_mode = "workspace-write"
+approval_policy = "on-request"
+
+# 省额度优先：审批交给用户，不调用自动 reviewer agent。
+approvals_reviewer = "user"
+
+# 默认不让命令联网。
+web_search = "cached"
+
+[profiles.warden-safe.sandbox_workspace_write]
+network_access = false
+
+
+# -----------------------------
+# Profile 2: 中等任务自动审查
+# -----------------------------
+[profiles.warden-auto]
+sandbox_mode = "workspace-write"
+approval_policy = "on-request"
+
+# 会调用自动 reviewer agent；更省操作，但会额外消耗一些额度。
+approvals_reviewer = "auto_review"
+
+web_search = "cached"
+
+[profiles.warden-auto.sandbox_workspace_write]
+network_access = false
+
+
+# -----------------------------
+# Profile 3: 只读审查 / 看代码
+# -----------------------------
+[profiles.warden-readonly]
+sandbox_mode = "read-only"
+approval_policy = "on-request"
+approvals_reviewer = "user"
+
+web_search = "cached"

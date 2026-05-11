@@ -6,7 +6,7 @@
 
 ### 中文摘要
 
-本文档用于冻结 Warden 当前最小可执行的 runtime/dataflow 合同，服务于既有 `L0 / L1 / L2` 主线。
+本文档用于冻结 Warden 当前最小可执行的 runtime/dataflow 合同，服务于当前 `L0 / L1` 主线。
 
 本版本先冻结以下内容：
 
@@ -14,7 +14,7 @@
 - `SampleContext` 负责什么，不负责什么；
 - 哪些工件属于 cheap evidence，应该每个 sample 只准备一次；
 - 哪些工件属于 heavy artifacts，只能按需 lazy load；
-- `L0 / L1 / L2` 的最小运行期输入/输出边界；
+- `L0 / L1` 的最小运行期输入/输出边界；
 - runtime result / trace 应保留哪些最小审计信息；
 - 哪些内容现在冻结，哪些内容仍保持可配置。
 
@@ -36,7 +36,7 @@
 
 ## 1. Purpose
 
-This document freezes the minimum runtime/dataflow contract needed for near-term Warden implementation work while preserving the official top-level runtime structure as `L0 / L1 / L2`.
+This document freezes the minimum runtime/dataflow contract needed for near-term Warden implementation work while preserving the current official top-level runtime structure as `L0 / L1`.
 
 The goal is to stabilize:
 
@@ -57,11 +57,11 @@ It is not a final threat-logic specification and not a replacement for `MODULE_I
 The official runtime stage framing remains:
 
 - `L0`: cheapest screening and routing stage;
-- `L1`: main judgment stage;
-- `L2`: highest-cost escalation / review stage.
+- `L1`: main judgment stage.
+- Future heavier review or escalation may be defined later, but this document does not define a current online L2 architecture.
 
 This document does not introduce an alternative top-level taxonomy.
-Implementation-local helper sub-stages may exist internally, but they must not replace the project-level `L0 / L1 / L2` contract.
+Implementation-local helper sub-stages may exist internally, but they must not replace the project-level `L0 / L1` contract.
 
 ---
 
@@ -114,7 +114,7 @@ Responsibilities:
 - store the current sample identity and primary URLs;
 - hold shared cheap evidence prepared once per sample;
 - hold stage trace entries;
-- hold routing state across `L0 / L1 / L2`;
+- hold routing state across `L0 / L1`;
 - hold runtime-only caches for lazy-loaded heavy artifacts;
 - hold minimal result payload state before writeback;
 - support explicit heavy-cache release after processing.
@@ -209,7 +209,7 @@ Minimum outputs:
 - stage name `L0`
 - stage status
 - routing reason codes
-- next-stage decision among `STOP`, `L1`, or `L2`
+- next-stage decision among `STOP`, `L1`, or review / recrawl / future-escalation hint
 - weak risk / specialized-surface / observability outputs when available
 
 Strict boundary:
@@ -232,7 +232,7 @@ Minimum responsibilities:
 - act as the main judgment shell;
 - request heavier evidence only when needed;
 - preserve routing trace from `L0`;
-- either complete the current runtime path or escalate to `L2`.
+- either complete the current runtime path or emit explicit review / recrawl / future-escalation hints.
 
 Minimum outputs:
 
@@ -241,7 +241,7 @@ Minimum outputs:
 - explicit routing outcome/status
 - reason codes or notes explaining why the sample stayed or escalated
 - placeholder or partial main-judgment outputs when final logic is not frozen yet
-- next-stage decision among `STOP` or `L2`
+- next-stage decision among `STOP`, review, recrawl, or future-escalation hint
 
 Strict boundary:
 
@@ -277,46 +277,25 @@ The minimum `L1` main-judgment input bundle should expose at least:
 The bundle may contain summaries and references.
 It should not embed full heavy payload bodies by default.
 
-### 5.3 `L2`
+### 5.3 Future heavier review or escalation
 
-Minimum inputs:
+Future heavier review or escalation may be defined later by a separate accepted task.
+This document does not define a current online L2 architecture, L2 schema, L2 routing contract, or L2 implementation requirement.
 
-- `SampleContext` after prior stage trace
-- an explicit `L2` high-cost review contract
-- optional heavy artifacts requested lazily
+When L1 cannot complete confidently, the current contract may emit explicit review / recrawl / future-escalation hints.
+Those hints should preserve enough context for later human review or a future heavier path without naming a current L2 stage.
 
-Minimum responsibilities:
-
-- serve as the highest-cost escalation shell;
-- preserve why escalation happened;
-- emit a review/deeper-analysis placeholder result even when final logic is still deferred.
-
-Minimum outputs:
-
-- stage name `L2`
-- stage status
-- explicit routing outcome/status
-- escalation reason summary
-- placeholder high-cost review result
-- terminal routing decision
-
-Strict boundary:
-
-- `L2` is the highest-cost stage, but this document does not freeze the final interaction, OCR, or multimodal review policy.
-
-#### Minimum `L2` high-cost review contract
-
-The minimum `L2` high-cost review contract should expose at least:
+If a later task defines a heavier review path, its minimum review contract should expose at least:
 
 - sample identity:
   - `sample_id`
   - `input_url`
   - `final_url`
-- escalation context:
+- review context:
   - incoming stage
   - incoming stage status
   - incoming routing outcome
-  - incoming escalation reason codes
+  - incoming review / recrawl / future-escalation reason codes
 - required cheap-evidence families that must remain available to review
 - required heavy artifacts for review
 - missing required heavy artifacts, if any
@@ -365,7 +344,7 @@ Concrete filenames remain implementation-local in V0.1 unless later frozen expli
 
 The following are frozen by this document:
 
-- the official top-level runtime structure stays `L0 / L1 / L2`;
+- the official top-level runtime structure stays `L0 / L1`;
 - `ArtifactPackage` is the immutable artifact-handle layer;
 - `SampleContext` is the shared mutable per-sample runtime state layer;
 - cheap evidence is prepared once per sample whenever practical;
@@ -380,7 +359,7 @@ The following are frozen by this document:
 
 The following remain configurable and are not frozen by this document:
 
-- final threat-decision logic inside `L0`, `L1`, or `L2`;
+- final threat-decision logic inside `L0` or `L1`;
 - exact thresholds;
 - exact OCR strategy;
 - exact vision or multimodal supplementation policy;

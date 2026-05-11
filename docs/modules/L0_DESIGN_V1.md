@@ -11,6 +11,7 @@
 - 若涉及精确字段名、路由语义、阶段职责、阈值口径或兼容性约束，以英文版为准。
 - 本文档当前版本明确采用 **脚本优先、规则优先、证据优先** 的实现立场，不将机器学习模型作为 L0 的默认前提。
 - 当前 auto-label 参考实现的活动 L0 逻辑位于 `src/warden/module/l0.py`，`scripts/labeling/Warden_auto_label_utils_brandlex.py` 保留兼容入口与顶层编排职责。
+- 本文中的 legacy `need_l2_candidate` / `need_l2` 兼容字段名只表示 review / recrawl / future-escalation hint，不定义当前在线 L2 架构。
 
 # Warden L0 设计规范 V1
 

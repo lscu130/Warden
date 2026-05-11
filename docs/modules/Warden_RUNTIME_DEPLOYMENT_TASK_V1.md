@@ -17,9 +17,9 @@ Warden 当前已经冻结了项目级协作规则、Vision Pipeline V1、Text Pi
 当前默认运行画像已经足够支持一版**离线可缓存模型、边缘可运行、以 smoke inference 为目标**的运行时部署基线：
 
 - text default: `multilingual-e5-small`
-- vision similarity default: `MobileCLIP2-S2`
 - OCR default: `PP-OCRv4 mobile`, trigger-based
 - detector default: `YOLO26n`
+- CLIP / MobileCLIP default: none in the online runtime path
 - offline teacher tools are not part of the default online runtime path
 
 当前用户仍在处理数据，因此本任务目标不是追求最终精度或 benchmark 封版，而是优先落地：
@@ -167,7 +167,7 @@ Public interfaces that must remain stable:
 
 - current frozen successful-sample file contract
 - existing data and capture file naming used by TrainSet V1
-- current stage discipline of L0 / L1 / L2
+- current stage discipline of L0 / L1
 
 Schema / field constraints:
 
@@ -207,7 +207,7 @@ Task-specific execution notes:
 
 - Prefer local model path parameters over implicit online-only fetch.
 - If a model API is unstable, wrap it behind a minimal adapter instead of spreading model-specific logic everywhere.
-- Keep OCR, text encoder, image-text encoder, and detector as decoupled components.
+- Keep OCR, text encoder, detector, and any separately approved optional image-text encoder as decoupled components.
 
 ## 10. Acceptance Criteria
 
@@ -229,9 +229,9 @@ Task-specific acceptance checks:
 - [ ] There is a documented local model cache / preload path
 - [ ] Default runtime stack matches current module specs:
   - text: `multilingual-e5-small`
-  - vision similarity: `MobileCLIP2-S2`
   - OCR: `PP-OCRv4 mobile`, trigger-based
   - detector: `YOLO26n`
+  - CLIP / MobileCLIP: none in the online runtime path
 - [ ] Missing optional full-page screenshot is handled explicitly
 - [ ] OCR can be skipped when trigger conditions are not met
 - [ ] Runtime can run without teacher models
@@ -304,9 +304,9 @@ The current repository state is sufficient to support a first runtime deployment
 The current default runtime profile is:
 
 - text default: `multilingual-e5-small`
-- vision similarity default: `MobileCLIP2-S2`
 - OCR default: `PP-OCRv4 mobile`, trigger-based
 - detector default: `YOLO26n`
+- CLIP / MobileCLIP default: none in the online runtime path
 - offline teacher tools are not part of the default online runtime path
 
 The user is still processing data.
@@ -451,7 +451,7 @@ Public interfaces that must remain stable:
 
 - current frozen successful-sample file contract
 - existing data and capture file naming used by TrainSet V1
-- current stage discipline of L0 / L1 / L2
+- current stage discipline of L0 / L1
 
 Schema / field constraints:
 
@@ -491,7 +491,7 @@ Task-specific execution notes:
 
 - Prefer local model path parameters over implicit online-only fetch.
 - If a model API is unstable, wrap it behind a minimal adapter instead of spreading model-specific logic.
-- Keep OCR, text encoder, image-text encoder, and detector as decoupled components.
+- Keep OCR, text encoder, detector, and any separately approved optional image-text encoder as decoupled components.
 
 ## 10. Acceptance Criteria
 
@@ -513,9 +513,9 @@ Task-specific acceptance checks:
 - [ ] There is a documented local model cache / preload path
 - [ ] The default runtime stack matches current module specs:
   - text: `multilingual-e5-small`
-  - vision similarity: `MobileCLIP2-S2`
   - OCR: `PP-OCRv4 mobile`, trigger-based
   - detector: `YOLO26n`
+  - CLIP / MobileCLIP: none in the online runtime path
 - [ ] Missing optional full-page screenshot is handled explicitly
 - [ ] OCR can be skipped when trigger conditions are not met
 - [ ] Runtime can run without teacher models

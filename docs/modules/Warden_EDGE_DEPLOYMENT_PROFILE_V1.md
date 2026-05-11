@@ -69,6 +69,7 @@ Under the V1 default deployment profile, Warden should behave as follows:
 - vision-side evidence remains bounded and selective
 - OCR must remain trigger-based rather than always-on
 - detector remains present, but bounded by lightweight architecture choice
+- CLIP / MobileCLIP-style image-text similarity is not part of the Warden V1 default online path; it is limited to offline screenshot clustering, template discovery, ablation baselines, research-only visual-prior experiments, or a separately approved optional feature flag
 - no component may silently assume server-class compute
 
 The practical goal is not to match heavy multi-modal LLM systems.
@@ -87,9 +88,9 @@ The practical goal is to remain meaningfully deployable on modest hardware while
 ### 4.2 Vision-side default
 
 - primary image input: `screenshot_viewport.png`
-- image-text encoder: `MobileCLIP2-S2`
 - OCR: `PP-OCRv4 mobile`, trigger-based
 - detector: `YOLO26n`
+- CLIP / MobileCLIP encoder: none in the default online profile
 
 ### 4.3 Offline-only teacher tools
 
@@ -145,11 +146,10 @@ Recommended default runtime order:
 2. prepare text-side evidence from `visible_text.txt` and side features for L1 when needed
 3. run text encoder and lightweight text fusion when L1 is entered
 4. load `screenshot_viewport.png` only when the active path requests visual evidence
-5. run image-text similarity encoder when visual follow-up is enabled
-6. run lightweight detector when the active deployment profile enables it
-7. decide whether OCR is needed
-8. run OCR only if trigger conditions are met
-9. package evidence and pass to staged fusion and routing
+5. run lightweight detector when the active deployment profile enables it
+6. decide whether OCR is needed
+7. run OCR only if trigger conditions are met
+8. package evidence and pass to staged fusion and routing
 
 This execution order reflects a bounded-cost bias.
 It keeps L0 before screenshot/OCR/model-heavy work, avoids making OCR the default bottleneck, and preserves detector usage for the later visual path rather than for the default L0 hot path.
@@ -164,7 +164,7 @@ It should be triggered when one or more of the following hold:
 - `visible_text.txt` is sparse
 - screenshot appears text-heavy
 - detector indicates suspicious local regions
-- image-text similarity suggests a risky scenario but text evidence is weak
+- detector evidence or screenshot text sparsity suggests unresolved visual ambiguity
 - full-page screenshot exists and visual ambiguity remains high
 
 ---
@@ -223,7 +223,7 @@ If deployment hardware is weaker than the intended default profile, reduction sh
 
 1. tighten OCR trigger thresholds
 2. reduce detector input size or switch detector to tighter-budget fallback
-3. switch image-text encoder from `MobileCLIP2-S2` to `MobileCLIP2-S0`
+3. disable detector before OCR only if a separately benchmarked profile approves that reduction
 4. if necessary, fall back to a text-dominant path for the weakest hardware tiers
 
 The default profile itself remains unchanged.
@@ -236,9 +236,9 @@ This section only defines reduction strategy when hardware cannot comfortably su
 The following decisions are frozen for the V1 default deployment profile:
 
 - text default: `multilingual-e5-small`
-- vision similarity default: `MobileCLIP2-S2`
 - OCR default: `PP-OCRv4 mobile`, trigger-based
 - detector default: `YOLO26n`
+- CLIP / MobileCLIP default: none in the online profile
 - detector remains in V1
 - off-the-shelf deployment is supported
 - fine-tuning remains allowed
@@ -261,5 +261,5 @@ The following remain open for later benchmark-driven refinement:
 
 ## 13. Practical One-Sentence Summary
 
-Warden V1 default deployment is a bounded-cost multimodal profile for ordinary PC-class and modest x86 edge environments: multilingual text encoding is always available, vision similarity and lightweight detection remain part of the default path, OCR stays trigger-based, and later Warden-specific fine-tuning is allowed without making fine-tuning a prerequisite for initial deployment.
+Warden V1 default deployment is a bounded-cost multimodal profile for ordinary PC-class and modest x86 edge environments: multilingual text encoding is always available, lightweight detection remains part of the default visual evidence path, OCR stays trigger-based, CLIP / MobileCLIP-style similarity stays outside the default online profile, and later Warden-specific fine-tuning is allowed without making fine-tuning a prerequisite for initial deployment.
 

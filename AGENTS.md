@@ -1,4 +1,4 @@
-﻿# AGENTS.md
+# AGENTS.md
 
 ## 中文版
 
@@ -24,6 +24,11 @@
 - 给用户的 Markdown 文档必须中英双语，中文摘要在前，英文全文在后。
 - 若需求与文档约束冲突，应明确指出冲突，而不是自行猜测。
 - Warden 的社会工程威胁定义包括高危欺骗行为和/或高危诱导动作；未观察到 payload / action 不能自动等同于 benign。
+- 当前在线架构只定义 `L0` 和 `L1`：`L0` 是低成本筛查与路由层，`L1` 是主判断层；更重的未来复核或升级路径必须另行定义。
+- 面向 GPT-5.5 / Codex / Claude Code 的任务提示默认采用 outcome-first：先写目标、成功标准、证据规则、约束、输出形态、验证和停止规则；只有路径本身影响正确性时才写死步骤。
+- 对架构、标签、数据集、模型、评估、workflow 和论文定位等高影响问题，默认执行反审：先检查隐含假设、失败场景、反例、证据缺口和备选路线。
+- 需要记录或约束 reasoning effort、verbosity、retrieval budget、preamble、工具副作用、反审要求和验证方式时，应写入任务单或 handoff。
+- 新增 Karpathy-style 执行护栏：先澄清假设和歧义，再执行；默认选择能满足成功标准的最小方案；每个改动必须能追溯到任务目标；交付前必须完成最小验证闭环或明确说明未验证原因。
 
 ## 3. 阅读重点
 
@@ -34,6 +39,8 @@
 - `Workflow compliance is mandatory`
 - `Schema discipline` / `Label discipline`
 - `Required final response format`
+- `GPT-5.5 prompt and agent defaults`
+- `Counter-review and anti-closed-loop reasoning defaults`
 
 ## English Version
 
@@ -55,11 +62,11 @@ High-risk deceptive behavior includes false or misleading identity, brand, autho
 Such behavior may be malicious even when no credential form, payment form, wallet flow, download, POST submission, or other high-risk action is currently observed.
 Absence of observed payload should be treated as `payload not observed`, not as automatic benign.
 
-Default system view:
+Current online system view:
 
-- L0: fast low-cost screening
-- L1: stronger semantic / structural judgment
-- L2: highest-cost escalation for hard or ambiguous cases
+- L0: cheapest rule hot path, cheap screening, and low-cost routing
+- L1: main judgment layer, including evidence-pack construction, text judgment, trigger-based vision evidence recovery, structured / joint signals, fusion, evidence ledger, and deterministic explanation rendering
+- Future heavier review or escalation may be defined later, but no current L2 architecture is defined by default.
 
 Primary engineering goals:
 
@@ -121,7 +128,143 @@ Follow these rules strictly:
 12. Do not claim compliance with workflow, task, or handoff requirements if the artifact was not actually read or produced.
 13. Markdown documents delivered to the user must be bilingual by default: a Chinese summary first for human reading, followed by the full English version for AI reading.
 14. For Markdown documents, English remains the authoritative version whenever exact wording, fields, commands, priorities, or historical facts matter.
+15. For GPT-5.5-class agents, prefer outcome-first prompts over process-heavy prompt stacks.
+16. Define success criteria, evidence rules, validation expectations, and stop rules before asking for implementation.
+17. Use detailed step-by-step process guidance only when the exact process is required by correctness, reproducibility, safety, or a project contract.
+18. For tool-heavy work, provide a short preamble before running tools and keep progress updates factual.
+19. Do not assume the user's proposed framing, architecture, taxonomy, model choice, experiment design, workflow change, or research claim is correct when the task is high-impact.
+20. For architecture, labeling, dataset, model, evaluation, workflow, and research decisions, perform counter-review before turning the proposal into execution work.
+21. Distinguish source-backed facts, engineering inferences, assumptions, recommendations, and unresolved risks.
+22. If evidence is insufficient to accept or reject a framing, mark the claim as unsupported or partial instead of filling the gap with speculation.
 
+
+### 3.0 Karpathy-derived agent guardrails
+
+Warden adopts the Karpathy-inspired coding-agent guardrails as operational discipline, not as a new architecture or executor route.
+These guardrails apply to non-trivial GPT Web, Human Manual, Codex, and any explicitly approved autonomous-agent work.
+For trivial one-line edits, apply them lightly without creating unnecessary process overhead.
+
+#### Think before acting
+
+Before implementation or task routing, the agent must surface material uncertainty instead of silently choosing an interpretation.
+
+Required behavior:
+
+- State assumptions when they affect scope, compatibility, labels, schema, evaluation, or user-facing output.
+- Present multiple plausible interpretations when the request can reasonably mean more than one thing.
+- Push back when the requested route is more complex, riskier, or less testable than a simpler route that satisfies the same goal.
+- Stop and clarify, mark missing evidence, or keep the task exploratory when ambiguity could corrupt data, labels, metrics, interfaces, or research conclusions.
+
+#### Simplicity first
+
+Prefer the smallest design, patch, prompt, script, or document change that satisfies the success criteria.
+
+Rules:
+
+- Do not add speculative features, optional flexibility, general frameworks, broad abstractions, or future-proofing that the task did not ask for.
+- Do not introduce new dependencies, new schema fields, new CLI flags, or new modules merely to make the solution look cleaner.
+- If a shorter local change satisfies the task and preserves contracts, prefer it over a broad redesign.
+- If the proposed implementation starts to look over-engineered, reduce it before editing.
+
+#### Surgical changes
+
+Every changed line must trace to the active task goal, `scope_in`, success criteria, or required validation.
+
+Rules:
+
+- Do not reformat whole files or clean adjacent code unless the task explicitly asks for that cleanup.
+- Match existing file style even when a different style would be preferred.
+- Mention unrelated dead code, stale comments, or design debt in the handoff instead of silently changing it.
+- Remove only the imports, variables, comments, generated artifacts, or references made obsolete by the current change.
+
+#### Goal-driven verification loop
+
+For non-trivial work, convert the task into a small set of observable checks and stop only when those checks are satisfied or honestly reported as not run.
+
+Required behavior:
+
+- Map each material change to a verification check: text search, diff inspection, schema compatibility check, smoke test, unit test, build, artifact inspection, or manual review.
+- Prefer tests or checks that directly falsify the intended behavior over broad low-signal validation.
+- If validation cannot run, state exactly what was not run, why, and the next best check.
+- Do not continue tool use after the stop rule is satisfied unless a material unresolved risk remains.
+
+
+### 3.1 GPT-5.5 prompt and agent defaults
+
+For GPT-5.5, Codex, Claude Code, and comparable reasoning agents, Warden prompts should use an outcome-first contract.
+
+Default prompt shape:
+
+1. `Role`: the agent role and responsibility boundary.
+2. `Goal`: the concrete outcome to produce.
+3. `Success criteria`: observable checks for completion.
+4. `Scope in`: files, modules, commands, or artifacts that may be touched.
+5. `Scope out`: files, modules, behavior, schemas, labels, or contracts that must not be touched.
+6. `Evidence rules`: what must be read, searched, cited, or verified before making claims.
+7. `Validation`: the smallest useful checks that must be run or explicitly marked as not run.
+8. `Stop rules`: when to stop as done, when to stop as blocked, and when to escalate.
+9. `Output`: exact final response or handoff format.
+
+Do not carry forward long legacy prompt stacks merely because they existed before. Keep stable project contracts in governing docs and task templates. Keep the task-specific request short, concrete, and placed after stable context when possible.
+
+Runtime defaults:
+
+- `reasoning.effort`: start from `medium` for GPT-5.5 when quality, reliability, latency, and cost must be balanced.
+- Use `low` for mechanical, local, or latency-sensitive tasks that still need light planning or tool use.
+- Use `none` only for latency-critical tasks that do not need reasoning, multi-step planning, or chained tool calls.
+- Use `high` or `xhigh` only for difficult architecture, debugging, agentic, evaluation, or cross-module work where the extra latency and cost are justified.
+- `text.verbosity`: use `low` for routine status and mechanical reviews, `medium` for normal engineering handoff, and `high` only for specs, audits, research notes, or complex tradeoff analysis.
+
+Evidence and retrieval defaults:
+
+- Define a retrieval budget for grounded tasks.
+- Start with the smallest retrieval set that can answer the core question.
+- Continue retrieval only when a required fact, file, source, date, owner, command output, or citation is missing.
+- Stop retrieval when additional search is unlikely to change the answer or reduce a material risk.
+- Do not search again only to improve phrasing, add nonessential examples, or decorate the answer.
+- Do not turn absence of evidence into a factual negative claim.
+
+Validation defaults:
+
+- When validation is possible, run the most relevant targeted check: syntax/import sanity, targeted unit test, type/lint check, build check, smoke test, or output artifact inspection.
+- If validation cannot be run, report what was not run, why it was not run, and the next best check.
+- For visual or generated artifacts, inspect the rendered or generated output before final delivery when the environment allows it.
+
+Tool-heavy workflow defaults:
+
+- Give a short preamble before long or tool-heavy work.
+- Preserve tool side-effect boundaries: read-only tasks must stay read-only; write tasks must stay inside `scope_in`.
+- In Responses-API-style workflows, preserve `phase`, preambles, and assistant-item replay semantics when the application exposes them.
+- Prefer structured output or external schema validation when available instead of embedding large schema definitions in prompt text.
+
+
+### 3.2 Counter-review and anti-closed-loop reasoning defaults
+
+Counter-review is Warden's default defense against closed-loop reasoning, user-framing bias, and plausible but unsupported project drift.
+It is mandatory for high-impact decisions involving architecture, module boundaries, threat-definition semantics, labels, dataset admission, model selection, fusion design, training or evaluation methodology, research novelty, workflow rules, or agent routing.
+
+Counter-review must check at least the following:
+
+- current proposed framing
+- hidden assumptions
+- likely failure modes
+- counterexamples or contradictory evidence
+- missing evidence or missing repository context
+- alternative routes
+- compatibility and downstream risks
+- whether the task should remain exploratory, become a task document, or be escalated
+
+Counter-review output should distinguish:
+
+- `fact`: directly supported by a checked source, current file, command output, cited paper, official documentation, or supplied artifact
+- `inference`: derived from supported facts but not directly stated by the evidence source
+- `assumption`: used temporarily because evidence is incomplete
+- `recommendation`: the agent's proposed action or design choice
+- `risk`: a failure mode, uncertainty, compatibility issue, or validation gap
+
+Counter-review must not become unbounded debate.
+Use the retrieval budget and stop rules from the task document.
+Stop when the framing is sufficiently supported for the current decision, when evidence is insufficient and must be reported, or when the task boundary needs human approval before execution.
 
 ## 4. Source of truth priority
 
@@ -302,7 +445,7 @@ Rules:
 - If brand inference is heuristic, expose confidence or rule path when practical.
 - Strong deceptive brand, authority, institution, security, financial, support, reward, or access-control context can be high-risk behavior, but brand mismatch alone must not become a universal one-factor malicious rule without supporting context.
 
-### 8.4 L0 / L1 / L2 discipline
+### 8.4 L0 / L1 discipline
 
 Warden is a staged system.
 
@@ -312,12 +455,13 @@ Rules:
 - Do not push expensive logic into L0 unless requested.
 - Do not bypass escalation logic silently.
 - Preserve explainability of stage transition conditions.
+- Do not define a current L2 architecture unless a separate accepted task explicitly introduces it.
 
 Default expectation:
 
 - L0 favors speed and recall
-- L1 adds stronger semantic / structural evidence
-- L2 handles hard ambiguous high-risk cases
+- L1 is the main judgment layer, with text, trigger-based vision evidence recovery, structured / joint signals, fusion, evidence ledger, and deterministic explanation rendering
+- Future heavier review or escalation remains out of scope until separately defined
 
 
 ## 9. Module boundary rules
@@ -467,6 +611,7 @@ Do not do the following unless explicitly requested:
 - silent schema changes
 - changing naming conventions project-wide
 - converting stable scripts into a new framework
+- adding speculative abstractions, optional flexibility, or adjacent cleanup that is not required by the active task
 - deleting fallback logic without checking compatibility
 - replacing documented behavior with "better" guessed behavior
 - fabricating experiment results
@@ -489,6 +634,8 @@ For non-trivial tasks, structure the result as:
 5. Compatibility impact
 6. Risks / caveats
 7. Recommended next step
+8. Evidence / retrieval performed, if the task depended on external or internal sources
+9. Stop condition reached, if the task had explicit stop rules
 
 If schema, labels, CLI, or outputs were touched, explicitly include:
 
@@ -510,6 +657,8 @@ Unless the task says otherwise, assume:
 - documentation is part of the deliverable
 - partial safe completion is better than speculative overreach
 - workflow compliance matters as much as code correctness
+- outcome-first task definitions are preferred over process-heavy instructions
+- evidence rules, validation rules, and stop rules should be explicit for non-trivial work
 
 
 ## 16. Required handoff and acceptance discipline
@@ -543,4 +692,3 @@ When work continues across threads or windows:
 
 If context gets long or brittle, summarize the state before switching threads.
 Do not continue high-risk work on half-remembered context.
-

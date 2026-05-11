@@ -53,7 +53,7 @@ This document does not define:
 - dataset schema redesign
 - label ontology redesign
 - final risk decision thresholds
-- L2 heavy reasoning logic
+- future heavier review or escalation logic
 - paper-facing result narration
 
 ---
@@ -179,6 +179,26 @@ The V1 text pipeline uses a layered design:
 5. evidence packaging for L1 downstream fusion
 
 The default path uses an embedding-style encoder rather than a generative LLM.
+
+---
+
+## 6.1 L1 Concept-Head Direction
+
+The text tower is a main evidence branch for L1, but it is not a complete free-form reasoning engine.
+It should learn structured semantic concepts and relation judgments through multi-task heads.
+The intended pattern is an implicit reasoning scaffold: the model does not output chain-of-thought, but it emits bounded intermediate concepts that L1 fusion can combine with structured and visual evidence.
+
+Draft multi-task head groups include:
+
+- action surface heads, such as login, signup, payment, wallet connect, download, support contact, PII collection, and third-party redirect surfaces;
+- behavior context heads, such as brand impersonation, authority impersonation, fake security, fake financial, fake reward, fake support, urgency, and deceptive hosted-brand-shell contexts;
+- relation / consistency heads, such as brand-domain alignment, brand URL-token consistency, claimed officiality, action-target alignment, form-action alignment, download-target alignment, redirect-chain reasonableness, hosted-platform context, business legitimacy, and context legitimacy;
+- risk axis heads, such as human exposure, deceptive identity, observed action, payload deployment, brand-domain conflict, evidence incompleteness, and gate/evasion risk;
+- page role heads, such as benign clear, benign hard negative, brand impersonation landing shell without payload observed, credential collection, payment collection, wallet abuse, fake download lure, fake support, gate/evasion shell, intermediary/redirector, and unknown;
+- routing heads, such as need vision, need recrawl, need human review, and future-escalation hint.
+
+These names are draft / proposed / conceptual terms, not frozen machine-readable output schema.
+Action surfaces are not automatically threat actions; they become threat-relevant only when combined with deceptive identity, manipulative narrative, suspicious destination, abnormal submission, missing business legitimacy, missing context legitimacy, or another high-risk behavior context.
 
 ---
 
@@ -450,7 +470,7 @@ V1 does not claim that this fully eliminates:
 - encoder blind spots
 - concept-layer calibration errors
 
-Those concerns remain relevant and should be handled as part of later robustness evaluation and L2 or security testing work.
+Those concerns remain relevant and should be handled as part of later robustness evaluation, security testing, or a separately defined future heavier review path.
 
 ---
 
