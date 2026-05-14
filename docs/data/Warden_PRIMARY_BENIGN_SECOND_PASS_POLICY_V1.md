@@ -181,7 +181,7 @@ second-pass 可并行给出：
 
 - gate / challenge shell
 - evasion / cloaking shell
-- 严重残缺、严重 blank、当前无法代表标准页面级 benign 样本
+- 严重稀疏但仍有可观测主体、当前不适合直接并入 primary 的有效网页样本
 
 则默认建议：
 
@@ -291,7 +291,9 @@ Here, second-pass means:
   - true high-risk behavior pages,
   - leftover `adult` / `gambling` samples,
   - leftover gate / evasion samples,
-  - sparse, screenshot-dependent, broken, or highly confusing hard cases.
+  - sparse, screenshot-dependent, or highly confusing hard cases.
+
+Invalid captures, HTTP error pages, blank pages, pure-color renders, severe broken renders, and insufficient-observability pages are outside this second-pass review set. They are removed during dataset construction before formal train / validation / test construction and must not be routed as benign, malicious, suspicious, uncertain, or auxiliary threat samples.
 
 This file defines only the second-pass review policy.
 It does not rewrite:
@@ -357,7 +359,7 @@ This asks whether the sample is better explained as:
 
 - a gate or challenge shell
 - an evasion or cloaking shell
-- a severely broken, severely sparse, or currently insufficient-evidence sample that should not go directly into primary
+- a severely sparse but still observable valid webpage sample that should not go directly into primary
 
 ## 5. Default Read Order For The Second Pass
 
@@ -455,7 +457,7 @@ If a sample is better explained as:
 
 - a gate or challenge shell
 - an evasion or cloaking shell
-- a severely broken or severely blank sample that cannot represent a standard page-level benign sample
+- a severely sparse but still observable valid webpage sample that cannot represent a standard page-level benign sample
 
 then the default suggestion is:
 
@@ -535,7 +537,7 @@ The current recommended stance is:
   - manual-review suggestion
   - content-warning suggestion
 - unresolved benign-like hard cases should go to `manual review` by default
-- only clearly gate/evasion or severely broken samples should default toward `aux_only`
+- only clearly gate/evasion or severely sparse but still observable valid webpage samples should default toward `aux_only`
 
 ## 12. Non-Goals
 

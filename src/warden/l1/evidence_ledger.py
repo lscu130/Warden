@@ -62,5 +62,5 @@ def build_evidence_ledger(
         if value and signal.startswith("need_"):
             add("joint_signal", signal, value, "limits", signal, 0.6)
     if "insufficient_evidence" in reason_codes:
-        add("rule_baseline", "evidence is insufficient for confident decision", True, "limits", "insufficient_evidence", 0.7)
+        add("rule_router", "evidence is insufficient for routing confidence", True, "limits", "insufficient_evidence", 0.7)
     return entries

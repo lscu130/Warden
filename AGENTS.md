@@ -24,6 +24,7 @@
 - 给用户的 Markdown 文档必须中英双语，中文摘要在前，英文全文在后。
 - 若需求与文档约束冲突，应明确指出冲突，而不是自行猜测。
 - Warden 的社会工程威胁定义包括高危欺骗行为和/或高危诱导动作；未观察到 payload / action 不能自动等同于 benign。
+- 无效采集、HTTP 错误页、空白页、纯色渲染页、严重渲染失败页、证据不可观测页面不是 Warden 威胁模型样本，不能标记为 benign、malicious 或 suspicious；数据集构建时由项目负责人在正式 train / validation / test 前移除。
 - 当前在线架构只定义 `L0` 和 `L1`：`L0` 是低成本筛查与路由层，`L1` 是主判断层；更重的未来复核或升级路径必须另行定义。
 - 面向 GPT-5.5 / Codex / Claude Code 的任务提示默认采用 outcome-first：先写目标、成功标准、证据规则、约束、输出形态、验证和停止规则；只有路径本身影响正确性时才写死步骤。
 - 对架构、标签、数据集、模型、评估、workflow 和论文定位等高影响问题，默认执行反审：先检查隐含假设、失败场景、反例、证据缺口和备选路线。
@@ -61,12 +62,15 @@ Warden defines a webpage social-engineering threat as high-risk deceptive behavi
 High-risk deceptive behavior includes false or misleading identity, brand, authority, institution, security, financial, support, reward, or access-control context construction.
 Such behavior may be malicious even when no credential form, payment form, wallet flow, download, POST submission, or other high-risk action is currently observed.
 Absence of observed payload should be treated as `payload not observed`, not as automatic benign.
+Invalid captures, HTTP error pages, blank pages, pure-color renders, severe broken renders, and insufficient-observability pages are not Warden threat-model samples. They must not be labeled as benign, malicious, or suspicious. In the dataset-building workflow, the project owner removes these samples before formal train / validation / test construction.
 
 Current online system view:
 
 - L0: cheapest rule hot path, cheap screening, and low-cost routing
 - L1: main judgment layer, including evidence-pack construction, text judgment, trigger-based vision evidence recovery, structured / joint signals, fusion, evidence ledger, and deterministic explanation rendering
 - Future heavier review or escalation may be defined later, but no current L2 architecture is defined by default.
+
+L0 handles only a small set of high-confidence cheap terminal or auxiliary buckets, such as adult, gambling, and obvious gate / challenge / verification cases. L0 does not decide ordinary benign or malicious webpage status. Every valid webpage sample not terminated by L0 must route to L1, and the L1 text branch is the default judgment path.
 
 Primary engineering goals:
 
@@ -460,7 +464,9 @@ Rules:
 Default expectation:
 
 - L0 favors speed and recall
-- L1 is the main judgment layer, with text, trigger-based vision evidence recovery, structured / joint signals, fusion, evidence ledger, and deterministic explanation rendering
+- L0 handles only high-confidence cheap terminal / auxiliary buckets such as adult, gambling, and obvious gate / challenge / verification; ordinary valid non-terminal webpages route to L1 instead of receiving final benign / malicious status in L0
+- L1 is the main judgment layer, with the text branch as the default judgment path, trigger-based vision evidence recovery, structured / joint signals, fusion, evidence ledger, and deterministic explanation rendering
+- L1 vision is evidence recovery: OCR recovers screenshot text and YOLO / detector localizes visible action components; vision evidence feeds the evidence pack / decision process but does not independently determine malicious or benign
 - Future heavier review or escalation remains out of scope until separately defined
 
 

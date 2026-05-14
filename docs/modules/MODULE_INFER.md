@@ -122,7 +122,7 @@ At the module-contract level, the intended flow is:
 2. run an embedded `L0-fast` screening/router path while preserving official `L0` semantics;
 3. send non-exiting samples to `L1`, which remains the main judgment stage;
 4. allow conditional multimodal supplementation under `L1` rather than inventing a new official stage;
-5. emit review / recrawl / future-escalation hints for hard gate, evasion, interaction-heavy, or high-ambiguity subsets without defining a current online L2 architecture.
+5. emit review / future-escalation hints for hard gate, evasion, interaction-heavy, or high-ambiguity valid webpage subsets without defining a current online L2 architecture. Any future recrawl behavior belongs to separately defined capture infrastructure, not current L0 / L1 threat-model output.
 
 This document treats `L0-fast` as an implementation-form clarification inside the overall runtime pipeline, not as a renamed stage and not as a replacement for the official `L0 / L1` contract.
 
@@ -200,7 +200,7 @@ Default responsibilities:
 - deterministic explanation rendering from evidence ledger entries and reason codes
 - richer consistency checks
 - more reliable main-stage judgment for samples that stop at L1
-- review, recrawl, or future-escalation hinting without defining a current L2 stage
+- review or future-escalation hinting without defining a current L2 stage
 
 Strict rules:
 
@@ -218,7 +218,7 @@ Strict rules:
 Future heavier review or escalation may be defined later in a separate accepted task.
 This module does not define a current online L2 architecture, L2 schema, L2 routing contract, or L2 implementation requirement.
 
-Until such a task exists, hard gate, evasion, interaction-heavy, high-ambiguity, or signal-conflict cases should be represented through explicit review / recrawl / future-escalation hints and evidence-ledger reason codes.
+Until such a task exists, hard gate, evasion, interaction-heavy, high-ambiguity, or signal-conflict valid webpage cases should be represented through explicit review / future-escalation hints and evidence-ledger reason codes. Recrawl must not be emitted as a current L0 / L1 threat-model route.
 
 ---
 

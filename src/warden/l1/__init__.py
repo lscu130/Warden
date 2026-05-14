@@ -1,4 +1,4 @@
-"""Warden L1 pipeline skeleton and conservative rule baseline.
+"""Warden L1 pipeline skeleton and conservative rule-router diagnostics.
 
 This package implements a model-independent L1 draft path. Action surfaces
 such as login, payment, wallet, download, support, and redirect are evidence

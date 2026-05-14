@@ -97,6 +97,8 @@ The main point is that the sample directory layout is frozen even when not every
 
 Under the current capture pipeline, failed or clearly invalid samples do not become full successful sample directories.
 
+Invalid captures, HTTP error pages, blank pages, pure-color renders, severe broken renders, and insufficient-observability pages are not Warden threat-model samples. They must not be labeled as benign, malicious, or suspicious and must not be admitted into formal train / validation / test data. In the dataset-building workflow, the project owner removes these samples before formal split construction.
+
 ### 4.2 Defaults Versus Optional Modes
 
 Under the current implementation:

@@ -60,6 +60,14 @@ The official runtime stage framing remains:
 - `L1`: main judgment stage.
 - Future heavier review or escalation may be defined later, but this document does not define a current online L2 architecture.
 
+Routing realignment:
+
+- `L0` handles only a small set of high-confidence cheap terminal or auxiliary buckets such as adult, gambling, and obvious gate / challenge / verification cases.
+- `L0` does not decide ordinary benign or malicious webpage status.
+- Every valid webpage sample not terminated by `L0` must route to `L1`.
+- `L1` text judgment runs by default.
+- Invalid captures, HTTP error pages, blank pages, pure-color renders, severe broken renders, and insufficient-observability pages are removed by the project owner during dataset cleaning before formal train / validation / test construction. They are not `benign`, `malicious`, or `suspicious` threat-model labels.
+
 This document does not introduce an alternative top-level taxonomy.
 Implementation-local helper sub-stages may exist internally, but they must not replace the project-level `L0 / L1` contract.
 
@@ -209,7 +217,7 @@ Minimum outputs:
 - stage name `L0`
 - stage status
 - routing reason codes
-- next-stage decision among `STOP`, `L1`, or review / recrawl / future-escalation hint
+- next-stage decision among `STOP`, `L1`, or review / future-escalation hint
 - weak risk / specialized-surface / observability outputs when available
 
 Strict boundary:
@@ -232,7 +240,7 @@ Minimum responsibilities:
 - act as the main judgment shell;
 - request heavier evidence only when needed;
 - preserve routing trace from `L0`;
-- either complete the current runtime path or emit explicit review / recrawl / future-escalation hints.
+- either complete the current runtime path or emit explicit review / future-escalation hints.
 
 Minimum outputs:
 
@@ -241,7 +249,7 @@ Minimum outputs:
 - explicit routing outcome/status
 - reason codes or notes explaining why the sample stayed or escalated
 - placeholder or partial main-judgment outputs when final logic is not frozen yet
-- next-stage decision among `STOP`, review, recrawl, or future-escalation hint
+- next-stage decision among `STOP`, review, or future-escalation hint
 
 Strict boundary:
 
@@ -282,8 +290,8 @@ It should not embed full heavy payload bodies by default.
 Future heavier review or escalation may be defined later by a separate accepted task.
 This document does not define a current online L2 architecture, L2 schema, L2 routing contract, or L2 implementation requirement.
 
-When L1 cannot complete confidently, the current contract may emit explicit review / recrawl / future-escalation hints.
-Those hints should preserve enough context for later human review or a future heavier path without naming a current L2 stage.
+When L1 cannot complete confidently on a valid webpage sample, the current contract may emit explicit review / future-escalation hints.
+Those hints should preserve enough context for later human review or a future heavier path without naming a current L2 stage. Recrawl is not a current L0 / L1 threat-model routing output; any future recrawl behavior belongs to separately defined capture infrastructure.
 
 If a later task defines a heavier review path, its minimum review contract should expose at least:
 
@@ -295,7 +303,7 @@ If a later task defines a heavier review path, its minimum review contract shoul
   - incoming stage
   - incoming stage status
   - incoming routing outcome
-  - incoming review / recrawl / future-escalation reason codes
+  - incoming review / future-escalation reason codes
 - required cheap-evidence families that must remain available to review
 - required heavy artifacts for review
 - missing required heavy artifacts, if any

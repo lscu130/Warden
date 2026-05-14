@@ -18,8 +18,8 @@ from .text_features import extract_visible_text_features
 from .url_features import extract_url_features
 
 
-def run_l1_baseline_for_sample(source: Any) -> Dict[str, Any]:
-    pack = build_evidence_pack(source)
+def run_l1_baseline_for_sample(source: Any, *, cheap_snapshot: Any = None) -> Dict[str, Any]:
+    pack = build_evidence_pack(source, cheap_snapshot=cheap_snapshot)
     url_features = extract_url_features(pack.get("url_info"))
     final_host = str(url_features.get("final_host") or "")
     text_features = extract_visible_text_features(str(pack.get("visible_text") or ""))
@@ -67,25 +67,57 @@ def run_l1_baseline_for_sample(source: Any) -> Dict[str, Any]:
         reason_codes=reason_codes,
     )
     explanation = render_explanation(
-        label=baseline["label"],
-        malicious_basis=baseline["malicious_basis"],
-        risk_axes=baseline["risk_axes"],
+        rule_assessment=baseline["rule_assessment"],
+        routing_hints=baseline["routing_hints"],
+        risk_hints=baseline["risk_hints"],
+        evidence_sufficiency=baseline["evidence_sufficiency"],
         reason_codes=reason_codes,
         evidence_ledger=ledger,
-        routing=baseline["routing"],
+        routing=baseline["routing_hints"],
     )
     return {
-        "result_kind": "warden_l1_rule_baseline_draft_v1",
+        "result_kind": "warden_l1_routing_diagnostic_draft_v1",
+        "stage": "L1",
+        "draft": True,
+        "not_final_schema": True,
+        "evidence_construction": {
+            "mode": pack.get("evidence_construction_mode"),
+            "cheap_snapshot_reused": bool(pack.get("cheap_snapshot_reused")),
+            "cheap_snapshot_schema_version": pack.get("cheap_snapshot_schema_version"),
+        },
         "sample_dir": pack["sample_dir"],
-        "label": baseline["label"],
-        "risk_score": baseline["risk_score"],
-        "confidence": baseline["confidence"],
-        "malicious_basis": baseline["malicious_basis"],
-        "payload_observed": baseline["payload_observed"],
-        "page_role": baseline["page_role"],
-        "risk_axes": baseline["risk_axes"],
-        "routing": baseline["routing"],
-        "reason_codes": reason_codes,
+        "rule_router": {
+            "rule_assessment": baseline["rule_assessment"],
+            "routing_assessment": baseline["routing_assessment"],
+            "routing_hints": baseline["routing_hints"],
+            "risk_hints": baseline["risk_hints"],
+            "evidence_sufficiency": baseline["evidence_sufficiency"],
+            "risk_axes": baseline["risk_axes"],
+            "reason_codes": reason_codes,
+        },
+        "text_semantic_concepts": {
+            "status": "stub_not_run",
+            "reason": "real_text_tower_not_available_yet",
+            "concept_outputs": {},
+        },
+        "vision_evidence": {
+            "status": "requested_but_stub_not_run"
+            if baseline["routing_hints"].get("need_ocr") or baseline["routing_hints"].get("need_yolo")
+            else "not_requested_or_stub",
+            "need_ocr": bool(baseline["routing_hints"].get("need_ocr")),
+            "need_yolo": bool(baseline["routing_hints"].get("need_yolo")),
+            "ocr_ran": False,
+            "yolo_ran": False,
+        },
+        "decision_head": {
+            "status": "not_run",
+            "reason": "real_text_tower_and_l1_decision_head_not_available_yet",
+            "final_label": None,
+            "risk_score": None,
+            "confidence": None,
+            "malicious_basis": None,
+            "payload_observed": None,
+        },
         "evidence_ledger": ledger,
         "explanation": explanation,
         "features": {

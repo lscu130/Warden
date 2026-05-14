@@ -195,7 +195,7 @@ Draft multi-task head groups include:
 - relation / consistency heads, such as brand-domain alignment, brand URL-token consistency, claimed officiality, action-target alignment, form-action alignment, download-target alignment, redirect-chain reasonableness, hosted-platform context, business legitimacy, and context legitimacy;
 - risk axis heads, such as human exposure, deceptive identity, observed action, payload deployment, brand-domain conflict, evidence incompleteness, and gate/evasion risk;
 - page role heads, such as benign clear, benign hard negative, brand impersonation landing shell without payload observed, credential collection, payment collection, wallet abuse, fake download lure, fake support, gate/evasion shell, intermediary/redirector, and unknown;
-- routing heads, such as need vision, need recrawl, need human review, and future-escalation hint.
+- routing heads, such as need vision, need human review, and future-escalation hint. Recrawl is not a current L0 / L1 threat-model routing head; any future recrawl behavior belongs to separately defined capture infrastructure.
 
 These names are draft / proposed / conceptual terms, not frozen machine-readable output schema.
 Action surfaces are not automatically threat actions; they become threat-relevant only when combined with deceptive identity, manipulative narrative, suspicious destination, abnormal submission, missing business legitimacy, missing context legitimacy, or another high-risk behavior context.

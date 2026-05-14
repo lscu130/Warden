@@ -45,6 +45,8 @@ This module is responsible for making dataset intake reproducible and auditable 
 
 This module must not silently redefine sample schema, label semantics, or training behavior.
 
+Invalid captures, HTTP error pages, blank pages, pure-color renders, severe broken renders, and insufficient-observability pages are removed by the project owner before formal train / validation / test construction. They are not Warden threat-model samples and must not be converted into benign, malicious, or suspicious labels by Data-module tooling.
+
 ---
 
 ## 2. Core Responsibility

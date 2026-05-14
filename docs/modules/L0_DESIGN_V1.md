@@ -11,7 +11,7 @@
 - 若涉及精确字段名、路由语义、阶段职责、阈值口径或兼容性约束，以英文版为准。
 - 本文档当前版本明确采用 **脚本优先、规则优先、证据优先** 的实现立场，不将机器学习模型作为 L0 的默认前提。
 - 当前 auto-label 参考实现的活动 L0 逻辑位于 `src/warden/module/l0.py`，`scripts/labeling/Warden_auto_label_utils_brandlex.py` 保留兼容入口与顶层编排职责。
-- 本文中的 legacy `need_l2_candidate` / `need_l2` 兼容字段名只表示 review / recrawl / future-escalation hint，不定义当前在线 L2 架构。
+- 本文中的 legacy `need_l2_candidate` / `need_l2` 兼容字段名只表示 review / future-escalation hint，不定义当前在线 L2 架构。Recrawl 不属于当前 L0 / L1 threat-model routing 输出；若未来需要 recrawl，应由另行定义的采集基础设施任务承接。
 
 # Warden L0 设计规范 V1
 
@@ -66,6 +66,8 @@ L0 默认负责以下内容：
    - `escalate_to_L1`
    - `direct_to_L2`
 7. 输出可审计的 route reasons、risk reasons 与 degraded-mode 说明。
+
+当前对齐约束：L0 是便宜筛查和路由层，只处理少数高置信、低成本 terminal / auxiliary bucket，例如 adult、gambling、明显 gate / challenge / verification。L0 不判断普通网页的 benign / malicious 状态。所有有效且未被 L0 终止的网页样本，都必须进入 L1。
 
 ## 4. L0 不负责的内容
 
@@ -852,7 +854,7 @@ This stage should explicitly determine:
 
 - which key inputs are present;
 - which key inputs are missing;
-- whether the current page is an obvious intermediate, blank, or abnormal state;
+- whether the current page is an obvious intermediate, abnormal, or dataset-cleaning removal state;
 - whether the current sample is in degraded mode.
 
 This stage does not perform final risk adjudication.
@@ -1115,6 +1117,14 @@ The default L0 routing result must be restricted to the following three outcomes
 - `early_stop_low_risk`
 - `escalate_to_L1`
 - `direct_to_L2`
+
+Current routing realignment:
+
+- L0 is a cheap screening and routing stage. It handles only a small set of high-confidence cheap terminal or auxiliary buckets such as adult, gambling, and obvious gate / challenge / verification cases.
+- L0 does not decide ordinary benign or malicious webpage status.
+- Every valid webpage sample that is not terminated by L0 must be routed to L1.
+- L1 text branch is the default judgment path.
+- Invalid captures, HTTP error pages, blank pages, pure-color renders, severe broken renders, and insufficient-observability pages are removed during dataset cleaning by the project owner before formal train / validation / test construction; they are not benign, malicious, or suspicious threat-model labels.
 
 ### 8.1 Formal meaning of `early_stop_low_risk`
 

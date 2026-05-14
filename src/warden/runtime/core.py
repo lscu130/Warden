@@ -86,6 +86,48 @@ class ArtifactPackage:
 
 
 @dataclass
+class CheapEvidenceSnapshot:
+    """Cheap, reusable evidence built once before L0 routing."""
+
+    schema_version: str
+    prepared_at_utc: str
+    sample_identity: Dict[str, Any]
+    artifact_presence: Dict[str, bool]
+    meta: Dict[str, Any]
+    url_info: Dict[str, Any]
+    forms_payload: Dict[str, Any]
+    net_summary: Dict[str, Any]
+    diff_summary: Any
+    auto_labels: Dict[str, Any]
+    raw_visible_text: str
+    visible_text: str
+    url_features: Dict[str, Any]
+    forms_summary: Dict[str, Any]
+    net_features: Dict[str, Any]
+    html_features: Dict[str, Any]
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "schema_version": self.schema_version,
+            "prepared_at_utc": self.prepared_at_utc,
+            "sample_identity": dict(self.sample_identity),
+            "artifact_presence": dict(self.artifact_presence),
+            "meta": dict(self.meta),
+            "url_info": dict(self.url_info),
+            "forms_payload": dict(self.forms_payload),
+            "net_summary": dict(self.net_summary),
+            "diff_summary": self.diff_summary,
+            "auto_labels": dict(self.auto_labels),
+            "raw_visible_text": self.raw_visible_text,
+            "visible_text": self.visible_text,
+            "url_features": dict(self.url_features),
+            "forms_summary": dict(self.forms_summary),
+            "net_features": dict(self.net_features),
+            "html_features": dict(self.html_features),
+        }
+
+
+@dataclass
 class StageResult:
     """Per-stage audit record for the runtime trace."""
 
@@ -121,6 +163,7 @@ class SampleContext:
     final_url: str
     page_title: str = ""
     label_hint: str = ""
+    cheap_snapshot: CheapEvidenceSnapshot | None = None
     cheap_evidence: Dict[str, Any] = field(default_factory=dict)
     heavy_cache: Dict[str, Any] = field(default_factory=dict)
     stage_trace: List[StageResult] = field(default_factory=list)

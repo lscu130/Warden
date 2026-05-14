@@ -116,7 +116,7 @@ The vision path must output structured evidence such as:
 - OCR text summaries
 - local detector presence flags and counts
 - image quality or uncertainty flags
-- review / recrawl / future-escalation hints when visual evidence quality is weak or conflicting
+- review / future-escalation hints when visual evidence quality is weak or conflicting. Recrawl is not a current L0 / L1 threat-model routing output; any future recrawl behavior belongs to separately defined capture infrastructure.
 
 The vision path must not silently convert all behavior into one opaque scalar if richer evidence is available.
 

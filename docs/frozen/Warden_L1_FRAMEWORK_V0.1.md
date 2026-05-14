@@ -10,7 +10,7 @@
 
 - L1 是主判断层，但不是单一模型的一锤定音。
 - L1 消费从 `SampleContext` 派生的 source-aware evidence bundle。
-- 文本 / HTML / URL / forms / network / structured signals 是 L1 主证据路径。
+- 所有有效且未被 L0 终止的网页样本都进入 L1；文本 / HTML / URL / forms / network / structured signals 是 L1 默认主证据路径。
 - 文本塔学习结构化语义概念识别和关系判断，通过多任务头输出中间概念，而不是生成自由推理文本。
 - 视觉路径是证据恢复和局部证据定位路径，不是独立最终威胁判断器。
 - OCR 用于恢复截图文字；YOLO 用于定位原子 UI 证据；CLIP / MobileCLIP 不属于 Warden V1 默认在线 L1 路径，仅允许离线截图聚类、模板发现、ablation baseline、research-only visual-prior experiments，或未来另行批准的 optional feature flag。
@@ -41,6 +41,13 @@ This document must stay compatible with:
 - `SampleContext` and lazy heavy-artifact discipline from the runtime/dataflow spec;
 - the edge deployment profile that keeps trigger-based `PP-OCRv4 mobile` and `YOLO26n` in the default V1 online profile while excluding CLIP / MobileCLIP from that default path;
 - the project threat definition: social-engineering threat equals high-risk deceptive behavior and/or high-risk induced action.
+
+Routing precondition:
+
+- Every valid webpage sample not terminated by L0 must route to L1.
+- L1 text judgment is the default path.
+- L1 vision is evidence recovery, not a parallel final classifier.
+- Invalid captures, HTTP error pages, blank pages, pure-color renders, severe broken renders, and insufficient-observability pages are removed during dataset cleaning before formal train / validation / test construction; they are not L1 threat labels.
 
 ## 2. L1 Position
 
@@ -147,7 +154,6 @@ These heads should reduce false positives from one-factor rules. Brand-domain mi
 ### 4.6 Routing Heads
 
 - `need_vision`
-- `need_recrawl`
 - `need_human_review`
 - `future_escalation_hint`
 

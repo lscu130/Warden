@@ -38,7 +38,7 @@ This file explains:
 
 Warden's mainline problem is web social-engineering threat judgment, not a dedicated interaction-recovery or anti-bot-bypass system.
 
-Project definition note: a gate, verification, CAPTCHA, blank, or evasion-like page can remain auxiliary when it only blocks observation. It can also become a social-engineering threat candidate when it constructs high-risk deceptive identity, authority, security, financial, support, reward, access-control, or attack-chain context, even if the direct credential/payment/wallet/download payload is not currently observed.
+Project definition note: a gate, verification, CAPTCHA, or evasion-like page can remain auxiliary when it only blocks observation. It can also become a social-engineering threat candidate when it constructs high-risk deceptive identity, authority, security, financial, support, reward, access-control, or attack-chain context, even if the direct credential/payment/wallet/download payload is not currently observed. Pure blank pages, HTTP error pages, pure-color renders, severe broken renders, and insufficient-observability pages are not part of this auxiliary set; they are removed during dataset construction before formal train / validation / test construction.
 
 Therefore, in Warden V1, gate / evasion behavior is treated as a real deployment-side auxiliary problem rather than the primary training objective itself.
 

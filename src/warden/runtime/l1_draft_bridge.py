@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import inspect
 import time
 from pathlib import Path
 from typing import Any, Callable, Dict, Mapping
@@ -38,7 +39,7 @@ def make_l1_draft_skipped_trace() -> Dict[str, Any]:
 def run_l1_draft_bridge(
     context: SampleContext,
     *,
-    runner: Callable[[Path], Dict[str, Any]] | None = None,
+    runner: Callable[..., Dict[str, Any]] | None = None,
 ) -> Dict[str, Any]:
     """Run L1 draft on a sample path and convert failures into trace data.
 
@@ -60,7 +61,15 @@ def run_l1_draft_bridge(
     }
     try:
         active_runner = run_l1_baseline_for_sample if runner is None else runner
-        trace["result"] = active_runner(context.artifacts.sample_dir)
+        cheap_snapshot = context.cheap_snapshot.to_dict() if context.cheap_snapshot is not None else None
+        signature = inspect.signature(active_runner)
+        accepts_snapshot = "cheap_snapshot" in signature.parameters or any(
+            parameter.kind == inspect.Parameter.VAR_KEYWORD for parameter in signature.parameters.values()
+        )
+        if accepts_snapshot:
+            trace["result"] = active_runner(context.artifacts.sample_dir, cheap_snapshot=cheap_snapshot)
+        else:
+            trace["result"] = active_runner(context.artifacts.sample_dir)
     except Exception as exc:  # pragma: no cover - exception type is intentionally broad for runtime safety.
         trace["status"] = "error"
         trace["result"] = {}

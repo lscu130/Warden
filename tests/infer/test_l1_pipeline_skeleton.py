@@ -71,6 +71,38 @@ def test_evidence_pack_records_missing_files_and_bad_json_without_crashing(tmp_p
     assert any(issue["artifact"] == "url.json" for issue in pack["issues"])
 
 
+def test_evidence_pack_reuses_cheap_snapshot_for_cheap_artifacts(tmp_path):
+    sample_dir = _make_sample(tmp_path / "sample")
+    snapshot = {
+        "schema_version": "cheap_evidence_snapshot_v1",
+        "artifact_presence": {
+            "url_json": True,
+            "visible_text_txt": True,
+            "forms_json": True,
+            "net_summary_json": True,
+        },
+        "url_info": {"input_url": "https://snapshot.test/", "final_url": "https://snapshot.test/login"},
+        "visible_text": "Snapshot visible text",
+        "forms_payload": {"forms": [{"inputs": [{"type": "password"}]}]},
+        "net_summary": {"requests": [{"url": "https://snapshot.test/login", "method": "POST"}]},
+    }
+    (sample_dir / "visible_text.txt").unlink()
+    (sample_dir / "forms.json").unlink()
+    (sample_dir / "net_summary.json").unlink()
+
+    pack = build_evidence_pack(sample_dir, cheap_snapshot=snapshot)
+
+    assert pack["evidence_construction_mode"] == "incremental_from_cheap_snapshot"
+    assert pack["cheap_snapshot_reused"] is True
+    assert pack["cheap_snapshot_schema_version"] == "cheap_evidence_snapshot_v1"
+    assert pack["visible_text"] == "Snapshot visible text"
+    assert pack["forms_payload"] == snapshot["forms_payload"]
+    assert pack["net_summary"] == snapshot["net_summary"]
+    assert "visible_text.txt" not in pack["missing_artifacts"]
+    assert "forms.json" not in pack["missing_artifacts"]
+    assert "net_summary.json" not in pack["missing_artifacts"]
+
+
 def test_actionable_html_extraction_recognizes_core_tags():
     features = extract_actionable_html_features(
         "<html><head><title>Login</title></head><body><h1>Verify</h1>"
@@ -103,11 +135,31 @@ def test_l1_baseline_generates_reason_codes_and_explanation(tmp_path):
 
     result = run_l1_baseline_for_sample(sample_dir)
 
-    assert result["label"] in {"malicious", "suspicious", "unknown", "benign"}
-    assert "login_surface_present" in result["reason_codes"]
-    assert result["payload_observed"] is True
+    assert result["stage"] == "L1"
+    assert result["draft"] is True
+    assert result["not_final_schema"] is True
+    assert "label" not in result
+    assert result["rule_router"]["rule_assessment"] in {
+        "low_risk_candidate",
+        "benign_hard_negative_candidate",
+        "text_sufficient",
+        "text_sparse",
+        "html_action_sparse",
+        "needs_text_model_judgment",
+        "needs_vision_evidence",
+        "needs_review",
+        "insufficient_observability",
+        "high_risk_candidate",
+        "insufficient_evidence",
+    }
+    assert "login_surface_present" in result["rule_router"]["reason_codes"]
+    assert result["decision_head"]["status"] == "not_run"
+    assert result["decision_head"]["final_label"] is None
+    assert result["decision_head"]["risk_score"] is None
+    assert result["decision_head"]["confidence"] is None
     assert result["evidence_ledger"]
-    assert result["explanation"]["summary"]
+    assert result["explanation"]["type"] == "routing_diagnostic"
+    assert "final" not in result["explanation"]["summary"].lower()
     assert result["explanation"]["positive_evidence"]
 
 
@@ -123,9 +175,10 @@ def test_manifest_row_uses_current_path(tmp_path):
 
 def test_explanation_renderer_only_uses_ledger_claims():
     explanation = render_explanation(
-        label="unknown",
-        malicious_basis="insufficient_evidence",
-        risk_axes=["evidence_incompleteness_risk"],
+        rule_assessment="insufficient_evidence",
+        routing_hints={"need_review": True},
+        risk_hints={"action_surface_present": False},
+        evidence_sufficiency={"visible_text_status": "missing"},
         reason_codes=["insufficient_evidence"],
         routing={"need_review_candidate": True},
         evidence_ledger=[
@@ -144,6 +197,9 @@ def test_explanation_renderer_only_uses_ledger_claims():
     joined = " ".join(explanation["positive_evidence"] + explanation["limiting_evidence"])
     assert "visible text missing" in joined
     assert "password" not in joined.lower()
+    assert explanation["type"] == "routing_diagnostic"
+    assert "malicious" not in explanation["summary"].lower()
+    assert "benign" not in explanation["summary"].lower()
 
 
 def test_cli_smoke_runs_on_tiny_manifest(tmp_path):
@@ -176,3 +232,21 @@ def test_cli_smoke_runs_on_tiny_manifest(tmp_path):
     rows = [json.loads(line) for line in output.read_text(encoding="utf-8").splitlines()]
     assert len(rows) == 1
     assert rows[0]["sample_dir"] == str(sample_dir)
+    assert "label" not in rows[0]
+    assert rows[0]["decision_head"]["status"] == "not_run"
+
+
+def test_invalid_capture_like_sample_is_diagnostic_only_without_recrawl_or_final_label(tmp_path):
+    sample_dir = tmp_path / "invalid_capture_like"
+    sample_dir.mkdir()
+    _write_json(sample_dir / "url.json", {"input_url": "https://example.test/", "final_url": "https://example.test/"})
+
+    result = run_l1_baseline_for_sample(sample_dir)
+    router = result["rule_router"]
+
+    assert "label" not in result
+    assert router["rule_assessment"] in {"insufficient_evidence", "insufficient_observability"}
+    assert "need_recrawl" not in router["routing_hints"]
+    assert router["routing_assessment"] != "route_to_recrawl"
+    serialized = json.dumps(result, ensure_ascii=False)
+    assert '"final_label": null' in serialized

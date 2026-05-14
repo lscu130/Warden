@@ -477,6 +477,8 @@ Rejected or invalid cases include:
 - failed capture with no usable output,
 - no substantive webpage content.
 
+These rejected / invalid cases are dataset-quality / observability failures that must be removed before formal train / validation / test construction. They must not be converted into benign, malicious, suspicious, uncertain, or auxiliary threat labels.
+
 ---
 
 ## 6. Deduplication and Clustering Policy

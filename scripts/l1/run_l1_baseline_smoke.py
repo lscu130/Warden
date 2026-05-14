@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only smoke runner for the Warden L1 rule baseline."""
+"""Read-only smoke runner for the Warden L1 rule-router draft."""
 
 from __future__ import annotations
 

@@ -9,7 +9,7 @@ from typing import Any, Dict, Iterable, List
 
 from scripts.data.common.io_utils import discover_sample_dirs, ensure_dir, now_utc_iso, write_json
 
-from .core import ArtifactPackage, SampleContext, StageResult
+from .core import ArtifactPackage, CheapEvidenceSnapshot, SampleContext, StageResult
 from .l1_draft_bridge import maybe_attach_l1_draft_trace
 
 MAX_TEXT_SCAN_CHARS = 120_000
@@ -58,7 +58,8 @@ def _missing_artifacts(artifact_presence: Dict[str, bool], artifact_names: List[
 
 
 def build_l1_input_bundle(context: SampleContext, previous: StageResult | None) -> Dict[str, Any]:
-    evidence = prepare_shared_evidence(context)
+    snapshot = build_cheap_evidence_snapshot(context)
+    evidence = snapshot.to_dict()
     artifact_presence = evidence.get("artifact_presence") or {}
     prior_outputs = previous.outputs if previous else {}
     l0_routing_hints = prior_outputs.get("l0_routing_hints") or {}
@@ -86,6 +87,8 @@ def build_l1_input_bundle(context: SampleContext, previous: StageResult | None) 
 
     return {
         "contract_name": "l1_main_judgment_input_bundle_v0_1",
+        "cheap_snapshot_schema_version": snapshot.schema_version,
+        "cheap_snapshot_reused": True,
         "sample_identity": {
             "sample_id": context.sample_id,
             "input_url": context.input_url,
@@ -194,8 +197,33 @@ def load_viewport_screenshot_bytes(context: SampleContext) -> bytes:
 
 
 def prepare_shared_evidence(context: SampleContext) -> Dict[str, Any]:
+    return build_cheap_evidence_snapshot(context).to_dict()
+
+
+def build_cheap_evidence_snapshot(context: SampleContext) -> CheapEvidenceSnapshot:
+    if context.cheap_snapshot is not None:
+        return context.cheap_snapshot
     if context.cheap_evidence:
-        return context.cheap_evidence
+        context.cheap_snapshot = CheapEvidenceSnapshot(
+            schema_version=str(context.cheap_evidence.get("schema_version") or "cheap_evidence_snapshot_v1"),
+            prepared_at_utc=str(context.cheap_evidence.get("prepared_at_utc") or now_utc_iso()),
+            sample_identity=dict(context.cheap_evidence.get("sample_identity") or {}),
+            artifact_presence=dict(context.cheap_evidence.get("artifact_presence") or {}),
+            meta=dict(context.cheap_evidence.get("meta") or {}),
+            url_info=dict(context.cheap_evidence.get("url_info") or {}),
+            forms_payload=dict(context.cheap_evidence.get("forms_payload") or {}),
+            net_summary=dict(context.cheap_evidence.get("net_summary") or {}),
+            diff_summary=context.cheap_evidence.get("diff_summary"),
+            auto_labels=dict(context.cheap_evidence.get("auto_labels") or {}),
+            raw_visible_text=str(context.cheap_evidence.get("raw_visible_text") or ""),
+            visible_text=str(context.cheap_evidence.get("visible_text") or ""),
+            url_features=dict(context.cheap_evidence.get("url_features") or {}),
+            forms_summary=dict(context.cheap_evidence.get("forms_summary") or {}),
+            net_features=dict(context.cheap_evidence.get("net_features") or {}),
+            html_features=dict(context.cheap_evidence.get("html_features") or {}),
+        )
+        context.cheap_evidence = context.cheap_snapshot.to_dict()
+        return context.cheap_snapshot
 
     l0_module = _load_l0_module()
     meta = context.artifacts.read_json_optional("meta.json", {})
@@ -222,27 +250,39 @@ def prepare_shared_evidence(context: SampleContext) -> Dict[str, Any]:
     context.page_title = str(meta.get("page_title") or context.page_title)
     context.label_hint = str(meta.get("label") or context.label_hint)
 
-    context.cheap_evidence = {
-        "prepared_at_utc": now_utc_iso(),
-        "artifact_presence": context.artifacts.artifact_presence(),
-        "meta": meta,
-        "url_info": url_info,
-        "forms_payload": forms,
-        "net_summary": net_summary,
-        "diff_summary": diff_summary,
-        "auto_labels": auto_labels,
-        "raw_visible_text": l0_prepared["raw_visible_text"],
-        "visible_text": l0_prepared["visible_text"],
-        "url_features": l0_prepared["url_features"],
-        "forms_summary": l0_prepared["forms_summary"],
-        "net_features": l0_prepared["net_features"],
-        "html_features": l0_prepared["html_features"],
-    }
-    return context.cheap_evidence
+    context.cheap_snapshot = CheapEvidenceSnapshot(
+        schema_version="cheap_evidence_snapshot_v1",
+        prepared_at_utc=now_utc_iso(),
+        sample_identity={
+            "sample_id": context.sample_id,
+            "input_url": context.input_url,
+            "final_url": context.final_url,
+        },
+        artifact_presence=context.artifacts.artifact_presence(),
+        meta=meta,
+        url_info=url_info,
+        forms_payload=forms,
+        net_summary=net_summary,
+        diff_summary=diff_summary,
+        auto_labels=auto_labels,
+        raw_visible_text=l0_prepared["raw_visible_text"],
+        visible_text=l0_prepared["visible_text"],
+        url_features=l0_prepared["url_features"],
+        forms_summary=l0_prepared["forms_summary"],
+        net_features=l0_prepared["net_features"],
+        html_features=l0_prepared["html_features"],
+    )
+    context.cheap_evidence = context.cheap_snapshot.to_dict()
+    return context.cheap_snapshot
+
+
+def _l1_was_entered(context: SampleContext) -> bool:
+    return any(item.stage == "L1" for item in context.stage_trace)
 
 
 def run_l0_stage(context: SampleContext) -> StageResult:
-    evidence = prepare_shared_evidence(context)
+    snapshot = build_cheap_evidence_snapshot(context)
+    evidence = snapshot.to_dict()
     l0_module = _load_l0_module()
     auto_labels = evidence.get("auto_labels") or {}
     brand_signals = auto_labels.get("brand_signals") or {
@@ -270,18 +310,28 @@ def run_l0_stage(context: SampleContext) -> StageResult:
 
     routing = l0_outputs.get("l0_routing_hints") or {}
     reason_codes = list(routing.get("routing_reason_codes") or [])
+    specialized_signals = l0_outputs.get("specialized_surface_signals") or {}
+    specialized_terminal_auxiliary = bool(
+        specialized_signals.get("specialized_fast_resolution_candidate")
+        and not routing.get("need_l2_candidate")
+        and not routing.get("need_text_semantic_candidate")
+        and not routing.get("need_vision_candidate")
+    )
+
     if routing.get("need_l2_candidate"):
         next_stage = "L2"
         status = "escalate"
         outcome_kind = "escalate_to_l2"
-    elif routing.get("need_text_semantic_candidate") or routing.get("need_vision_candidate") or routing.get("no_early_stop_candidate"):
+    elif specialized_terminal_auxiliary:
+        next_stage = "STOP"
+        status = "terminal_auxiliary"
+        outcome_kind = "l0_terminal_auxiliary_bucket"
+    else:
         next_stage = "L1"
         status = "escalate"
-        outcome_kind = "escalate_to_l1"
-    else:
-        next_stage = "STOP"
-        status = "stop"
-        outcome_kind = "l0_stop"
+        outcome_kind = "route_to_l1_default"
+        if not reason_codes:
+            reason_codes.append("valid_non_terminal_sample_routes_to_l1")
 
     routing_outcome = _make_routing_outcome(
         stage="L0",
@@ -298,7 +348,8 @@ def run_l0_stage(context: SampleContext) -> StageResult:
         reason_codes=reason_codes,
         routing_outcome=routing_outcome,
         input_contract={
-            "contract_name": "l0_runtime_observation_input_bundle_v0_1",
+            "contract_name": "cheap_evidence_snapshot_v1",
+            "snapshot_schema_version": snapshot.schema_version,
             "required_cheap_families": [
                 "sample_identity",
                 "url_info",
@@ -478,7 +529,8 @@ def process_sample(sample_dir: Path, output_dir: Path) -> Dict[str, Any]:
     if context.stage_trace and context.stage_trace[-1].next_stage == "L2":
         run_l2_stage(context)
 
-    maybe_attach_l1_draft_trace(context)
+    if _l1_was_entered(context):
+        maybe_attach_l1_draft_trace(context)
 
     sample_output_dir = ensure_dir(output_dir / context.sample_id)
     result_payload = build_result_payload(context)
