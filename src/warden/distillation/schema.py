@@ -1,13 +1,60 @@
 """Constants for the mock distillation skeleton schema."""
 
-SCHEMA_VERSION = "warden_distill_v0.2_mock"
+SCHEMA_VERSION = "warden_distill_v0.3_mock"
 TEACHER_MODEL = "mock_teacher_v0"
 TEACHER_ROLE = "mock_skeleton"
-TEACHER_PROFILE = "mock_teacher_v0"
-PROMPT_TEMPLATE_VERSION = "mock_prompt_v0"
-VALIDATOR_VERSION = "warden_distill_validator_v0.2"
+TEACHER_PROFILE = "mock_v0_3_formula"
+TEACHER_PROVIDER = "mock"
+PROMPT_TEMPLATE_ID = "warden_distill_v0.3.primary_mock"
+PROMPT_TEMPLATE_VERSION = "warden_distill_v0.3"
+VALIDATOR_VERSION = "warden_distill_validator_v0.3"
 ALLOWED_SPLITS = {"train", "val", "test", "unknown"}
 ALLOWED_MODES = {"dry-run", "mock"}
+ALLOWED_RELATION_TYPES = {"context_induces_action", "relation_unclear", "no_relation_observed"}
+ALLOWED_ENGAGEMENT_RELATION_TYPES = {
+    "context_supports_risk_bearing_engagement",
+    "relation_unclear",
+    "no_relation_observed",
+}
+ALLOWED_MALICIOUS_BASIS_ADVISORY = {
+    "no_web_se_evidence_observed",
+    "manipulative_context_only",
+    "action_surface_only",
+    "url_claim_only",
+    "visible_impersonation_without_funnel_affordance",
+    "risk_bearing_engagement_observed",
+    "manipulative_context_and_risk_bearing_engagement_observed",
+    "web_se_formula_satisfied",
+    "out_of_v1_scope",
+    "insufficient_evidence",
+}
+ALLOWED_FINAL_LABEL_ADVISORY = {
+    "benign",
+    "malicious",
+    "unknown_diagnostic_only",
+    "out_of_v1_scope_diagnostic_only",
+}
+V03_REVIEW_REASONS = {
+    "url_claim_only_insufficient_page_evidence",
+    "visible_impersonation_without_funnel_affordance",
+    "visible_impersonation_with_funnel_affordance",
+    "deceptive_funnel_priming_candidate",
+    "risk_bearing_engagement_unclear",
+    "context_engagement_relation_unclear",
+    "downstream_risk_unclear",
+    "action_surface_without_risk_bearing_engagement",
+    "formula_relation_unclear",
+    "evidence_sufficiency_low",
+    "visual_text_conflict",
+    "fallback_modality_loss",
+    "out_of_v1_scope_candidate",
+    "gate_or_evasion_excluded_v1",
+    "redirect_only_excluded_v1",
+    "teacher_human_label_conflict",
+    "schema_or_grounding_failure",
+    "schema_validation_failure",
+    "modality_guard_failure",
+}
 FORBIDDEN_FIELDS = {
     "final_gold_label",
     "final_training_label",
@@ -15,14 +62,18 @@ FORBIDDEN_FIELDS = {
     "chain_of_thought",
     "hidden_reasoning",
     "teacher_cot",
+    "possible_cloak_or_gate",
+    "visual_malicious",
 }
 
 REQUIRED_OUTPUT_FILES = [
     "distillation_records.jsonl",
     "review_queue.jsonl",
     "attempts.jsonl",
+    "validation_summaries.jsonl",
     "run_audit.json",
     "run_report.md",
+    "adapter_readiness_report.md",
     "errors.jsonl",
 ]
 
@@ -34,24 +85,60 @@ REQUIRED_RECORD_KEYS = [
     "sample_path",
     "source_manifest",
     "source_split",
+    "source_url",
+    "canonical_url",
+    "capture_id",
+    "evidence_pack_id",
     "split",
     "diagnostic_only",
     "do_not_train_as_gold",
+    "teacher_provider",
     "teacher_model",
     "teacher_role",
     "teacher_profile",
     "teacher_run_id",
+    "prompt_template_id",
     "prompt_template_version",
+    "prompt_snapshot_path",
+    "image_input_expected",
     "attempt_id",
     "attempt_index",
+    "attempt_status",
+    "repair_attempted",
+    "repair_reason",
     "created_at_utc",
     "input_modalities",
     "fallback_reason",
     "image_input_passed_to_teacher",
     "image_input_policy",
+    "modality_guard_status",
     "visual_evidence_source",
+    "raw_output_path",
+    "repaired_output_path",
+    "validation_status",
+    "validation_errors",
+    "token_usage_placeholder",
+    "cost_placeholder",
+    "latency_ms_placeholder",
+    "provider_request_id_placeholder",
+    "failure_category",
+    "retry_allowed",
+    "rollback_required",
     "evidence_pack_summary",
     "rule_router_observation",
+    "formula_semantics",
+    "formula_concepts",
+    "observed_evidence_summary",
+    "manipulative_context",
+    "risk_bearing_engagement",
+    "context_engagement_relation",
+    "evidence_sufficiency",
+    "formula_result",
+    "url_claim_analysis",
+    "visible_impersonation_analysis",
+    "funnel_affordance_analysis",
+    "risk_outcome_axes",
+    "claimed_identity_candidates",
     "text_semantic_concepts",
     "vision_evidence",
     "decision_head_auxiliary_targets",

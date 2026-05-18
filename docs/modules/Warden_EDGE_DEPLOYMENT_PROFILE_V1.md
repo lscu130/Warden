@@ -69,7 +69,7 @@ Under the V1 default deployment profile, Warden should behave as follows:
 - vision-side evidence remains bounded and selective
 - OCR must remain trigger-based rather than always-on
 - detector remains present, but bounded by lightweight architecture choice
-- CLIP / MobileCLIP-style image-text similarity is not part of the Warden V1 default online path; it is limited to offline screenshot clustering, template discovery, ablation baselines, research-only visual-prior experiments, or a separately approved optional feature flag
+- CLIP / MobileCLIP-style image-text similarity is not part of the Warden V1 default path; it is limited to offline screenshot clustering, template discovery, ablation baselines, research-only visual-prior experiments, or a separately approved optional feature flag
 - no component may silently assume server-class compute
 
 The practical goal is not to match heavy multi-modal LLM systems.
@@ -90,7 +90,7 @@ The practical goal is to remain meaningfully deployable on modest hardware while
 - primary image input: `screenshot_viewport.png`
 - OCR: `PP-OCRv4 mobile`, trigger-based
 - detector: `YOLO26n`
-- CLIP / MobileCLIP encoder: none in the default online profile
+- CLIP / MobileCLIP encoder: none in the default V1 profile
 
 ### 4.3 Offline-only teacher tools
 
@@ -98,7 +98,7 @@ The practical goal is to remain meaningfully deployable on modest hardware while
 - `Florence-2`
 - other stronger calibration or pseudo-label tools as needed
 
-These are not required for the default online runtime path.
+These are not required for the default V1 runtime path.
 
 ---
 
@@ -261,5 +261,5 @@ The following remain open for later benchmark-driven refinement:
 
 ## 13. Practical One-Sentence Summary
 
-Warden V1 default deployment is a bounded-cost multimodal profile for ordinary PC-class and modest x86 edge environments: multilingual text encoding is always available, lightweight detection remains part of the default visual evidence path, OCR stays trigger-based, CLIP / MobileCLIP-style similarity stays outside the default online profile, and later Warden-specific fine-tuning is allowed without making fine-tuning a prerequisite for initial deployment.
+Warden V1 default deployment is a bounded-cost profile for ordinary PC-class and modest x86 edge environments: multilingual text encoding is always available, lightweight detection and OCR remain conditional evidence-recovery candidates, CLIP / MobileCLIP-style similarity stays outside the default V1 profile, and later Warden-specific fine-tuning is allowed without making fine-tuning a prerequisite for initial deployment.
 

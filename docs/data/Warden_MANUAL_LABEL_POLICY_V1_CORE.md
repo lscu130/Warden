@@ -612,7 +612,14 @@ In practice:
 - final brand-impersonation decision,
 - final dataset-admission decision.
 
-The final judgment must consider high-risk deceptive behavior and/or high-risk induced action. A page can be `se_threat` because it constructs a deceptive identity, brand, authority, institution, security, financial, support, reward, or access-control context even when no direct credential, payment, wallet, download, POST, or other action payload is currently observed.
+The final judgment must follow the project-level V1 formula:
+
+```text
+Web-SE Threat := EvidenceSufficient(ManipulativeContext ∧ InducedHighRiskAction)
+InducedHighRiskAction := DirectAction ∨ RoutedAction ∨ ActionPreparation
+```
+
+A page can be `se_threat` only when evidence is sufficient for both manipulative context and an induced high-risk action path, including direct action, routed action, or action preparation. A deceptive identity, brand, authority, institution, security, financial, support, reward, or access-control context without any direct, routed, or prepared high-risk action evidence is a `payload not observed` / review state, not sufficient by itself for V1 `se_threat`.
 
 ## 3. Design Principles
 
@@ -639,12 +646,12 @@ These belong to `auto` or `rule`.
 `manual` should answer:
 
 1. whether the page is finally judged benign, social-engineering threat, uncertain, or auxiliary;
-2. what high-risk deceptive behavior is observed, and what harmful action it is ultimately trying to induce, prepare, or route toward if any;
+2. what manipulative context is observed, and what harmful action it is ultimately trying to induce, prepare, or route toward;
 3. what role the current page plays in the attack chain;
 4. whether brand impersonation is actually established;
 5. where the sample should finally be routed in dataset usage.
 
-If high-risk deceptive behavior is established but the direct payload/action is absent in the current capture, reviewers should treat that as a `payload not observed` evidence state rather than as automatic benign.
+If manipulative context is established but direct payload/action is absent in the current capture, reviewers should treat that as a `payload not observed` evidence state rather than as automatic benign. V1 `se_threat` still requires evidence that the page routes toward, prepares, or directly induces a high-risk action.
 
 ### 3.3 `manual` is not a default full-corpus prerequisite
 
@@ -658,12 +665,12 @@ Reasons:
 - gold-eval, hard-case, and conflict-heavy samples are more valuable than exhaustively annotating near-duplicate ordinary pages;
 - when cluster/subcluster structures exist, manual review should prioritize canonical/representative samples rather than per-page exhaustive duplication.
 
-### 3.4 Primary classes remain stable while final judgment covers behavior and action
+### 3.4 Primary classes remain stable while final judgment follows the V1 formula
 
-The manual primary label remains aligned with the stable **final harmful action / induced harm goal** family for compatibility. The final `manual_final_label` should still consider both high-risk deceptive behavior and high-risk induced action.
+The manual primary label remains aligned with the stable **final harmful action / induced harm goal** family for compatibility. The final `manual_final_label` should follow the V1 formula by requiring both `ManipulativeContext` and `InducedHighRiskAction` evidence.
 
 Industry, content warning, and hard-case attributes should remain secondary fields rather than replacing the main threat class.
-When the final judgment is malicious by behavior but no direct action payload is observed, preserve the stable enum contract and use existing page-role, brand-impersonation, scenario, hard-case, and reason-code fields to document the basis. Any dedicated future fields such as `malicious_basis`, `high_risk_behavior_type`, or `payload_observed` require a separate schema task.
+When manipulative context is observed but no direct action payload is observed, preserve the stable enum contract and use existing page-role, brand-impersonation, scenario, hard-case, and reason-code fields to document whether routed action or action-preparation evidence exists. Any dedicated future fields such as `manipulative_context_type`, `induced_action_type`, or `payload_observed` require a separate schema task.
 
 ## 4. Current Coverage Strategy
 

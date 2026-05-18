@@ -23,9 +23,9 @@
 - 冻结字段名、文件名、CLI、输出结构和标签语义时，不允许静默改动。
 - 给用户的 Markdown 文档必须中英双语，中文摘要在前，英文全文在后。
 - 若需求与文档约束冲突，应明确指出冲突，而不是自行猜测。
-- Warden 的社会工程威胁定义包括高危欺骗行为和/或高危诱导动作；未观察到 payload / action 不能自动等同于 benign。
+- Warden V1 的核心威胁公式是 `Web-SE Threat := EvidenceSufficient(ManipulativeContext ∧ InducedHighRiskAction)`；未观察到 payload / action 不能自动等同于 benign，但 V1 malicious 也不能仅凭内容类别或捕获形态成立。
 - 无效采集、HTTP 错误页、空白页、纯色渲染页、严重渲染失败页、证据不可观测页面不是 Warden 威胁模型样本，不能标记为 benign、malicious 或 suspicious；数据集构建时由项目负责人在正式 train / validation / test 前移除。
-- 当前在线架构只定义 `L0` 和 `L1`：`L0` 是低成本筛查与路由层，`L1` 是主判断层；更重的未来复核或升级路径必须另行定义。
+- 当前 V1 主实验链路是 `Processed Valid Dataset -> Evidence Pack Builder -> L1`；未来 online / wild-test 链路保留为 `Raw URL -> Capture -> QA / Scope Admission -> Evidence Pack Builder -> L1`。旧 `L0` 只能作为 legacy runtime / routing compatibility，不是当前 V1 模型主线；更重的未来复核或升级路径必须另行定义。
 - 面向 GPT-5.5 / Codex / Claude Code 的任务提示默认采用 outcome-first：先写目标、成功标准、证据规则、约束、输出形态、验证和停止规则；只有路径本身影响正确性时才写死步骤。
 - 对架构、标签、数据集、模型、评估、workflow 和论文定位等高影响问题，默认执行反审：先检查隐含假设、失败场景、反例、证据缺口和备选路线。
 - 需要记录或约束 reasoning effort、verbosity、retrieval budget、preamble、工具副作用、反审要求和验证方式时，应写入任务单或 handoff。
@@ -58,19 +58,32 @@ It is not limited to classic phishing-site detection.
 Its goal is to judge whether a webpage presents meaningful social-engineering risk,
 using signals such as screenshot, HTML, URL, DOM/text cues, intent cues, credential request cues,
 brand-related evidence, and risk escalation logic.
-Warden defines a webpage social-engineering threat as high-risk deceptive behavior and/or high-risk induced action.
-High-risk deceptive behavior includes false or misleading identity, brand, authority, institution, security, financial, support, reward, or access-control context construction.
-Such behavior may be malicious even when no credential form, payment form, wallet flow, download, POST submission, or other high-risk action is currently observed.
-Absence of observed payload should be treated as `payload not observed`, not as automatic benign.
+Warden V1 defines a webpage social-engineering threat with the following canonical formula:
+
+```text
+Web-SE Threat := EvidenceSufficient(ManipulativeContext ∧ InducedHighRiskAction)
+
+InducedHighRiskAction := DirectAction ∨ RoutedAction ∨ ActionPreparation
+```
+
+A web-based social-engineering threat is a webpage for which observable evidence is sufficient to support both: (1) a deceptive, manipulative, or coercive context; and (2) an induced high-risk user action. The induced high-risk action may be directly requested on the current page, routed through an observable next-step action, or strongly prepared by page elements that move the user toward credential disclosure, PII submission, payment, wallet authorization, malicious download, fake support contact, account verification, or similar user-action risk.
+Absence of observed payload should be treated as `payload not observed`, not as automatic benign. It is an evidence state and review signal; by itself it is not sufficient to make a V1 malicious judgment.
+Phishing websites are a subset of Web-SE Threat. In Warden V1, phishing typically involves brand, identity, authority, institution, or service impersonation plus induced credential or sensitive-information disclosure.
 Invalid captures, HTTP error pages, blank pages, pure-color renders, severe broken renders, and insufficient-observability pages are not Warden threat-model samples. They must not be labeled as benign, malicious, or suspicious. In the dataset-building workflow, the project owner removes these samples before formal train / validation / test construction.
 
-Current online system view:
+Current V1 model/dataflow view:
 
-- L0: cheapest rule hot path, cheap screening, and low-cost routing
-- L1: main judgment layer, including evidence-pack construction, text judgment, trigger-based vision evidence recovery, structured / joint signals, fusion, evidence ledger, and deterministic explanation rendering
+- Current offline experiment: `Processed Valid Dataset -> Evidence Pack Builder -> L1 Main Judgment / L1 Training / L1 Evaluation -> Metrics / Evidence Ledger / Ablation`
+- Future wild-test / online inference: `Raw URL -> Capture Pipeline -> Capture QA / V1 Scope Admission -> Evidence Pack Builder -> L1 Main Judgment -> Wild-Test Report`
+- L1 internal flow: `Text / HTML / URL / Forms first pass -> if evidence insufficient, trigger OCR / YOLO -> Conditional Vision Evidence Recovery -> Fusion -> Evidence Ledger`
+- Legacy `L0` code or documentation may remain as runtime compatibility, cheap screening, routing, exclusion, capture-quality, or future-scope auxiliary support, but it is not the current V1 default model/dataflow entrypoint.
 - Future heavier review or escalation may be defined later, but no current L2 architecture is defined by default.
 
-L0 handles only a small set of high-confidence cheap terminal or auxiliary buckets, such as adult, gambling, and obvious gate / challenge / verification cases. L0 does not decide ordinary benign or malicious webpage status. Every valid webpage sample not terminated by L0 must route to L1, and the L1 text branch is the default judgment path.
+Historical adult / gambling / gate / challenge / verification detectors must not be described as V1 main-scope threat classes. In current offline experiments, processed valid samples enter the Evidence Pack Builder directly before L1. In future online/wild-test paths, capture QA and V1 scope admission occur before evidence-pack construction; do not rename that admission step into a new default L0 judgment layer.
+
+Warden V1 does not treat high-risk content alone as Web-SE Threat. Adult, gambling, guns, drugs, or other regulated/high-risk-content-only pages are outside the V1 main task unless the page also contains sufficient evidence of manipulative context inducing a high-risk user action.
+
+Gate-only, challenge-only, CAPTCHA-only, human-verification-only, redirect-only, trusted-sink-only, and insufficient-observability captures are excluded from the V1 main benchmark and must not be labeled as V1 malicious solely due to their capture pattern. If downstream content is observed and satisfies the Web-SE Threat formula, the downstream threat page may be admitted. Evasion/cloaking-aware detection is deferred to V2/V3 or a separate auxiliary study.
 
 Primary engineering goals:
 
@@ -447,7 +460,7 @@ Rules:
 - Do not make brand logic the only decision basis unless task scope says so.
 - Alias matching should be transparent and auditable.
 - If brand inference is heuristic, expose confidence or rule path when practical.
-- Strong deceptive brand, authority, institution, security, financial, support, reward, or access-control context can be high-risk behavior, but brand mismatch alone must not become a universal one-factor malicious rule without supporting context.
+- Strong deceptive brand, authority, institution, security, financial, support, reward, or access-control context can support `ManipulativeContext`, but brand mismatch alone must not become a universal one-factor malicious rule without induced high-risk action evidence and sufficient context.
 
 ### 8.4 L0 / L1 discipline
 
@@ -463,10 +476,12 @@ Rules:
 
 Default expectation:
 
-- L0 favors speed and recall
-- L0 handles only high-confidence cheap terminal / auxiliary buckets such as adult, gambling, and obvious gate / challenge / verification; ordinary valid non-terminal webpages route to L1 instead of receiving final benign / malicious status in L0
-- L1 is the main judgment layer, with the text branch as the default judgment path, trigger-based vision evidence recovery, structured / joint signals, fusion, evidence ledger, and deterministic explanation rendering
-- L1 vision is evidence recovery: OCR recovers screenshot text and YOLO / detector localizes visible action components; vision evidence feeds the evidence pack / decision process but does not independently determine malicious or benign
+- Current offline V1 experiments start from `Processed Valid Dataset`, then build an evidence pack, then run L1 judgment / training / evaluation.
+- Future online / wild-test paths start from `Raw URL`, then capture, QA / V1 scope admission, evidence-pack construction, and L1 judgment.
+- Legacy L0 logic, if present, is compatibility routing / screening support and is not the default V1 model/dataflow mainline.
+- L1 is the main judgment layer, with the text / HTML / URL / forms first pass as the default judgment path, trigger-based vision evidence recovery, structured / joint signals, fusion, evidence ledger, and deterministic explanation rendering.
+- L1 vision is conditional evidence recovery: OCR recovers screenshot text and YOLO / detector localizes visible action components only when L1 evidence is insufficient; vision evidence feeds the evidence pack / decision process but does not independently determine malicious or benign.
+- CLIP / MobileCLIP is not part of the Warden V1 default path.
 - Future heavier review or escalation remains out of scope until separately defined
 
 

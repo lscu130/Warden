@@ -1,4 +1,4 @@
-# JUDGE_TEACHER_PROMPT_V0_2
+# JUDGE_TEACHER_PROMPT_V0_3
 
 ## 中文版
 
@@ -22,9 +22,16 @@ Audit rules:
 
 - `rule_router` outputs are routing / evidence sufficiency diagnostics only.
 - `rule_router` is not a gold label, not a teacher label, and not final model judgment.
+- `rule_router is not a teacher label source`.
+- Warden V1 formula: `Web-SE Threat := EvidenceSufficient(ManipulativeContext ∧ RiskBearingEngagement)`.
+- `RiskBearingEngagement := DirectHighRiskAction ∨ RoutedHighRiskAction ∨ ActionPreparation ∨ DeceptiveFunnelPriming`.
 - `weak labels are evidence`, not gold labels.
 - `payload not observed` is not automatic benign.
-- `action surface is not automatically threat action`.
+- `action_surface != risk_bearing_engagement`.
+- `induced_high_risk_action` is compatibility / child concept only.
+- URL-only brand claim is not a V1 positive.
+- Visible impersonation without funnel affordance is not a strong positive.
+- `unknown relation is not malicious`.
 - `vision_evidence` is evidence recovery, not classifier output.
 - Advisory Decision Head fields must not override human labels.
 - Val/test teacher outputs must not be used as training targets.
@@ -47,7 +54,7 @@ Output JSON:
 
 ```json
 {
-  "schema_version": "warden_distill_judge_v0.2",
+  "schema_version": "warden_distill_judge_v0.3",
   "sample_id": "{{sample_id}}",
   "audit_result": {
     "schema_valid": false,
@@ -57,7 +64,29 @@ Output JSON:
     "weak_label_overreach": false,
     "rule_router_label_misuse": false,
     "advisory_label_overreach": false,
-    "split_policy_violation": false
+    "split_policy_violation": false,
+    "formula_alignment_violation": false,
+    "out_of_v1_scope_overreach": false,
+    "missing_required_concept_fields": []
+  },
+  "concept_alignment_checks": {
+    "claimed_identity_candidates_present": false,
+    "identity_claim_present": false,
+    "action_surface_present": false,
+    "behavior_context_present": false,
+    "relation_judgments_present": false,
+    "evidence_state_present": false,
+    "threat_action_candidate_present": false,
+    "decision_head_auxiliary_targets_present": false,
+    "manipulative_context_present": false,
+    "risk_bearing_engagement_present": false,
+    "context_engagement_relation_present": false,
+    "url_claim_analysis_present": false,
+    "visible_impersonation_analysis_present": false,
+    "funnel_affordance_analysis_present": false,
+    "risk_outcome_axes_present": false,
+    "evidence_sufficiency_present": false,
+    "formula_result_present": false
   },
   "quality_control": {
     "needs_human_review": true,
@@ -68,7 +97,17 @@ Output JSON:
     "visual_text_conflict": false,
     "rule_router_teacher_conflict": false,
     "evidence_incomplete": false,
-    "possible_cloak_or_gate": false
+    "diagnostic_only": true,
+    "formula_relation_unclear": false,
+    "action_surface_without_risk_bearing_engagement": false,
+    "risk_bearing_engagement_unclear": false,
+    "downstream_risk_unclear": false,
+    "evidence_sufficiency_low": false,
+    "out_of_v1_scope_candidate": false,
+    "gate_or_evasion_excluded_v1": false,
+    "redirect_only_excluded_v1": false,
+    "regulated_content_only_excluded_v1": false,
+    "schema_or_grounding_failure": false
   },
   "repair_recommendations": [],
   "human_review_reasons": [],

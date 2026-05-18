@@ -10,7 +10,7 @@
 
 - L1 是主判断层，但不是单一模型的一锤定音。
 - L1 消费从 `SampleContext` 派生的 source-aware evidence bundle。
-- 所有有效且未被 L0 终止的网页样本都进入 L1；文本 / HTML / URL / forms / network / structured signals 是 L1 默认主证据路径。
+- 当前离线实验从 `Processed Valid Dataset -> Evidence Pack Builder -> L1` 开始；文本 / HTML / URL / forms / network / structured signals 是 L1 默认主证据路径。
 - 文本塔学习结构化语义概念识别和关系判断，通过多任务头输出中间概念，而不是生成自由推理文本。
 - 视觉路径是证据恢复和局部证据定位路径，不是独立最终威胁判断器。
 - OCR 用于恢复截图文字；YOLO 用于定位原子 UI 证据；CLIP / MobileCLIP 不属于 Warden V1 默认在线 L1 路径，仅允许离线截图聚类、模板发现、ablation baseline、research-only visual-prior experiments，或未来另行批准的 optional feature flag。
@@ -37,14 +37,16 @@ It is a documentation definition update. It is not an implementation task and no
 
 This document must stay compatible with:
 
-- the official current `L0 / L1` staged runtime contract;
+- the current V1 model/dataflow refocus: `Processed Valid Dataset -> Evidence Pack Builder -> L1` for offline experiments, with `Raw URL -> Capture -> QA / Scope Admission -> Evidence Pack Builder -> L1` preserved for future online/wild-test;
 - `SampleContext` and lazy heavy-artifact discipline from the runtime/dataflow spec;
 - the edge deployment profile that keeps trigger-based `PP-OCRv4 mobile` and `YOLO26n` in the default V1 online profile while excluding CLIP / MobileCLIP from that default path;
-- the project threat definition: social-engineering threat equals high-risk deceptive behavior and/or high-risk induced action.
+- the project threat definition: `Web-SE Threat := EvidenceSufficient(ManipulativeContext ∧ InducedHighRiskAction)`, where `InducedHighRiskAction := DirectAction ∨ RoutedAction ∨ ActionPreparation`.
+- `docs/threat_model/WARDEN_THREAT_ADJUDICATION_FLOW_V1.md` as the central adjudication-flow reference for the final V1 formula, claimed identity extraction, action-surface escalation, business legitimacy, benign hard negatives, routed/action-preparation cases, and unknown / insufficient evidence semantics.
 
-Routing precondition:
+Dataflow precondition:
 
-- Every valid webpage sample not terminated by L0 must route to L1.
+- Current offline valid samples start from `Processed Valid Dataset`, enter the Evidence Pack Builder, and route to L1.
+- Future online/wild-test samples must pass Capture QA / V1 Scope Admission before Evidence Pack Builder and L1.
 - L1 text judgment is the default path.
 - L1 vision is evidence recovery, not a parallel final classifier.
 - Invalid captures, HTTP error pages, blank pages, pure-color renders, severe broken renders, and insufficient-observability pages are removed during dataset cleaning before formal train / validation / test construction; they are not L1 threat labels.
@@ -57,13 +59,18 @@ It is not a monolithic classifier and should not be described as a single model 
 Conceptual structure:
 
 ```text
-L1 main judgment shell
-  -> source-aware evidence pack builder
-  -> text / HTML / URL / form / network main path
-  -> structured feature and joint-signal branch
-  -> visual evidence recovery path, requested only when needed
-  -> fusion head or heads
-  -> deterministic explanation renderer
+Current offline experiment:
+Processed Valid Dataset
+  -> Evidence Pack Builder
+  -> L1 Main Judgment / L1 Training / L1 Evaluation
+  -> Metrics / Evidence Ledger / Ablation
+
+L1 internal flow:
+Text / HTML / URL / Forms first pass
+  -> if evidence insufficient, trigger OCR / YOLO
+  -> Conditional Vision Evidence Recovery
+  -> Fusion
+  -> Evidence Ledger
 ```
 
 L1 consumes a source-aware evidence bundle derived from `SampleContext`.
@@ -141,7 +148,7 @@ These heads should reduce false positives from one-factor rules. Brand-domain mi
 
 - `benign_clear`
 - `benign_hard_negative`
-- `brand_impersonation_landing_shell_without_payload_observed`
+- `manipulative_context_with_payload_not_observed_needs_action_evidence`
 - `credential_collection_page`
 - `payment_collection_page`
 - `wallet_drain_or_web3_abuse_page`
@@ -204,7 +211,7 @@ They should not encode broad final concepts that require text, URL, destination,
 
 ### 6.3 CLIP / MobileCLIP
 
-CLIP-family image-text encoders, including MobileCLIP variants, are not part of the Warden V1 default online L1 path.
+CLIP-family image-text encoders, including MobileCLIP variants, are not part of the Warden V1 default path.
 
 They are allowed only for:
 
@@ -220,7 +227,7 @@ They must not:
 - act as a standalone visual threat classifier;
 - replace OCR for text recovery;
 - replace YOLO for local UI evidence localization;
-- become a default online L1 input;
+- become a default V1 input;
 - treat page-level visual similarity as sufficient malicious evidence by itself.
 
 ## 7. Fusion
@@ -314,7 +321,7 @@ It does not:
 - add dependencies;
 - change CLI behavior;
 - change output JSON schema as an implemented contract;
-- remove trigger-based `PP-OCRv4 mobile` or `YOLO26n` from the default online edge profile;
+- remove trigger-based `PP-OCRv4 mobile` or `YOLO26n` as optional/conditional edge-profile candidates;
 - claim runtime, accuracy, latency, or model-performance validation.
 
 Future work is still required for:

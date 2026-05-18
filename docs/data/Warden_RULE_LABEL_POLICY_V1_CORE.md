@@ -520,7 +520,7 @@ It is not:
 - a final truth layer;
 - a replacement for `manual_labels.json`.
 
-Under the project-level definition, `rule` should be able to represent cases where high-risk deceptive behavior is present while direct action payload is not observed. Such cases may require escalation or manual review instead of being treated as automatic benign.
+Under the project-level V1 formula, `rule` should be able to represent cases where manipulative context is present while direct action payload is not observed. Such cases may require escalation or manual review instead of being treated as automatic benign, but they need direct, routed, or action-preparation evidence before becoming V1 Web-SE Threat candidates.
 
 ### 2.2 Difference from `auto_labels.json`
 
@@ -704,7 +704,7 @@ Meaning: brand-related evidence is strong, but brand spoofing is not actually es
 #### `conflict_sensitive_intent_low_but_lure_signal_high`
 Meaning: direct on-page sensitive-collection evidence is weak, but lure / redirection / hosted-page signals are strong.
 
-This conflict is the main v1-core place to preserve behavior-only or payload-not-observed risk without changing the schema.
+This conflict is the main v1-core place to preserve manipulative-context plus payload-not-observed risk, including possible routed-action or action-preparation evidence, without changing the schema.
 
 #### `conflict_visual_risk_high_text_risk_low`
 Meaning: visual risk appears elevated while text/form evidence remains weak, so stronger review is needed.

@@ -1,0 +1,13 @@
+{
+  "evidence_pack_id": "evidence_pack_04c7d518b4d8c163844f64d1",
+  "image_input_expected": false,
+  "image_input_passed_to_teacher": false,
+  "mock_only": true,
+  "modality_guard_status": "mock_no_image_input",
+  "note": "placeholder prompt snapshot for no-network adapter readiness; no provider call performed",
+  "prompt_template_id": "warden_distill_v0.3.primary_mock",
+  "prompt_template_version": "warden_distill_v0.3",
+  "sample_key": "sample_61cc7750eb6e6f3a3712d56f",
+  "teacher_model": "mock_teacher_v0",
+  "teacher_provider": "mock"
+}

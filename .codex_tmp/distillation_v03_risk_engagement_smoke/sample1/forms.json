@@ -1,0 +1,1 @@
+{"forms":[{"action":"https://example-login.test/login","inputs":[{"type":"text","name":"user"},{"type":"password","name":"pass"}]}]}

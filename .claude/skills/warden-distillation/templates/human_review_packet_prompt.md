@@ -1,4 +1,4 @@
-# HUMAN_REVIEW_PACKET_PROMPT_V0_2
+# HUMAN_REVIEW_PACKET_PROMPT_V0_3
 
 ## 中文版
 
@@ -22,8 +22,15 @@ Rules:
 
 - `weak labels are evidence`.
 - `payload not observed` is not automatic benign.
-- `action surface is not automatically threat action`.
+- `action_surface != risk_bearing_engagement`.
+- `induced_high_risk_action` is compatibility / child concept only.
+- URL-only brand claim is not a V1 positive.
+- Visible impersonation without funnel affordance is not a strong positive.
+- `unknown relation is not malicious`.
+- `rule_router is not a teacher label source`.
 - `rule_router` output is context only.
+- Warden V1 formula: `Web-SE Threat := EvidenceSufficient(ManipulativeContext ∧ RiskBearingEngagement)`.
+- `RiskBearingEngagement := DirectHighRiskAction ∨ RoutedHighRiskAction ∨ ActionPreparation ∨ DeceptiveFunnelPriming`.
 - Teacher advisory labels do not override human gold labels.
 - Do not claim visual evidence if image input was unavailable.
 
@@ -44,7 +51,7 @@ Output JSON:
 
 ```json
 {
-  "schema_version": "warden_human_review_packet_v0.2",
+  "schema_version": "warden_human_review_packet_v0.3",
   "sample_id": "{{sample_id}}",
   "review_priority": "medium",
   "review_reasons": [],
@@ -52,6 +59,19 @@ Output JSON:
     "url_domain": "",
     "visible_text_quotes": [],
     "action_surfaces": [],
+    "claimed_identity_candidates": [],
+    "relation_judgments": {},
+    "evidence_state": {},
+    "threat_action_candidate": {},
+    "manipulative_context": {},
+    "risk_bearing_engagement": {},
+    "context_engagement_relation": {},
+    "url_claim_analysis": {},
+    "visible_impersonation_analysis": {},
+    "funnel_affordance_analysis": {},
+    "risk_outcome_axes": {},
+    "evidence_sufficiency": {},
+    "formula_result": {},
     "network_notes": [],
     "visual_notes": []
   },
@@ -70,7 +90,17 @@ Output JSON:
     "visual_text_conflict": false,
     "rule_router_teacher_conflict": false,
     "evidence_incomplete": false,
-    "possible_cloak_or_gate": false
+    "diagnostic_only": true,
+    "formula_relation_unclear": false,
+    "action_surface_without_risk_bearing_engagement": false,
+    "risk_bearing_engagement_unclear": false,
+    "downstream_risk_unclear": false,
+    "evidence_sufficiency_low": false,
+    "out_of_v1_scope_candidate": false,
+    "gate_or_evasion_excluded_v1": false,
+    "redirect_only_excluded_v1": false,
+    "regulated_content_only_excluded_v1": false,
+    "schema_or_grounding_failure": false
   },
   "recommended_manual_action": "inspect_before_training_use"
 }

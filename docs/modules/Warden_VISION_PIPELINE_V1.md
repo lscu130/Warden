@@ -190,7 +190,7 @@ The V1 Vision Pipeline uses a decoupled three-component design:
 Outputs from these components are packed into a structured visual evidence bundle and passed to downstream fusion.
 Within L1, this visual path is evidence recovery and evidence localization.
 It is not an independent final visual threat-judgment path.
-The Warden V1 default online L1 path uses OCR and detector evidence as the default visual primitives. CLIP / MobileCLIP-style similarity encoders are not part of the default online L1 path.
+The Warden V1 default L1 path is text / HTML / URL / forms first. OCR and detector evidence are conditional visual evidence recovery primitives triggered when L1 evidence is insufficient. CLIP / MobileCLIP-style similarity encoders are not part of the default V1 path.
 
 This design is preferred over a monolithic end-to-end generative visual-language runtime path because it provides:
 
@@ -262,7 +262,7 @@ Examples:
 
 ## 8.1 Purpose
 
-The image-text similarity encoder is not part of the Warden V1 default online L1 path.
+The image-text similarity encoder is not part of the Warden V1 default path.
 It may be used only for offline screenshot clustering, template discovery, ablation baselines, research-only visual-prior experiments, or a separately approved future optional feature flag.
 
 When used offline or in an approved experiment, its purpose is to map screenshots against a fixed prompt bank representing social-engineering-relevant visual scenarios and produce numeric similarity features for analysis or ablation.
@@ -288,11 +288,11 @@ Any offline or research-only image-text encoder should optimize for:
 - practical parameter size
 - easier expansion through prompt-bank updates
 
-V1 does not choose a CLIP / MobileCLIP-style visual similarity encoder as the default online runtime path.
+V1 does not choose a CLIP / MobileCLIP-style visual similarity encoder as the default runtime path.
 
 ## 8.4 Runtime usage mode
 
-The encoder must not run in the Warden V1 default online L1 path.
+The encoder must not run in the Warden V1 default path.
 If a separately approved optional feature flag enables it later, it should be used in non-generative similarity mode.
 
 Allowed experimental pattern:
@@ -330,7 +330,7 @@ Offline / experimental examples:
 
 These are scenario-similarity features, not final maliciousness labels.
 The CLIP-family encoder must not output the final `malicious / benign` judgment, must not replace OCR for screenshot text recovery, and must not replace the detector for local UI evidence localization.
-Page-level visual similarity is weak evidence unless grounded by text, URL, forms, network, OCR, detector output, or other context. It is not a default online routing or fusion input in Warden V1.
+Page-level visual similarity is weak evidence unless grounded by text, URL, forms, network, OCR, detector output, or other context. It is not a default routing or fusion input in Warden V1.
 
 ---
 
@@ -597,7 +597,7 @@ This module must not:
 This document freezes the following high-level decisions for V1:
 
 - the vision pipeline remains decoupled rather than monolithic
-- OCR and local detection remain separate default online components
+- OCR and local detection remain separate conditional evidence-recovery components
 - CLIP / MobileCLIP-style similarity encoding remains offline / research-only unless a separate task approves an optional feature flag
 - the vision path emits evidence rather than final judgment
 - `screenshot_viewport.png` remains the primary visual input
@@ -639,5 +639,5 @@ A Vision Pipeline V1 task is done only if:
 
 ## 22. Practical One-Sentence Summary
 
-Warden Vision V1 is a viewport-first, evidence-oriented, decoupled visual pipeline: the default online L1 path uses lightweight OCR to fill screenshot text blind spots and a lightweight detector to locate atomic high-risk components, then passes those outputs into downstream multimodal fusion rather than making a standalone black-box final decision. CLIP / MobileCLIP-style image-text similarity is offline / research-only unless a separate task approves an optional feature flag.
+Warden Vision V1 is a viewport-first, evidence-oriented, decoupled visual pipeline: the default L1 path is text / HTML / URL / forms first, then conditionally uses lightweight OCR to fill screenshot text blind spots and a lightweight detector to locate atomic high-risk components when evidence is insufficient. Those outputs pass into downstream fusion rather than making a standalone black-box final decision. CLIP / MobileCLIP-style image-text similarity is offline / research-only unless a separate task approves an optional feature flag.
 

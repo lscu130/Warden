@@ -1,0 +1,10 @@
+{
+  "attempt_id": "attempt_07f5a87dbc16a1f0db33eddf",
+  "external_api_call": false,
+  "mock_only": true,
+  "note": "placeholder raw output for no-network adapter readiness; no provider response exists",
+  "raw_provider_response": null,
+  "record_id": "mock_c5e6fb5f0a4a958961cfcc04",
+  "teacher_model": "mock_teacher_v0",
+  "teacher_provider": "mock"
+}

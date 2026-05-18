@@ -13,8 +13,9 @@
 ## 2026-04-27 Chinese Definition Update Summary
 
 - gate / verification / CAPTCHA 页面如果只是阻挡观察，仍可按 auxiliary 处理。
-- 如果这类页面已经构造高危欺骗身份、权威、安全、金融、客服、奖励、访问控制或攻击链上下文，即使当前 payload 未观察到，也可能成为社会工程威胁候选。
-- 未观察到 payload / action 应表达为 `payload not observed`，不能自动判为 benign。
+- 如果这类页面已经构造操纵性上下文，并且诱导、路由或准备用户执行高风险动作，则可能成为社会工程威胁候选。
+- 未观察到 payload / action 应表达为 `payload not observed`，不能自动判为 benign；该状态本身也不足以构成 V1 malicious。
+- gate / evasion 在 V1 中是辅助/排除/未来范围问题，不是 V1 主训练目标或当前在线 L2 架构。
 
 ## English Version
 
@@ -30,7 +31,7 @@ This file explains:
 
 1. what counts as a gate / evasion sample;
 2. why such samples do not enter TrainSet V1 primary by default;
-3. how they should be handled across L0 / L1 / L2;
+3. how they should be handled across L0 / L1 and a separately defined future heavier review path;
 4. how they may still be used for training-adjacent research, evaluation, and analysis;
 5. how this protocol stays consistent with the README, the current scripts, and the main training line.
 
@@ -38,9 +39,9 @@ This file explains:
 
 Warden's mainline problem is web social-engineering threat judgment, not a dedicated interaction-recovery or anti-bot-bypass system.
 
-Project definition note: a gate, verification, CAPTCHA, or evasion-like page can remain auxiliary when it only blocks observation. It can also become a social-engineering threat candidate when it constructs high-risk deceptive identity, authority, security, financial, support, reward, access-control, or attack-chain context, even if the direct credential/payment/wallet/download payload is not currently observed. Pure blank pages, HTTP error pages, pure-color renders, severe broken renders, and insufficient-observability pages are not part of this auxiliary set; they are removed during dataset construction before formal train / validation / test construction.
+Project definition note: a gate, verification, CAPTCHA, or evasion-like page remains auxiliary or excluded when it only blocks observation. It can become a Web-SE Threat candidate only when observable evidence is sufficient for both manipulative context and induced high-risk action through direct action, routed action, or action preparation. Pure blank pages, HTTP error pages, pure-color renders, severe broken renders, and insufficient-observability pages are not part of this auxiliary set; they are removed during dataset construction before formal train / validation / test construction.
 
-Therefore, in Warden V1, gate / evasion behavior is treated as a real deployment-side auxiliary problem rather than the primary training objective itself.
+Therefore, in Warden V1, gate / evasion behavior is treated as an auxiliary, exclusion, or future-scope problem rather than the primary training objective itself.
 
 The target sample families include:
 
@@ -63,9 +64,9 @@ Warden still uses multimodal webpage evidence such as:
 - brand evidence;
 - page metadata.
 
-### 3.2 It Does Not Change The Main L0 / L1 / L2 Structure
+### 3.2 It Does Not Define A Current L2 Structure
 
-This document adds a special handling protocol for one difficult sample family. It does not redesign the main staged architecture.
+This document adds a special handling protocol for one difficult sample family. It does not redesign the main staged architecture, and it does not define a current online L2 architecture.
 
 ### 3.3 It Does Not Redefine TrainSet V1 Primary
 
@@ -94,7 +95,7 @@ The reasons are:
 2. They often do not stably represent a fully exposed page-level landing sample.
 3. If they are merged directly into the main primary set, the model may learn gate pages as if they were the final malicious page.
 4. They are better used as:
-   - L2 escalation candidates;
+   - future heavier-review candidates;
    - auxiliary evaluation material;
    - case-study / error-analysis / robustness-analysis material;
    - future interaction-recovery inputs.
@@ -129,7 +130,7 @@ If a page outwardly presents gate / verification / CAPTCHA semantics but already
 
 then its threat nature is no longer equivalent to an ordinary gate page. Such samples may later be upgraded into true social-engineering threat pages during review.
 
-If the page strongly constructs deceptive trust or authority context but the direct payload is absent in the current capture, the appropriate evidence state is `payload not observed`, not automatic benign.
+If the page strongly constructs deceptive trust or authority context but the direct payload is absent in the current capture, the appropriate evidence state is `payload not observed`, not automatic benign. V1 malicious still requires sufficient evidence of direct action, routed action, or action preparation.
 
 ## 6. Core Handling Principles
 
@@ -141,13 +142,13 @@ These samples should be preserved. They should not be deleted casually. But by d
 
 Warden V1 uses a recognize-and-escalate strategy for this family rather than trying to solve interaction recovery directly in L1.
 
-### 6.3 Put Heavy Interactive Handling In L2, Not L1
+### 6.3 Defer Heavy Interactive Handling To Future Scope
 
-L1 should identify likely gate / evasion behavior and prepare escalation. L2 should carry the higher-cost interactive attempts and deeper review.
+L1 may identify likely gate / evasion behavior and prepare review or future-escalation hints. Higher-cost interactive attempts and deeper review require a separately approved future task; this document does not define that current path.
 
-### 6.4 L2 Should Only Process The Escalated Subset
+### 6.4 Future Heavier Review Should Only Process The Escalated Subset
 
-L2 is not supposed to process the full corpus with equal cost. It should only process the escalated gate / evasion subset.
+A future heavier review path should not process the full corpus with equal cost. It should only process an explicitly escalated gate / evasion subset after that path is separately defined.
 
 ## 7. Staged Handling Protocol
 
@@ -162,7 +163,7 @@ L0 may:
 - detect visible gate-page cues;
 - forward suspicious samples to L1.
 
-L0 must not solve gates, bypass challenge pages, run screenshot/OCR, load full HTML as a default prerequisite, or perform interaction recovery. Strong gate / evasion uncertainty should be routed toward L2 through explicit reason codes.
+L0 must not solve gates, bypass challenge pages, run screenshot/OCR, load full HTML as a default prerequisite, or perform interaction recovery. Strong gate / evasion uncertainty should be represented through explicit review or future-escalation reason codes.
 
 ### 7.2 L1 Responsibilities
 
@@ -181,13 +182,13 @@ Its responsibilities are to:
    - an unresolved evasion candidate;
    - a fake verification or fake CAPTCHA social-engineering page;
 3. recommend escalation where needed;
-4. prepare evidence summaries for L2.
+4. prepare evidence summaries for review or a separately defined future heavier review path.
 
-### 7.3 L2 Responsibilities
+### 7.3 Future Heavier Review Responsibilities
 
-L2 handles the escalated gate / evasion subset.
+No current online L2 architecture is defined by this document. A future heavier review path may handle an explicitly escalated gate / evasion subset after a separate task defines it.
 
-Possible L2 actions include:
+Possible future actions include:
 
 - light interaction or clicking;
 - continuing the page flow;
@@ -206,7 +207,7 @@ This auxiliary set does not automatically enter TrainSet V1 primary. Its existen
 
 Its main uses include:
 
-- L2 escalation input;
+- future heavier-review input;
 - robustness and deployment-oriented evaluation;
 - cloaking and evasion case studies;
 - error analysis;
@@ -223,13 +224,13 @@ Warden V1 remains focused on page-level social-engineering threat recognition. G
 After the main model is trained, this set can be used to evaluate:
 
 - whether ordinary gate pages are wrongly judged as final malicious pages;
-- whether the system can reliably identify samples that should escalate to L2;
+- whether the system can reliably identify samples that need review or future heavier handling;
 - whether fake verification or fake CAPTCHA pages remain detectable;
 - whether the model behaves conservatively on complex evidence.
 
 ### 9.2 As An Escalation Trigger Set
 
-Samples may be prioritized for L2 when they show signals such as:
+Samples may be prioritized for review or future heavier handling when they show signals such as:
 
 - verify-human / CAPTCHA / Cloudflare / challenge semantics;
 - hidden or unrevealed main content;
@@ -251,13 +252,13 @@ This document does not change the main README claims that:
 
 1. Warden is a web social-engineering threat judgment system.
 2. The inputs remain screenshots, HTML, URLs, forms, brand evidence, and metadata.
-3. The system still uses an L0 / L1 / L2 staged design.
+3. The current online system uses L0 / L1 only; future heavier review may be defined separately.
 4. The mainline focus is still data, labels, weak-rule backfill, training routes, and lightweight model design.
 5. Adversarial or anti-gate work exists, but it is not the center of V1.
 
 This document only adds one clarification:
 
-gate / evasion is a real deployment-side subproblem, and Warden V1 keeps it as an auxiliary sample set plus escalation protocol rather than redefining the main training set around it.
+gate / evasion is a real deployment-side subproblem, and Warden V1 keeps it as an auxiliary sample set plus review / future-escalation protocol rather than redefining the main training set around it.
 
 ## 11. Recommended Current Execution Stance
 
@@ -267,7 +268,7 @@ At the current stage, the recommended stance is:
 - current dataset scripts remain focused on that primary path by default;
 - the Gate / Evasion Auxiliary Set is kept separately, documented separately, and evaluated separately;
 - L1 recognizes and escalates but does not do heavy interaction;
-- L2 handles only the escalated subset;
+- any future heavier review handles only a separately escalated subset after it is defined;
 - README and paper framing stay centered on web social-engineering threat recognition rather than anti-evasion recovery.
 
 ## 12. Definition Of Done
@@ -276,7 +277,7 @@ This auxiliary protocol can be considered established when:
 
 - the repository contains a dedicated document for gate / evasion positioning;
 - the document explicitly states that the set is not part of TrainSet V1 primary;
-- the L1 and L2 responsibility boundary is explicit;
+- the L1 and future-heavier-review responsibility boundary is explicit;
 - the main uses are stated as auxiliary evaluation, escalation, and case study;
 - the document explicitly states that the README main design and main input definition are unchanged.
 

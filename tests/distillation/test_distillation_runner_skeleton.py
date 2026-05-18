@@ -100,8 +100,62 @@ def test_mock_teacher_output_validates_against_schema(tmp_path):
     result = validate_distillation_record(record)
 
     assert result.valid is True
-    assert record["schema_version"] == "warden_distill_v0.2_mock"
+    assert record["schema_version"] == "warden_distill_v0.3_mock"
     assert record["teacher_model"] == "mock_teacher_v0"
+    assert record["teacher_profile"] == "mock_v0_3_formula"
+    assert record["prompt_template_version"] == "warden_distill_v0.3"
+    assert record["formula_semantics"]["web_se_formula"] == (
+        "EvidenceSufficient(ManipulativeContext AND RiskBearingEngagement)"
+    )
+    assert record["formula_semantics"]["risk_bearing_engagement_formula"] == (
+        "DirectHighRiskAction OR RoutedHighRiskAction OR ActionPreparation OR DeceptiveFunnelPriming"
+    )
+    assert set(record["formula_concepts"]) >= {
+        "manipulative_context",
+        "action_surface",
+        "risk_bearing_engagement",
+        "context_engagement_relation",
+        "evidence_sufficiency",
+        "formula_result",
+        "url_claim_analysis",
+        "visible_impersonation_analysis",
+        "funnel_affordance_analysis",
+        "risk_outcome_axes",
+    }
+    assert set(record["formula_concepts"]["risk_bearing_engagement"]) >= {
+        "direct_high_risk_action",
+        "routed_high_risk_action",
+        "action_preparation",
+        "deceptive_funnel_priming",
+    }
+    assert record["formula_concepts"]["action_surface"]["not_threat_by_itself"] is True
+    assert (
+        record["formula_concepts"]["risk_bearing_engagement"][
+            "action_surface_is_not_automatically_risk_bearing_engagement"
+        ]
+        is True
+    )
+    assert record["formula_concepts"]["formula_result"]["web_se_threat_formula_satisfied"] is False
+    assert "claimed_identity_candidates" in record
+    assert set(record["text_semantic_concepts"]) >= {
+        "claimed_identity_candidates",
+        "identity_claim",
+        "action_surface",
+        "behavior_context",
+        "relation_judgments",
+        "evidence_state",
+        "threat_action_candidate",
+        "concept_level_evaluation_readiness",
+    }
+    assert record["text_semantic_concepts"]["action_surface"][
+        "action_surface_is_not_automatically_threat_action"
+    ] is True
+    assert record["text_semantic_concepts"]["relation_judgments"]["unknown_is_not_malicious"] is True
+    assert record["text_semantic_concepts"]["evidence_state"][
+        "payload_not_observed_is_not_automatic_benign"
+    ] is True
+    assert record["decision_head_auxiliary_targets"]["do_not_train_as_gold"] is True
+    assert record["decision_head_auxiliary_targets"]["final_label_advisory"] == "unknown_diagnostic_only"
 
 
 def test_mock_records_are_always_non_gold_and_diagnostic(tmp_path):
@@ -184,12 +238,12 @@ def test_review_queue_receives_sparse_or_missing_evidence_samples(tmp_path):
 
     review_rows = _read_jsonl(output_dir / "review_queue.jsonl")
     assert review_rows
-    assert any("visible_text_missing" in row["review_reasons"] for row in review_rows)
+    assert any("evidence_sufficiency_low" in row["review_reasons"] for row in review_rows)
 
 
 def test_schema_validator_rejects_forbidden_fields():
     record = {
-        "schema_version": "warden_distill_v0.2_mock",
+        "schema_version": "warden_distill_v0.3_mock",
         "record_id": "r1",
         "sample_id": "s1",
         "sample_path": "sample",
@@ -202,6 +256,9 @@ def test_schema_validator_rejects_forbidden_fields():
         "fallback_reason": None,
         "evidence_pack_summary": {},
         "rule_router_observation": {},
+        "formula_semantics": {},
+        "formula_concepts": {},
+        "claimed_identity_candidates": [],
         "text_semantic_concepts": {},
         "vision_evidence": {},
         "decision_head_auxiliary_targets": {},
@@ -215,6 +272,33 @@ def test_schema_validator_rejects_forbidden_fields():
 
     assert result.valid is False
     assert any("forbidden field" in issue for issue in result.issues)
+
+
+def test_schema_validator_rejects_missing_required_concept_fields(tmp_path):
+    sample = _make_sample(tmp_path / "sample")
+    pack = build_evidence_pack({"sample_id": "s1", "current_path": str(sample), "split": "train"})
+    record = build_mock_record(pack, split="train", seed=42, diagnostic_only=True)
+    record["text_semantic_concepts"].pop("relation_judgments")
+
+    result = validate_distillation_record(record)
+
+    assert result.valid is False
+    assert (
+        "missing required concept key: text_semantic_concepts.relation_judgments"
+        in result.issues
+    )
+
+
+def test_schema_validator_rejects_missing_formula_concepts(tmp_path):
+    sample = _make_sample(tmp_path / "sample")
+    pack = build_evidence_pack({"sample_id": "s1", "current_path": str(sample), "split": "train"})
+    record = build_mock_record(pack, split="train", seed=42, diagnostic_only=True)
+    record["formula_concepts"].pop("context_engagement_relation")
+
+    result = validate_distillation_record(record)
+
+    assert result.valid is False
+    assert "missing required formula concept key: formula_concepts.context_engagement_relation" in result.issues
 
 
 def test_cli_smoke_writes_required_output_files(tmp_path):
@@ -254,13 +338,19 @@ def test_cli_smoke_writes_required_output_files(tmp_path):
         assert (output_dir / name).exists()
 
     audit = json.loads((output_dir / "run_audit.json").read_text(encoding="utf-8"))
+    assert audit["schema_version"] == "warden_distill_v0.3_mock"
+    assert audit["prompt_template_version"] == "warden_distill_v0.3"
     assert audit["external_api_calls"] == 0
     assert audit["teacher_calls"] == 0
     assert audit["ocr_calls"] == 0
     assert audit["yolo_calls"] == 0
     assert audit["clip_calls"] == 0
+    assert audit["missing_required_concept_fields"] == {}
+    assert audit["concept_level_readiness"]["records_with_formula_concepts"] == 1
+    assert audit["concept_level_readiness"]["records_with_formula_result"] == 1
 
     records = _read_jsonl(output_dir / "distillation_records.jsonl")
     assert records
     assert all(record["do_not_train_as_gold"] is True for record in records)
     assert all(record["diagnostic_only"] is True for record in records)
+    assert all("formula_concepts" in record for record in records)

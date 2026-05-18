@@ -8,7 +8,7 @@
 
 - 本文档定义 Inference 模块的默认职责。
 - 涉及阶段路由、阈值和部署输出时，以英文版为准。
-- 当前在线口径只定义官方阶段命名 `L0 / L1`，允许在总 runtime pipeline 中使用内嵌式 `L0-fast` 子路径，但不改变阶段语义。
+- 当前 V1 离线实验口径是 `Processed Valid Dataset -> Evidence Pack Builder -> L1`。旧 `L0` / `L0-fast` 只作为 runtime compatibility 或 future online/wild-test 的 cheap screening / scope admission 辅助，不是当前 V1 模型主线。
 - 当前 auto-label 参考实现的活动 L0 逻辑位于 `src/warden/module/l0.py`，`scripts/labeling/Warden_auto_label_utils_brandlex.py` 保留兼容入口与顶层编排职责。
 - 当前 auto-label 参考实现的默认 L0 热路径已收窄：默认不做完整 `HTML` 特征提取，也不做默认 `brand` 提取；相关字段保留为兼容默认值，非 specialized 页面默认继续交给 `L1`。
 
@@ -16,13 +16,13 @@
 
 Inference 模块负责运行期判断流程，包括阶段路由、阈值应用、运行时输出、导出与性能相关路径。
 它的关注点是线上或准线上推理行为，而不是训练阶段的数据重标或 schema 改写。
-本模块采用项目级定义：社会工程威胁 = 高危欺骗行为和/或高危诱导动作。未观察到 payload / action 应表达为 `payload not observed`，不应在推理文档中自动等同于 benign。
+本模块采用项目级 V1 公式：`Web-SE Threat := EvidenceSufficient(ManipulativeContext ∧ InducedHighRiskAction)`，其中 `InducedHighRiskAction := DirectAction ∨ RoutedAction ∨ ActionPreparation`。未观察到 payload / action 应表达为 `payload not observed`，不应在推理文档中自动等同于 benign；该状态本身也不足以构成 V1 malicious。
 
 ## 2. 责任边界
 
 - 拥有：runtime pipeline、stage routing、threshold application、export / benchmark / deployment path。
 - 不拥有：训练集重标、训练期目标定义和数据层结构重构。
-- 当前推荐运行流：共享证据准备可先于分层判断发生；`L0` 负责低成本筛查与路由；`L1` 是主判断层，多数样本应在此完成主判断，可先走 text-first，再在需要时补充 trigger-based visual evidence recovery 与 structured / joint signals。Future heavier review or escalation may be defined later，但本文档不定义当前在线 `L2` 架构。
+- 当前推荐 V1 离线实验流：`Processed Valid Dataset` 进入 `Evidence Pack Builder`，再进入 `L1` 主判断、训练和评估。未来 online / wild-test 流保留 `Raw URL -> Capture -> QA / Scope Admission -> Evidence Pack Builder -> L1`。OCR / YOLO 只作为 L1 内部 evidence-insufficient 时的 trigger-based visual evidence recovery。Future heavier review or escalation may be defined later，但本文档不定义当前在线 `L2` 架构。
 - `early low-risk exit` 只是路由结果，不是真值安全结论；运行时输出应显式保留这种 routing outcome 语义。
 
 ## English Version
@@ -39,9 +39,9 @@ The Inference module defines how Warden performs runtime webpage social-engineer
 using staged logic, bounded cost, explicit routing, and auditable outputs.
 
 This module is responsible for online or offline inference-time decision flow.
-It must preserve the current staged L0 / L1 philosophy and must not silently absorb training-time assumptions as runtime truth.
+It must preserve the current V1 model/dataflow refocus and must not silently absorb training-time assumptions as runtime truth.
 
-At the project-definition level, a social-engineering threat means high-risk deceptive behavior and/or high-risk induced action. Inference documentation and outputs should therefore avoid treating "no payload observed" as automatic benign. When high-risk deceptive identity, authority, institution, security, financial, support, reward, brand, or access-control context is present but no credential/payment/wallet/download/POST/action payload is observed, the state should be represented as `payload not observed` and routed according to policy confidence and stage rules.
+At the project-definition level, Warden V1 uses `Web-SE Threat := EvidenceSufficient(ManipulativeContext ∧ InducedHighRiskAction)`, where `InducedHighRiskAction := DirectAction ∨ RoutedAction ∨ ActionPreparation`. Inference documentation and outputs should avoid treating "no payload observed" as automatic benign. When manipulative context is present but no credential/payment/wallet/download/POST/action payload is observed, the state should be represented as `payload not observed` and routed according to evidence sufficiency and stage rules; that state alone is not sufficient for a V1 malicious judgment.
 
 ---
 
@@ -50,8 +50,7 @@ At the project-definition level, a social-engineering threat means high-risk dec
 The Inference module owns:
 
 - runtime input preparation
-- stage routing
-- L0 / L1 execution policy
+- evidence-pack construction and L1 execution policy
 - threshold application
 - review / routing policy
 - inference-time structured output
@@ -72,15 +71,17 @@ The Inference module does not own:
 
 ## 3. Inference Philosophy
 
-### 3.1 Staged judgment, not monolithic guessing
+### 3.1 Evidence-pack-first L1 judgment, not monolithic guessing
 
-Warden inference is staged by design.
+Warden V1 inference and experiments are evidence-pack-first by design.
 
 Default expectation:
 
-- L0: cheapest rule hot path, cheap screening, and low-cost routing
-- L1: main judgment layer, including evidence-pack construction, text judgment, trigger-based vision evidence recovery, structured / joint signals, fusion, evidence ledger, and deterministic explanation rendering
+- Current offline experiment: `Processed Valid Dataset -> Evidence Pack Builder -> L1 Main Judgment / L1 Training / L1 Evaluation -> Metrics / Evidence Ledger / Ablation`
+- Future wild-test / online inference: `Raw URL -> Capture Pipeline -> Capture QA / V1 Scope Admission -> Evidence Pack Builder -> L1 Main Judgment -> Wild-Test Report`
+- L1: main judgment layer, including evidence-pack construction, text / HTML / URL / forms first pass, trigger-based vision evidence recovery, structured / joint signals, fusion, evidence ledger, and deterministic explanation rendering
 - Future heavier review or escalation may be defined later; this document does not define a current online L2 architecture.
+- Legacy L0 code paths, if present, are compatibility screening / routing support and not the current V1 default model/dataflow mainline.
 
 ### 3.2 Runtime cost discipline
 
@@ -105,26 +106,25 @@ Inference outputs must remain inspectable and not collapse into opaque single-va
 
 Inference reasoning should preserve the distinction between:
 
-- high-risk deceptive behavior: deceptive identity, trust, authority, institution, security, financial, support, reward, brand, or access-control context construction;
-- high-risk induced action: credential, OTP, payment, wallet, PII/KYC, download, fake-support diversion, or attack-chain redirect behavior;
+- ManipulativeContext: deceptive identity, trust, authority, institution, security, financial, support, reward, brand, or access-control context construction;
+- InducedHighRiskAction: direct action, routed action, or action-preparation evidence involving credential, OTP, payment, wallet, PII/KYC, download, fake-support diversion, account verification, or attack-chain redirect behavior;
 - payload not observed: no current evidence of a form, POST, wallet flow, payment flow, download flow, or other direct action component.
 
 This distinction is conceptual in this task. It does not introduce new output fields or change existing runtime schemas.
 
 ### 3.5 Current runtime-flow interpretation
 
-The current recommended runtime flow may include a shared evidence-preparation step before stage-specific routing or judgment.
-This does not redefine the official stage names.
+The current recommended V1 flow starts with evidence-pack construction for processed valid samples. This does not implement new runtime behavior in this documentation task.
 
 At the module-contract level, the intended flow is:
 
-1. prepare shared cheap runtime evidence where available;
-2. run an embedded `L0-fast` screening/router path while preserving official `L0` semantics;
-3. send non-exiting samples to `L1`, which remains the main judgment stage;
-4. allow conditional multimodal supplementation under `L1` rather than inventing a new official stage;
-5. emit review / future-escalation hints for hard gate, evasion, interaction-heavy, or high-ambiguity valid webpage subsets without defining a current online L2 architecture. Any future recrawl behavior belongs to separately defined capture infrastructure, not current L0 / L1 threat-model output.
+1. current offline experiments read from `Processed Valid Dataset`;
+2. build a source-aware evidence pack;
+3. run `L1`, with text / HTML / URL / forms first;
+4. trigger OCR / YOLO only when L1 evidence is insufficient;
+5. preserve future online / wild-test flow as `Raw URL -> Capture -> QA / Scope Admission -> Evidence Pack Builder -> L1`.
 
-This document treats `L0-fast` as an implementation-form clarification inside the overall runtime pipeline, not as a renamed stage and not as a replacement for the official `L0 / L1` contract.
+Legacy `L0-fast` or L0 router terminology may remain in current code and compatibility docs, but it is not the V1 default model/dataflow entrypoint after this refocus.
 
 For the current auto-label-backed reference path, the active L0 implementation lives in `src/warden/module/l0.py`, while `scripts/labeling/Warden_auto_label_utils_brandlex.py` remains the compatibility entrypoint and top-level orchestration layer.
 
@@ -133,7 +133,7 @@ In the current narrowed default hot path for that reference implementation:
 - full `HTML` feature extraction is skipped by default;
 - default `brand` extraction is skipped by default;
 - `html_features` and `brand_signals` remain present with compatibility-safe default values;
-- non-specialized pages should normally continue toward `L1`, while `L0` stays focused on cheap `gambling / adult / gate` specialized screening and routing hints.
+- non-specialized pages should normally continue toward evidence-pack construction and `L1`, while legacy L0 code stays focused on cheap `gambling / adult / gate` specialized screening, exclusion, and routing hints. These hints are not V1 primary threat classes.
 
 ---
 
@@ -162,7 +162,7 @@ It may be implemented as an embedded `L0-fast` runtime sub-path inside the broad
 
 Default responsibilities:
 
-- obvious `gambling / adult / gate` specialized-surface recall
+- obvious `gambling / adult / gate` specialized-surface recall for auxiliary routing, exclusion, or future-scope handling
 - obvious benign filtering only if policy explicitly allows
 - simple structured/rule signals
 - cheap URL, visible-text/title, form-summary, network-summary, and existing cheap diff/evasion-observability evidence
@@ -209,7 +209,7 @@ Strict rules:
 - do not let L1 become effectively “always final” unless explicitly intended
 - do not reinterpret conditional multimodal supplementation as a separate official stage
 - do not treat CLIP or any page-level visual similarity encoder as a standalone malicious / benign judge
-- do not put CLIP, MobileCLIP, SNet, or SpecularNet-like routes into the Warden V1 default online L1 path
+- do not put CLIP, MobileCLIP, SNet, or SpecularNet-like routes into the Warden V1 default path
 - do not treat action surfaces such as login, download, payment, wallet, support, or redirect as automatically malicious without risky behavior context or inherently high-risk action patterns
 - do not document draft L1 output terms as frozen machine-readable schema without a later explicit schema task
 

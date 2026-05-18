@@ -34,6 +34,16 @@ The Text pipeline is responsible for converting webpage-visible language and nea
 
 The Text pipeline is not a standalone final judge and must remain consistent with Warden's staged inference philosophy.
 
+Current V1 dataflow context:
+
+```text
+Processed Valid Dataset
+  -> Evidence Pack Builder
+  -> L1 Main Judgment / L1 Training / L1 Evaluation
+```
+
+Future online / wild-test may prepend `Raw URL -> Capture Pipeline -> Capture QA / V1 Scope Admission`, but the text pipeline still consumes the evidence pack rather than raw capture output directly.
+
 ---
 
 ## 2. Scope
@@ -188,17 +198,23 @@ The text tower is a main evidence branch for L1, but it is not a complete free-f
 It should learn structured semantic concepts and relation judgments through multi-task heads.
 The intended pattern is an implicit reasoning scaffold: the model does not output chain-of-thought, but it emits bounded intermediate concepts that L1 fusion can combine with structured and visual evidence.
 
+These concept heads should follow `docs/threat_model/WARDEN_THREAT_ADJUDICATION_FLOW_V1.md`. In particular, claimed identity extraction is the primary identity path, brand knowledge is optional enhancement, and `business_legitimacy = unknown` must not be treated as malicious by itself.
+
+The detailed L1 text concept contract is `docs/l1/WARDEN_L1_TEXT_SEMANTIC_CONCEPTS_V1.md`. It defines `claimed_identity_candidates`, identity claim concepts, action surface concepts, behavior context concepts, relation judgments, evidence state concepts, threat-action candidate concepts, Decision Head concept inputs, and concept-level evaluation requirements.
+
 Draft multi-task head groups include:
 
 - action surface heads, such as login, signup, payment, wallet connect, download, support contact, PII collection, and third-party redirect surfaces;
 - behavior context heads, such as brand impersonation, authority impersonation, fake security, fake financial, fake reward, fake support, urgency, and deceptive hosted-brand-shell contexts;
 - relation / consistency heads, such as brand-domain alignment, brand URL-token consistency, claimed officiality, action-target alignment, form-action alignment, download-target alignment, redirect-chain reasonableness, hosted-platform context, business legitimacy, and context legitimacy;
 - risk axis heads, such as human exposure, deceptive identity, observed action, payload deployment, brand-domain conflict, evidence incompleteness, and gate/evasion risk;
-- page role heads, such as benign clear, benign hard negative, brand impersonation landing shell without payload observed, credential collection, payment collection, wallet abuse, fake download lure, fake support, gate/evasion shell, intermediary/redirector, and unknown;
+- page role heads, such as benign clear, benign hard negative, manipulative context with payload not observed and missing action evidence, credential collection, payment collection, wallet abuse, fake download lure, fake support, gate/evasion shell, intermediary/redirector, and unknown;
 - routing heads, such as need vision, need human review, and future-escalation hint. Recrawl is not a current L0 / L1 threat-model routing head; any future recrawl behavior belongs to separately defined capture infrastructure.
 
 These names are draft / proposed / conceptual terms, not frozen machine-readable output schema.
 Action surfaces are not automatically threat actions; they become threat-relevant only when combined with deceptive identity, manipulative narrative, suspicious destination, abnormal submission, missing business legitimacy, missing context legitimacy, or another high-risk behavior context.
+V1 malicious requires sufficient evidence for both manipulative context and induced high-risk action. Payload-not-observed cases need direct-action, routed-action, or action-preparation evidence before they can become V1 Web-SE Threat candidates.
+Unknown relation is not malicious; it is an evidence state for the Decision Head or review path.
 
 ---
 

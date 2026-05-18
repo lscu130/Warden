@@ -19,7 +19,7 @@ Warden 当前已经冻结了项目级协作规则、Vision Pipeline V1、Text Pi
 - text default: `multilingual-e5-small`
 - OCR default: `PP-OCRv4 mobile`, trigger-based
 - detector default: `YOLO26n`
-- CLIP / MobileCLIP default: none in the online runtime path
+- CLIP / MobileCLIP default: none in the V1 default runtime path
 - offline teacher tools are not part of the default online runtime path
 
 当前用户仍在处理数据，因此本任务目标不是追求最终精度或 benchmark 封版，而是优先落地：
@@ -167,7 +167,7 @@ Public interfaces that must remain stable:
 
 - current frozen successful-sample file contract
 - existing data and capture file naming used by TrainSet V1
-- current stage discipline of L0 / L1
+- current V1 dataflow discipline of Evidence Pack Builder / L1 with legacy L0 compatibility handled separately
 
 Schema / field constraints:
 
@@ -231,7 +231,7 @@ Task-specific acceptance checks:
   - text: `multilingual-e5-small`
   - OCR: `PP-OCRv4 mobile`, trigger-based
   - detector: `YOLO26n`
-  - CLIP / MobileCLIP: none in the online runtime path
+  - CLIP / MobileCLIP: none in the V1 default runtime path
 - [ ] Missing optional full-page screenshot is handled explicitly
 - [ ] OCR can be skipped when trigger conditions are not met
 - [ ] Runtime can run without teacher models
@@ -306,7 +306,7 @@ The current default runtime profile is:
 - text default: `multilingual-e5-small`
 - OCR default: `PP-OCRv4 mobile`, trigger-based
 - detector default: `YOLO26n`
-- CLIP / MobileCLIP default: none in the online runtime path
+- CLIP / MobileCLIP default: none in the V1 default runtime path
 - offline teacher tools are not part of the default online runtime path
 
 The user is still processing data.
@@ -451,7 +451,7 @@ Public interfaces that must remain stable:
 
 - current frozen successful-sample file contract
 - existing data and capture file naming used by TrainSet V1
-- current stage discipline of L0 / L1
+- current V1 dataflow discipline of Evidence Pack Builder / L1 with legacy L0 compatibility handled separately
 
 Schema / field constraints:
 
@@ -515,7 +515,7 @@ Task-specific acceptance checks:
   - text: `multilingual-e5-small`
   - OCR: `PP-OCRv4 mobile`, trigger-based
   - detector: `YOLO26n`
-  - CLIP / MobileCLIP: none in the online runtime path
+  - CLIP / MobileCLIP: none in the V1 default runtime path
 - [ ] Missing optional full-page screenshot is handled explicitly
 - [ ] OCR can be skipped when trigger conditions are not met
 - [ ] Runtime can run without teacher models

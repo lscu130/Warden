@@ -6,6 +6,8 @@
 
 本文档定义 Warden L1 的未来 `Text Semantic Concepts`、`vision_evidence`、结构化证据和 `Decision Head` 草案契约。
 
+项目级威胁判定流程见 `docs/threat_model/WARDEN_THREAT_ADJUDICATION_FLOW_V1.md`。本文档中的 `text_semantic_concepts`、`vision_evidence` 和未来 `Decision Head` 字段应按该流程解释；本文档仍是 draft contract，不冻结 final runtime schema。
+
 当前状态：
 
 - `rule_router` 只做路由与证据充分性诊断。
@@ -21,14 +23,15 @@
 - L1-vision 是 Visual Evidence Recovery，只补证据，不独立判断恶意。
 - OCR 用于恢复截图文字。
 - YOLO / detector 用于定位输入框、按钮、二维码、钱包按钮、下载按钮、验证码等 UI 证据。
-- CLIP / MobileCLIP、SNet、SpecularNet-like 不属于 Warden V1 default online L1 path。
+- CLIP / MobileCLIP、SNet、SpecularNet-like 不属于 Warden V1 default path。
 - 无效采集、HTTP 错误页、空白页、纯色渲染页、严重渲染失败页、证据不可观测页面不是 L1 威胁标签；数据集构建时应在正式 train / validation / test 前移除。
 - L1 Decision Head 未来消费文本语义概念、结构化证据和可选视觉补证据，再输出 future L1 final decision。
 
 ### L1 草案流程
 
 ```text
-Evidence Pack
+Processed Valid Dataset
+  -> Evidence Pack Builder
   -> Rule Router / Evidence Sufficiency Diagnostic
   -> Text Semantic Concept Extractor
   -> Optional Visual Evidence Recovery
@@ -59,6 +62,10 @@ This document defines the draft interface contract for future Warden L1 text sem
 
 This document is a contract draft for future implementation and training alignment. It is not final schema, not official runtime schema, not a model implementation, and not a benchmark claim.
 
+The project-level threat adjudication flow is defined in `docs/threat_model/WARDEN_THREAT_ADJUDICATION_FLOW_V1.md`. Interpret `text_semantic_concepts`, `vision_evidence`, and future `Decision Head` fields through that flow; this document remains a draft contract and does not freeze final runtime schema.
+
+The detailed text concept and relation-judgment target contract is defined in `docs/l1/WARDEN_L1_TEXT_SEMANTIC_CONCEPTS_V1.md`. That document refines `claimed_identity_candidates`, `text_semantic_concepts`, relation judgments, Decision Head concept inputs, and concept-level evaluation requirements without changing official runtime schema.
+
 Current status:
 
 - `rule_router` is a routing and evidence-sufficiency diagnostic component.
@@ -69,10 +76,11 @@ Current status:
 
 ## 2. L1 Stage Semantics
 
-Warden L1 should be understood as this staged pipeline:
+Warden L1 should be understood as this staged pipeline for the current offline experiment path:
 
 ```text
-Evidence Pack
+Processed Valid Dataset
+  -> Evidence Pack Builder
   -> Rule Router / Evidence Sufficiency Diagnostic
   -> Text Semantic Concept Extractor
   -> Optional Visual Evidence Recovery
@@ -81,9 +89,20 @@ Evidence Pack
   -> Evidence Renderer
 ```
 
+Future online / wild-test adds capture and scope admission before the same evidence-pack and L1 path:
+
+```text
+Raw URL
+  -> Capture Pipeline
+  -> Capture QA / V1 Scope Admission
+  -> Evidence Pack Builder
+  -> L1 Main Judgment
+  -> Wild-Test Report
+```
+
 Responsibilities:
 
-- Evidence Pack collects source-aware URL, visible text, actionable HTML, forms, network, artifact presence, and optional visual artifacts.
+- Evidence Pack Builder collects source-aware URL, visible text, actionable HTML, forms, network, artifact presence, and optional visual artifacts.
 - Rule Router diagnoses evidence sufficiency and emits routing hints.
 - Text Semantic Concept Extractor emits bounded semantic concept groups and relation judgments.
 - Visual Evidence Recovery adds OCR text and detector-localized UI evidence when requested.
@@ -174,6 +193,10 @@ Interpretation:
 The future Text Semantic Concept Extractor consumes source-aware text evidence such as visible text, compact actionable HTML text, URL-derived text, form summaries, network summaries, and optional OCR text when available.
 
 It must output structured semantic concepts and bounded relation judgments. It must not output chain-of-thought or free-form final judgment.
+
+It should use claimed identity extraction as the primary identity path. Brand knowledge may enrich normalization and relation checks, but brand-list-first detection is not the primary entry point and must not become a malicious shortcut.
+
+The detailed concept groups, including `identity_domain_relation`, `business_legitimacy_hint`, evidence-state concepts, and threat-action candidate concepts, are defined in `docs/l1/WARDEN_L1_TEXT_SEMANTIC_CONCEPTS_V1.md`.
 
 Draft shape:
 
@@ -364,7 +387,7 @@ Responsibilities:
 - Vision outputs must be converted into structured evidence before the Decision Head consumes them.
 - Vision must not output final malicious / benign judgment.
 
-CLIP / MobileCLIP, SNet, and SpecularNet-like routes are not part of the Warden V1 default online L1 path. They may remain offline research, ablation, clustering, template discovery, or future optional feature-flag topics only after separate approval.
+CLIP / MobileCLIP, SNet, and SpecularNet-like routes are not part of the Warden V1 default path. They may remain offline research, ablation, clustering, template discovery, or future optional feature-flag topics only after separate approval.
 
 Draft `vision_evidence` shape:
 
@@ -456,6 +479,8 @@ The L1 Decision Head is the future component that owns the L1 final decision.
 It consumes:
 
 - text semantic concept outputs;
+- claimed identity candidates;
+- relation judgment outputs;
 - URL/domain features;
 - actionable HTML features;
 - forms/network features;
@@ -465,6 +490,8 @@ It consumes:
 - evidence ledger references.
 
 It may be implemented later with XGBoost or another lightweight decision head. This document does not implement it.
+
+Decision Head concept inputs should follow `docs/l1/WARDEN_L1_TEXT_SEMANTIC_CONCEPTS_V1.md`. The text tower supplies concepts and relation judgments; it does not own the final decision.
 
 Current draft stub:
 

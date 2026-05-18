@@ -22,7 +22,7 @@
   - text encoder: `multilingual-e5-small`
   - OCR: `PP-OCRv4 mobile`（trigger-based）
   - detector: `YOLO26n`
-  - CLIP / MobileCLIP: 默认在线路径不启用
+  - CLIP / MobileCLIP: V1 默认路径不启用
 
 为什么先用 Python 3.10：
 
@@ -223,7 +223,7 @@ Recommended baseline:
   - text encoder: `multilingual-e5-small`
   - OCR: `PP-OCRv4 mobile`, trigger-based
   - detector: `YOLO26n`
-  - CLIP / MobileCLIP: disabled in the default online path
+  - CLIP / MobileCLIP: disabled in the default V1 path
 
 ## 2. Why Python 3.10
 

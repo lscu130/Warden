@@ -4,7 +4,7 @@
 
 ### 摘要
 
-本文档定义 Warden 蒸馏工作流 V0.2。V0.2 取代旧 V0.1 作为当前 L1 语义下的默认蒸馏说明，但不删除历史 V0.1 文档。
+本文档定义 Warden 蒸馏工作流 V0.2。V0.2 已被 `WARDEN_DISTILLATION_WORKFLOW_V0.3.md` supersede，用于历史和兼容参考；当前 Warden V1 formula-aligned distillation 以 V0.3 为准。
 
 关键约束：
 
@@ -26,11 +26,17 @@
 
 ## 1. Status And Supersession
 
-This document defines the current Warden distillation workflow for prompt / Skill alignment with Warden L1 semantics.
+This document defines the Warden distillation V0.2 workflow for prompt / Skill alignment with earlier Warden L1 semantics.
+
+V0.2 is superseded by `WARDEN_DISTILLATION_WORKFLOW_V0.3.md` for current Warden V1 formula-aligned distillation. Keep this document as historical and compatibility context only.
 
 V0.2 supersedes V0.1 for current Warden L1 semantics. Older V0.1 task or prompt files, if present, remain historical artifacts and must not be deleted by this task.
 
 This document is documentation only. It does not implement a production runner, call model APIs, run teacher distillation, change schemas, change labels, move data, or alter training / inference code.
+
+Distillation targets and prompts should follow `docs/threat_model/WARDEN_THREAT_ADJUDICATION_FLOW_V1.md` for threat adjudication semantics. In particular, claimed identity extraction is the primary identity path, action surfaces are not threat actions by themselves, `unknown` is not malicious, and Decision Head auxiliary targets remain advisory.
+
+Detailed L1 text concept and relation-judgment targets are defined in `docs/l1/WARDEN_L1_TEXT_SEMANTIC_CONCEPTS_V1.md`. Teacher outputs should use that document for `claimed_identity_candidates`, `text_semantic_concepts`, `identity_domain_relation`, `business_legitimacy_hint`, evidence-state concepts, and threat-action candidate concepts.
 
 ## 2. L1-Aligned Distillation Targets
 
@@ -51,7 +57,16 @@ Distillation V0.2 targets the following output groups:
   "input_modalities": {},
   "observed_evidence_summary": {},
   "rule_router_context": {},
-  "text_semantic_concepts": {},
+  "claimed_identity_candidates": [],
+  "text_semantic_concepts": {
+    "identity_claim": {},
+    "action_surface": {},
+    "behavior_context": {},
+    "relation_judgments": {},
+    "evidence_state": {},
+    "threat_action_candidate": {},
+    "concept_level_evaluation_readiness": {}
+  },
   "vision_evidence_observations": {},
   "decision_head_auxiliary_targets": {},
   "quality_control": {},
@@ -102,6 +117,7 @@ Required principles:
 payload not observed != benign
 weak labels are evidence, not gold labels
 action surface is not automatically threat action
+unknown is not malicious
 ```
 
 ## 5. Text Semantic Concepts
@@ -110,10 +126,15 @@ Teacher outputs should produce structured targets for future text tower concept 
 
 Required concept groups:
 
-- `action_surfaces`
-- `behavior_contexts`
-- `relation_consistency`
-- `business_legitimacy`
+- `claimed_identity_candidates`
+- `text_semantic_concepts.identity_claim`
+- `text_semantic_concepts.action_surface`
+- `text_semantic_concepts.behavior_context`
+- `relation_judgments`
+- `text_semantic_concepts.evidence_state`
+- `text_semantic_concepts.threat_action_candidate`
+- `text_semantic_concepts.concept_level_evaluation_readiness`
+- `business_legitimacy_hint`
 - `context_legitimacy`
 - `risk_axes`
 - `page_role_candidates`
@@ -128,6 +149,12 @@ action surface is not automatically threat action
 ```
 
 Threat escalation requires additional context such as deceptive identity, manipulative narrative, abnormal destination, inconsistent business context, suspicious submission target, or inherently dangerous collection.
+
+Required relation-judgment principle:
+
+```text
+unknown relation is not malicious
+```
 
 ## 6. Vision Evidence Observations
 
@@ -158,6 +185,7 @@ payload_observed_advisory
 page_role_advisory
 risk_score_advisory
 confidence_advisory
+do_not_train_as_gold
 ```
 
 Required interpretation:
@@ -175,6 +203,14 @@ Allowed future advisory label values should follow the L1 Decision Head draft co
 - `payload_observed_advisory`: `true`, `false`, `unknown`
 
 These remain advisory and draft.
+
+Mock runner alignment:
+
+- mock output must include `claimed_identity_candidates`;
+- mock output must include the required `text_semantic_concepts` subgroups;
+- mock output must include `decision_head_auxiliary_targets.do_not_train_as_gold=true`;
+- mock audit/report output should expose missing required concept fields and concept-level readiness counts;
+- mock output remains `diagnostic_only=true`, `do_not_train_as_gold=true`, `teacher_model=mock_teacher_v0`, and zero-call for external API / OCR / YOLO / CLIP.
 
 ## 8. Split Policy
 

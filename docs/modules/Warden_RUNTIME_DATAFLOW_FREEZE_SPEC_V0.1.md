@@ -6,7 +6,7 @@
 
 ### 中文摘要
 
-本文档用于冻结 Warden 当前最小可执行的 runtime/dataflow 合同，服务于当前 `L0 / L1` 主线。
+本文档用于冻结 Warden 当前最小可执行的 runtime/dataflow 合同。当前 V1 离线实验主线是 `Processed Valid Dataset -> Evidence Pack Builder -> L1`；旧 `L0 / L1` 叙述只作为 runtime compatibility 和未来 online/wild-test 辅助路径保留。
 
 本版本先冻结以下内容：
 
@@ -14,7 +14,7 @@
 - `SampleContext` 负责什么，不负责什么；
 - 哪些工件属于 cheap evidence，应该每个 sample 只准备一次；
 - 哪些工件属于 heavy artifacts，只能按需 lazy load；
-- `L0 / L1` 的最小运行期输入/输出边界；
+- Evidence Pack Builder / L1 的最小运行期输入/输出边界；
 - runtime result / trace 应保留哪些最小审计信息；
 - 哪些内容现在冻结，哪些内容仍保持可配置。
 
@@ -36,14 +36,14 @@
 
 ## 1. Purpose
 
-This document freezes the minimum runtime/dataflow contract needed for near-term Warden implementation work while preserving the current official top-level runtime structure as `L0 / L1`.
+This document freezes the minimum runtime/dataflow contract needed for near-term Warden implementation work. After the V1 model/dataflow refocus, the current offline experiment mainline is `Processed Valid Dataset -> Evidence Pack Builder -> L1`; older `L0 / L1` runtime wording remains compatibility context for legacy runtime code and future online/wild-test support.
 
 The goal is to stabilize:
 
 - runtime object responsibilities;
 - per-sample shared-state boundaries;
 - cheap-vs-heavy artifact lifecycle discipline;
-- minimum stage input/output expectations;
+- minimum Evidence Pack Builder / L1 input/output expectations;
 - audit-oriented result and trace retention;
 - the line between frozen items and still-configurable items.
 
@@ -54,22 +54,36 @@ It is not a final threat-logic specification and not a replacement for `MODULE_I
 
 ## 2. Top-Level Runtime Contract
 
-The official runtime stage framing remains:
+The current V1 default dataflow is:
 
-- `L0`: cheapest screening and routing stage;
-- `L1`: main judgment stage.
-- Future heavier review or escalation may be defined later, but this document does not define a current online L2 architecture.
+```text
+Current offline experiment:
+Processed Valid Dataset
+  -> Evidence Pack Builder
+  -> L1 Main Judgment / L1 Training / L1 Evaluation
+  -> Metrics / Evidence Ledger / Ablation
+
+Future wild-test / online inference:
+Raw URL
+  -> Capture Pipeline
+  -> Capture QA / V1 Scope Admission
+  -> Evidence Pack Builder
+  -> L1 Main Judgment
+  -> Wild-Test Report
+```
+
+Future heavier review or escalation may be defined later, but this document does not define a current online L2 architecture.
 
 Routing realignment:
 
-- `L0` handles only a small set of high-confidence cheap terminal or auxiliary buckets such as adult, gambling, and obvious gate / challenge / verification cases.
-- `L0` does not decide ordinary benign or malicious webpage status.
-- Every valid webpage sample not terminated by `L0` must route to `L1`.
+- Legacy `L0` code paths, if present, are runtime compatibility screening / routing support rather than the current V1 offline experiment default entrypoint.
+- Adult, gambling, gate, challenge, verification, redirect-only, trusted-sink-only, and evasion-only surfaces are not V1 primary Web-SE Threat classes by themselves.
+- Current offline valid samples enter `Evidence Pack Builder` and `L1` directly.
+- Future online / wild-test paths use Capture QA / V1 Scope Admission before evidence-pack construction; that admission step must not be reinterpreted as a default V1 threat-judgment L0.
 - `L1` text judgment runs by default.
 - Invalid captures, HTTP error pages, blank pages, pure-color renders, severe broken renders, and insufficient-observability pages are removed by the project owner during dataset cleaning before formal train / validation / test construction. They are not `benign`, `malicious`, or `suspicious` threat-model labels.
 
-This document does not introduce an alternative top-level taxonomy.
-Implementation-local helper sub-stages may exist internally, but they must not replace the project-level `L0 / L1` contract.
+This document does not introduce an alternative implemented runtime schema. Implementation-local helper sub-stages may exist internally, but they must not replace the project-level V1 dataflow contract.
 
 ---
 
@@ -122,7 +136,7 @@ Responsibilities:
 - store the current sample identity and primary URLs;
 - hold shared cheap evidence prepared once per sample;
 - hold stage trace entries;
-- hold routing state across `L0 / L1`;
+- hold routing state across Evidence Pack Builder / L1 and any legacy L0 compatibility path;
 - hold runtime-only caches for lazy-loaded heavy artifacts;
 - hold minimal result payload state before writeback;
 - support explicit heavy-cache release after processing.
@@ -197,7 +211,9 @@ Rules:
 
 ## 5. Minimum Stage Contracts
 
-### 5.1 `L0`
+### 5.1 Legacy `L0` Compatibility Path
+
+This section documents an existing runtime compatibility path. It is not the current V1 offline experiment default entrypoint.
 
 Minimum inputs:
 
@@ -230,7 +246,7 @@ Strict boundary:
 
 Minimum inputs:
 
-- `SampleContext` after `L0`
+- `SampleContext` after Evidence Pack Builder or a legacy L0 compatibility path
 - shared cheap evidence
 - an explicit `L1` main-judgment input bundle derived from the current sample state
 - optional heavy artifacts requested lazily
@@ -239,7 +255,7 @@ Minimum responsibilities:
 
 - act as the main judgment shell;
 - request heavier evidence only when needed;
-- preserve routing trace from `L0`;
+- preserve routing trace from Evidence Pack Builder and any legacy L0 compatibility path;
 - either complete the current runtime path or emit explicit review / future-escalation hints.
 
 Minimum outputs:
@@ -352,7 +368,7 @@ Concrete filenames remain implementation-local in V0.1 unless later frozen expli
 
 The following are frozen by this document:
 
-- the official top-level runtime structure stays `L0 / L1`;
+- the current V1 offline experiment structure is `Processed Valid Dataset -> Evidence Pack Builder -> L1`, while existing `L0 / L1` names remain compatibility context until a separate implementation-alignment task changes runtime code;
 - `ArtifactPackage` is the immutable artifact-handle layer;
 - `SampleContext` is the shared mutable per-sample runtime state layer;
 - cheap evidence is prepared once per sample whenever practical;
@@ -367,7 +383,7 @@ The following are frozen by this document:
 
 The following remain configurable and are not frozen by this document:
 
-- final threat-decision logic inside `L0` or `L1`;
+- final threat-decision logic inside legacy `L0` compatibility paths or `L1`;
 - exact thresholds;
 - exact OCR strategy;
 - exact vision or multimodal supplementation policy;

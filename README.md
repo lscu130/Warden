@@ -12,13 +12,13 @@
 
 - 本 README 是仓库入口和当前阶段导览。
 - 精确定义、字段、任务边界、接口和验收标准以英文版、`PROJECT.md`、模块文档、任务单和 handoff 为准。
-- 当前 README 反映 Warden 最新主线：网页社会工程威胁判断、L0 + L1、文本/结构优先、视觉补证据、CLIP/SNet 不进默认在线主线。
+- 当前 README 反映 Warden 最新主线：网页社会工程威胁判断、`Processed Valid Dataset -> Evidence Pack Builder -> L1` 当前实验链路、文本/结构优先、条件式 OCR/YOLO 视觉补证据、CLIP/SNet 不进 V1 默认路径。
 
 ## 1. 项目概览
 
 Warden 是一个 **网页社会工程威胁判断系统**。
 
-它关注网页是否存在高危欺骗行为，和/或是否诱导、准备、路由用户执行高危动作，例如：
+V1 关注网页是否有充分可观测证据同时支持操纵性上下文，以及诱导、准备或路由用户执行高危动作，例如：
 
 - 账号、密码、OTP、支付信息、钱包授权、助记词索取；
 - 品牌、平台、机构、客服、安全、金融、奖励、访问控制等身份或信任上下文伪造；
@@ -27,42 +27,49 @@ Warden 是一个 **网页社会工程威胁判断系统**。
 
 规范短句：
 
-**社会工程威胁 = 高危欺骗行为 和/或 高危诱导动作。**
+**网页社会工程威胁 = 证据充分支持（操纵性上下文 ∧ 被诱导的高风险动作）。**
 
-页面即使当前没有观察到登录框、支付框、钱包流程、下载、POST 提交或其他 payload，也可能因高危欺骗行为构成 malicious。这类证据状态应记录为 `payload not observed`，不能自动视为 benign。
+被诱导的高风险动作包括直接高风险动作、路由到高风险动作、或高风险动作准备信号。未观察到 payload / action 时应记录为 `payload not observed`，不能自动视为 benign；该状态本身也不足以构成 V1 malicious。
 
-## 2. 当前系统主线
+完整判定流程见 `docs/threat_model/WARDEN_THREAT_ADJUDICATION_FLOW_V1.md`。其中明确：宣称身份抽取是主路径，品牌库只是可选增强；action surface 需要结合欺骗 / 操纵 / 身份冲突 / 业务不合法上下文才可能升级为 threat action。
 
-当前在线系统只定义 **L0 + L1**。未来更重的复核或升级层可以另行设计；当前阶段不把 L2 作为在线主线契约。
+## 2. 当前 V1 模型与数据流主线
+
+当前 V1 离线实验链路从已经 processed valid 的样本开始，不以 L0 作为默认模型入口。未来更重的复核或升级层可以另行设计；当前 V1 不定义默认 L2。
 
 ```text
-Raw sample
-  -> CheapEvidenceSnapshot
-  -> L0Router
-  -> if L0 terminal: stop / auxiliary terminal
-  -> else: L1EvidencePack.expand(cheap_snapshot)
-  -> L1 text branch
-  -> Rule Router diagnostics
-  -> optional OCR / YOLO evidence recovery
-  -> L1 Decision Head
-  -> Evidence Renderer
+Current offline experiment:
+Processed Valid Dataset
+  -> Evidence Pack Builder
+  -> L1 Main Judgment / L1 Training / L1 Evaluation
+  -> Metrics / Evidence Ledger / Ablation
+
+Future wild-test / online inference:
+Raw URL
+  -> Capture Pipeline
+  -> Capture QA / V1 Scope Admission
+  -> Evidence Pack Builder
+  -> L1 Main Judgment
+  -> Wild-Test Report
 ```
 
-### 2.1 CheapEvidenceSnapshot
+### 2.1 Evidence Pack Builder
 
-L0 前先构建极轻量证据快照，用于避免重复读取基础文件。它包含 URL、title、visible_text 统计、forms/network 轻量统计、artifact presence、adult/gambling/gate cheap hints 等。
+Evidence Pack Builder 是当前 V1 主实验入口。它从 processed valid dataset 读取 URL、title、visible_text、forms/network、artifact presence、必要的 HTML/DOM 结构和按需视觉补证据信息，为 L1 主判断、训练、评估、metrics、evidence ledger 和 ablation 提供统一输入。
 
-### 2.2 L0
+### 2.2 V1 Scope Admission 与 Legacy L0
 
-L0 是 cheap screening / specialized terminal router。
+V1 scope admission 用于确认样本是否属于当前 V1 主任务。旧 L0 逻辑可以作为 cheap screening / specialized routing / exclusion compatibility support 保留，但不是当前 V1 模型默认主线。
 
-它只处理少数高置信低成本 bucket：
+历史 adult、gambling、gate 检测是辅助信号或未来范围线索，不是 V1 主威胁类别：
 
 - adult；
 - gambling；
 - obvious gate / challenge / verification。
 
-所有有效且未被 L0 terminal 的网页默认进入 L1。L0 不判断普通网页的 benign / malicious 状态。
+当前离线有效样本直接进入 Evidence Pack Builder 和 L1。未来 online / wild-test 可在 Capture QA / V1 Scope Admission 中复用低成本 screening 思路，但不能把它重新定义成 V1 默认 L0 判断层。
+
+成人、博彩、枪支、毒品等 high-risk-content-only 页面不属于 V1 主任务；gate-only / challenge-only / CAPTCHA-only / redirect-only / trusted-sink-only 捕获也不因捕获形态直接成为 V1 malicious。若下游页面满足 Web-SE Threat 公式，下游威胁页可进入主判断。
 
 ### 2.3 L1
 
@@ -70,7 +77,7 @@ L1 是当前主判断层，但不是单体模型。
 
 L1 包含：
 
-- `L1EvidencePack`：在 `CheapEvidenceSnapshot` 基础上增量补全完整证据；
+- `Evidence Pack Builder` / `L1EvidencePack`：为 L1 构建完整证据；
 - `L1-text`：默认运行的文本与结构化语义主路径；
 - `Rule Router`：路由和证据充分性诊断器，不是分类器；
 - `L1-vision`：按需 OCR / YOLO 视觉补证据端；
@@ -86,7 +93,7 @@ L1 包含：
 
 视觉端不负责最终 malicious / benign 判断。
 
-CLIP / MobileCLIP 不进入默认在线 L1 主线。SNet / SpecularNet-like 也不进入默认在线 L1 主线。它们仅保留为离线聚类、模板发现、ablation、研究实验或未来另行批准的可选功能。
+CLIP / MobileCLIP 不进入 V1 默认路径。SNet / SpecularNet-like 也不进入 V1 默认路径。它们仅保留为离线聚类、模板发现、ablation、研究实验或未来另行批准的可选功能。
 
 ## 4. 数据与训练状态
 
@@ -115,7 +122,7 @@ HTTP 错误页、404、空白页、纯色页、严重渲染失败、结构严重
 - 让 L0 判断普通网页 benign / malicious；
 - 让 Rule Router 输出 final label；
 - 让视觉端承担最终判断；
-- 让 CLIP / SNet 进入默认在线主线；
+- 让 CLIP / SNet 进入 V1 默认主线；
 - 在 malicious clean pool 完成前训练正式 L1；
 - 在最终数据集冻结前正式蒸馏；
 - 当前阶段定义在线 L2。
@@ -124,8 +131,8 @@ HTTP 错误页、404、空白页、纯色页、严重渲染失败、结构严重
 
 Warden 已经建立或正在建立：
 
-- L0 / L1 runtime skeleton；
-- CheapEvidenceSnapshot；
+- legacy L0 / L1 runtime skeleton；
+- CheapEvidenceSnapshot compatibility support；
 - L1 evidence pack skeleton；
 - Rule Router draft；
 - L1 draft sidecar；
@@ -145,13 +152,17 @@ Warden 已经建立或正在建立：
 
 Warden is a **webpage social-engineering threat judgment system**.
 
-It is broader than narrow brand-phishing detection. Warden judges whether a real webpage presents high-risk deceptive behavior and/or high-risk induced action.
+It is broader than narrow brand-phishing detection. Warden V1 judges whether observable webpage evidence is sufficient to support both a manipulative context and an induced high-risk user action.
 
 Canonical short form:
 
-**Social-engineering threat = high-risk deceptive behavior and/or high-risk induced action.**
+**Web-SE Threat = EvidenceSufficient(ManipulativeContext ∧ InducedHighRiskAction).**
 
-High-risk deceptive behavior may be malicious even when no credential form, payment form, wallet flow, download, POST submission, or other payload is currently observed. That state should be recorded as `payload not observed`; it is not automatic benign.
+`InducedHighRiskAction := DirectAction ∨ RoutedAction ∨ ActionPreparation`.
+
+When no credential form, payment form, wallet flow, download, POST submission, or other payload is currently observed, that state should be recorded as `payload not observed`; it is not automatic benign. That state alone is also not sufficient for a V1 malicious judgment.
+
+The full adjudication flow is defined in `docs/threat_model/WARDEN_THREAT_ADJUDICATION_FLOW_V1.md`. It states that claimed identity extraction is the primary path, brand knowledge is optional enhancement, and action surfaces require deceptive, manipulative, identity-conflicting, or business-illegitimate context before they can escalate into threat actions.
 
 ## 1. What Warden Looks For
 
@@ -172,47 +183,54 @@ Warden distinguishes:
 
 Action surface alone is not malicious. A login form, download button, payment page, wallet button, or support page must be interpreted with page context, URL/domain relation, business legitimacy, form/network targets, and other evidence.
 
-## 2. Current Online Mainline: L0 + L1
+## 2. Current V1 Model And Dataflow Mainline
 
-The current online architecture defines **L0 + L1 only**. Future heavier review or escalation may be designed later; the current online architecture does not define L2.
+The current V1 offline experiment path starts from already processed valid samples. It does not use L0 as the default model entrypoint.
 
 ```text
-Raw sample
-  -> CheapEvidenceSnapshot
-  -> L0Router
-  -> if L0 terminal: stop / auxiliary terminal
-  -> else: L1EvidencePack.expand(cheap_snapshot)
-  -> L1 text branch
-  -> Rule Router diagnostics
-  -> optional OCR / YOLO evidence recovery
-  -> L1 Decision Head
-  -> Evidence Renderer
+Current offline experiment:
+Processed Valid Dataset
+  -> Evidence Pack Builder
+  -> L1 Main Judgment / L1 Training / L1 Evaluation
+  -> Metrics / Evidence Ledger / Ablation
+
+Future wild-test / online inference:
+Raw URL
+  -> Capture Pipeline
+  -> Capture QA / V1 Scope Admission
+  -> Evidence Pack Builder
+  -> L1 Main Judgment
+  -> Wild-Test Report
 ```
 
-### 2.1 CheapEvidenceSnapshot
+Current V1 has no default L2. Legacy L0 references, where they remain, are compatibility routing / screening support, not the default V1 model/dataflow mainline.
 
-`CheapEvidenceSnapshot` is a lightweight evidence snapshot built before L0. It reads and caches only cheap evidence:
+### 2.1 Evidence Pack Builder
+
+`Evidence Pack Builder` is the current V1 main experiment entrypoint. It reads processed valid samples and prepares source-aware evidence:
 
 - URL / final URL / host;
 - title;
 - visible-text presence, length, prefix snippets, and keyword hits;
 - lightweight forms / network counts;
 - artifact presence;
-- adult / gambling / gate hints.
+- adult / gambling / gate hints, treated as auxiliary routing, exclusion, or future-scope signals rather than V1 primary threat classes.
 
-L1 should reuse this snapshot rather than rereading and reparsing the same cheap evidence.
+L1 should consume this evidence pack for judgment, training, evaluation, metrics, evidence ledger, and ablation.
 
-### 2.2 L0
+### 2.2 V1 Scope Admission And Legacy L0
 
-L0 is a cheap screening / specialized terminal router.
+V1 scope admission checks whether a sample belongs to the current V1 main task. Legacy L0 logic may remain as cheap screening / specialized routing / exclusion compatibility support.
 
-It handles only a few high-confidence, low-cost terminal or auxiliary buckets:
+Historical adult, gambling, and gate detections are auxiliary signals or future-scope cues rather than V1 primary threat classes:
 
 - adult;
 - gambling;
 - obvious gate / challenge / verification.
 
-Every valid webpage sample not terminated by L0 routes to L1 by default. L0 does not decide ordinary webpage benign / malicious status.
+Current offline valid samples enter Evidence Pack Builder and L1 directly. Future online / wild-test paths may use Capture QA / Scope Admission before evidence-pack construction, but this must not be treated as a default V1 L0 judgment layer.
+
+Adult, gambling, guns, drugs, or other high-risk-content-only pages are outside the V1 main task. Gate-only, challenge-only, CAPTCHA-only, redirect-only, and trusted-sink-only captures are not V1 malicious solely because of their capture pattern. If downstream content satisfies the Web-SE Threat formula, the downstream threat page may enter the main judgment path.
 
 ### 2.3 L1
 
@@ -220,7 +238,7 @@ L1 is the current main judgment layer, but it is not a monolithic model.
 
 L1 includes:
 
-- `L1EvidencePack`: incrementally expands full structured evidence from `CheapEvidenceSnapshot`;
+- `Evidence Pack Builder` / `L1EvidencePack`: builds full structured evidence for L1;
 - `L1-text`: the default text and structured-semantic main path;
 - `Rule Router`: routing and evidence-sufficiency diagnostics, not a classifier;
 - `L1-vision`: optional OCR / YOLO evidence recovery;
@@ -231,12 +249,22 @@ L1 includes:
 
 The visual branch recovers evidence. It does not make the final malicious / benign decision.
 
-Current default visual evidence recovery consists of:
+Current L1 internal flow is text / HTML / URL / forms first, then conditional visual evidence recovery only if evidence is insufficient:
+
+```text
+Text / HTML / URL / Forms first pass
+  -> if evidence insufficient, trigger OCR / YOLO
+  -> Conditional Vision Evidence Recovery
+  -> Fusion
+  -> Evidence Ledger
+```
+
+Current conditional visual evidence recovery consists of:
 
 - OCR for screenshot text recovery when visible text is missing, sparse, or image-rendered;
 - YOLO / detector for UI-component evidence such as input boxes, password fields, OTP fields, QR codes, download buttons, wallet buttons, captcha widgets, modals, and primary CTAs.
 
-CLIP / MobileCLIP are not part of the Warden V1 default online L1 path. SNet / SpecularNet-like routes are not part of the Warden V1 default online L1 path. They may be used only for offline clustering, template discovery, ablation, research experiments, or a separately approved future optional feature flag.
+CLIP / MobileCLIP are not part of the Warden V1 default path. SNet / SpecularNet-like routes are not part of the Warden V1 default path. They may be used only for offline clustering, template discovery, ablation, research experiments, or a separately approved future optional feature flag.
 
 ## 4. Current Data And Training State
 
@@ -265,7 +293,7 @@ The current default scope does not include:
 - letting L0 decide ordinary webpage benign / malicious status;
 - letting Rule Router output final labels;
 - letting the visual branch make final judgments;
-- putting CLIP / SNet into the default online mainline;
+- putting CLIP / SNet into the V1 default mainline;
 - training official L1 before malicious clean pool completion;
 - running official distillation before the final dataset freeze;
 - defining an online L2 at the current stage.
@@ -274,8 +302,8 @@ The current default scope does not include:
 
 Warden currently has or is building:
 
-- L0 / L1 runtime skeleton;
-- CheapEvidenceSnapshot;
+- legacy L0 / L1 runtime skeleton;
+- CheapEvidenceSnapshot compatibility support;
 - L1 evidence-pack skeleton;
 - Rule Router draft;
 - L1 draft sidecar;

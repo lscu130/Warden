@@ -29,12 +29,32 @@ def build_review_queue_record(record: dict[str, Any]) -> dict[str, Any] | None:
         suggested_action = "recrawl"
     elif "val_test_diagnostic_only_record" in review_reasons:
         suggested_action = "keep_diagnostic_only"
+    formula_concepts = record.get("formula_concepts", {}) if isinstance(record.get("formula_concepts"), dict) else {}
+    formula_result = formula_concepts.get("formula_result", {}) if isinstance(formula_concepts.get("formula_result"), dict) else {}
+    risk_bearing = (
+        formula_concepts.get("risk_bearing_engagement", {})
+        if isinstance(formula_concepts.get("risk_bearing_engagement"), dict)
+        else {}
+    )
+    url_claim = formula_concepts.get("url_claim_analysis", {}) if isinstance(formula_concepts.get("url_claim_analysis"), dict) else {}
+    visible_impersonation = (
+        formula_concepts.get("visible_impersonation_analysis", {})
+        if isinstance(formula_concepts.get("visible_impersonation_analysis"), dict)
+        else {}
+    )
+    funnel_affordance = (
+        formula_concepts.get("funnel_affordance_analysis", {})
+        if isinstance(formula_concepts.get("funnel_affordance_analysis"), dict)
+        else {}
+    )
+    quality_flags = record.get("quality_flags", {}) if isinstance(record.get("quality_flags"), dict) else {}
 
     return {
         "record_id": record["record_id"],
         "sample_key": record.get("sample_key"),
         "sample_id": record["sample_id"],
         "sample_path": record["sample_path"],
+        "priority": _severity(review_reasons),
         "source_manifest": record.get("source_manifest"),
         "source_split": record.get("source_split"),
         "teacher_run_id": record.get("teacher_run_id"),
@@ -44,7 +64,31 @@ def build_review_queue_record(record: dict[str, Any]) -> dict[str, Any] | None:
         "severity": _severity(review_reasons),
         "review_reason": sorted(set(review_reasons))[0] if review_reasons else "needs_human_review",
         "review_reasons": sorted(set(review_reasons)),
-        "quality_flags": record.get("quality_flags", {}),
+        "quality_flags": quality_flags,
+        "short_evidence_context": {
+            "source_url": record.get("source_url"),
+            "canonical_url": record.get("canonical_url"),
+            "summary": record.get("evidence_pack_summary", {}),
+        },
+        "formula_failure_mode": formula_result.get("formula_basis", "unknown"),
+        "risk_bearing_engagement_uncertainty": quality_flags.get("risk_bearing_engagement_unclear", False),
+        "url_claim_state": url_claim,
+        "visible_impersonation_state": visible_impersonation,
+        "funnel_affordance_state": funnel_affordance,
+        "concept_level_review": {
+            "claimed_identity_candidates_present": "claimed_identity_candidates" in record,
+            "relation_judgments_present": isinstance(record.get("text_semantic_concepts"), dict)
+            and "relation_judgments" in record["text_semantic_concepts"],
+            "evidence_state_present": isinstance(record.get("text_semantic_concepts"), dict)
+            and "evidence_state" in record["text_semantic_concepts"],
+            "threat_action_candidate_present": isinstance(record.get("text_semantic_concepts"), dict)
+            and "threat_action_candidate" in record["text_semantic_concepts"],
+            "review_reasons": [
+                reason
+                for reason in review_reasons
+                if "concept" in reason or "text_semantic_concepts" in reason
+            ],
+        },
         "evidence_context": {
             "summary": record.get("evidence_pack_summary", {}),
             "input_modalities": record.get("input_modalities", []),
@@ -56,6 +100,8 @@ def build_review_queue_record(record: dict[str, Any]) -> dict[str, Any] | None:
             "repair_path": None,
         },
         "suggested_action": suggested_action,
+        "suggested_next_action": suggested_action,
         "do_not_train_as_gold": record.get("do_not_train_as_gold") is True,
+        "not_train_as_gold": record.get("do_not_train_as_gold") is True,
         "diagnostic_only": record.get("diagnostic_only") is True,
     }
